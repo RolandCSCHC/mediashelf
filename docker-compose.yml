@@ -1,0 +1,57 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mediashelf-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mediashelf}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mediashelf}
+      POSTGRES_DB: ${POSTGRES_DB:-mediashelf}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mediashelf} -d ${POSTGRES_DB:-mediashelf}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    container_name: mediashelf-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-mediashelf}:${POSTGRES_PASSWORD:-mediashelf}@postgres:5432/${POSTGRES_DB:-mediashelf}?schema=public
+      CORS_ORIGIN: http://localhost:3000
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3001
+    container_name: mediashelf-frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      # Server components reach Nest via the Compose network
+      API_URL: http://backend:3001
+      # Browser calls use the published host port
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

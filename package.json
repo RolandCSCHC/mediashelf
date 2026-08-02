@@ -1,0 +1,14 @@
+{
+  "name": "mediashelf",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter @mediashelf/backend --filter @mediashelf/frontend dev",
+    "build": "pnpm -r --filter @mediashelf/shared-types --filter @mediashelf/backend --filter @mediashelf/frontend build",
+    "lint": "pnpm -r --filter @mediashelf/backend --filter @mediashelf/frontend lint",
+    "docker:up": "docker compose up --build"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

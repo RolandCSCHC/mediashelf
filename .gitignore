@@ -141,3 +141,15 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/
+
+# Prisma
+apps/backend/prisma/*.db
+apps/backend/prisma/*.db-journal
+
+# Docker
+*.pid

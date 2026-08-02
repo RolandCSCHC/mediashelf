@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MediaType {
+  MOVIE
+  SERIES
+}
+
+enum MediaStatus {
+  WATCHLIST
+  WATCHING
+  WATCHED
+  FUTURE
+}
+
+model User {
+  id         String      @id @default(cuid())
+  googleId   String      @unique
+  email      String      @unique
+  name       String?
+  picture    String?
+  mediaItems MediaItem[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+model MediaItem {
+  id             String      @id @default(cuid())
+  userId         String
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tmdbId         Int
+  type           MediaType
+  title          String
+  description    String?
+  posterPath     String?
+  backdropPath   String?
+  releaseDate    DateTime?
+  genres         String[]
+  runtime        Int?
+  status         MediaStatus @default(WATCHLIST)
+  downloaded     Boolean     @default(false)
+  currentSeason  Int?
+  currentEpisode Int?
+  dateWatched    DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@unique([userId, tmdbId, type])
+  @@index([userId, status])
+}
