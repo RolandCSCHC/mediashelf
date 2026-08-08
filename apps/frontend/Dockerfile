@@ -6,10 +6,12 @@ WORKDIR /app
 FROM base AS build
 COPY package.json pnpm-workspace.yaml .npmrc ./
 COPY packages/shared-types/package.json ./packages/shared-types/
+COPY packages/eslint-config/package.json ./packages/eslint-config/
 COPY apps/frontend/package.json ./apps/frontend/
 RUN pnpm install --filter @mediashelf/frontend...
 
 COPY packages/shared-types ./packages/shared-types
+COPY packages/eslint-config ./packages/eslint-config
 COPY apps/frontend ./apps/frontend
 
 RUN pnpm --filter @mediashelf/shared-types build
