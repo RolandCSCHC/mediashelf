@@ -100,8 +100,10 @@ pnpm lint          # ESLint (frontend, backend, shared-types)
 pnpm typecheck     # TypeScript --noEmit across packages
 pnpm format        # Prettier write
 pnpm format:check  # Prettier check (CI-friendly)
-pnpm check         # Run lint + typecheck + format:check
+pnpm check         # Prepare deps, then lint + typecheck + format:check
 ```
+
+GitHub Actions runs `pnpm check` and `pnpm build` on every pull request and every push to `main` (see `.github/workflows/ci.yml`).
 
 ## Documentation
 
