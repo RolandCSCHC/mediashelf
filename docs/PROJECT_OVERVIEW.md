@@ -480,6 +480,14 @@ Possible future additions:
 
 ## Phase 3
 
+- Dark Mode (light/dark toggle)
+- Responsive UI shell
+- Auth and library page polishing
+
+---
+
+## Phase 4
+
 - TMDB integration
 - Search movies
 - Search TV series
@@ -487,7 +495,7 @@ Possible future additions:
 
 ---
 
-## Phase 4
+## Phase 5
 
 - CRUD
 - Watchlist
@@ -498,7 +506,7 @@ Possible future additions:
 
 ---
 
-## Phase 5
+## Phase 6
 
 - Series progress
 - Filters
@@ -507,31 +515,29 @@ Possible future additions:
 
 ---
 
-## Phase 6
+## Phase 7
 
 - Import existing `.txt`
 - Export library to JSON
 
 ---
 
-## Phase 7
-
-- Dark Mode
-- Responsive UI
-- UI polishing
-
----
-
 ## Phase 8
 
-- Swagger documentation
-- Unit tests
-- Integration tests
-- GitHub Actions
+- Feature UI polish (media cards, filters chrome)
+- PWA (optional)
 
 ---
 
 ## Phase 9
+
+- Swagger documentation
+- Unit tests
+- Integration tests
+
+---
+
+## Phase 10
 
 - Production deployment on Render
 

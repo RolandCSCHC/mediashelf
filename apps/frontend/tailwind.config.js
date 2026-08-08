@@ -9,8 +9,10 @@ module.exports = {
         foreground: 'var(--foreground)',
         muted: 'var(--muted)',
         accent: 'var(--accent)',
+        'accent-hover': 'var(--accent-hover)',
         surface: 'var(--surface)',
         border: 'var(--border)',
+        danger: 'var(--danger)',
       },
       fontFamily: {
         display: ['var(--font-display)', 'Georgia', 'serif'],
