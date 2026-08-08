@@ -17,6 +17,7 @@ import type {
 import { MediaType } from '@mediashelf/shared-types';
 import { AppShell } from '@/components/app-shell';
 import { AuthGuard } from '@/components/auth-guard';
+import { AddLibraryToListModal } from '@/components/add-library-to-list-modal';
 import {
   DEFAULT_LIBRARY_FILTERS,
   LibraryFilterSortControls,
@@ -49,6 +50,7 @@ function ListDetailContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isAddOpen, setIsAddOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -233,6 +235,13 @@ function ListDetailContent() {
     ).sort((a, b) => a.localeCompare(b));
   }, [list]);
 
+  const existingMediaItemIds = useMemo(() => {
+    if (!list) {
+      return new Set<string>();
+    }
+    return new Set(list.items.map((entry) => entry.mediaItemId));
+  }, [list]);
+
   const visibleItems = useMemo(() => {
     if (!list) {
       return [];
@@ -298,6 +307,17 @@ function ListDetailContent() {
                 type="button"
                 variant="secondary"
                 size="sm"
+                onClick={() => {
+                  setActionError(null);
+                  setIsAddOpen(true);
+                }}
+              >
+                Add from library
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
                 onClick={openEditModal}
               >
                 Edit list
@@ -335,9 +355,25 @@ function ListDetailContent() {
           ) : null}
 
           {list.items.length === 0 ? (
-            <p className="mt-10 text-sm text-muted">
-              This list is empty. Open a title and use Add to list.
-            </p>
+            <div className="mt-12 rounded-lg border border-dashed border-border bg-surface/60 px-6 py-10 text-center">
+              <p className="font-display text-xl text-foreground">
+                This list is empty
+              </p>
+              <p className="mx-auto mt-2 max-w-sm text-sm text-muted">
+                Add titles from your library to get started.
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                className="mt-4"
+                onClick={() => {
+                  setActionError(null);
+                  setIsAddOpen(true);
+                }}
+              >
+                Add from library
+              </Button>
+            </div>
           ) : visibleItems.length === 0 ? (
             <div className="mt-12 rounded-lg border border-dashed border-border bg-surface/60 px-6 py-10 text-center">
               <p className="font-display text-xl text-foreground">
@@ -449,6 +485,18 @@ function ListDetailContent() {
               </div>
             </form>
           </Modal>
+
+          <AddLibraryToListModal
+            open={isAddOpen}
+            listId={list.id}
+            existingMediaItemIds={existingMediaItemIds}
+            onClose={() => setIsAddOpen(false)}
+            onAdded={(detail) => {
+              setActionError(null);
+              setList(detail);
+            }}
+            onError={setActionError}
+          />
         </>
       ) : null}
     </AppShell>

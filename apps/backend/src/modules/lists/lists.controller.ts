@@ -22,6 +22,7 @@ import { ListsService } from './lists.service';
 import { CreateCustomListDto } from './dto/create-custom-list.dto';
 import { UpdateCustomListDto } from './dto/update-custom-list.dto';
 import { AddListItemDto } from './dto/add-list-item.dto';
+import { AddListItemsDto } from './dto/add-list-items.dto';
 import { UpdateListItemDto } from './dto/update-list-item.dto';
 
 @Controller('lists')
@@ -74,6 +75,15 @@ export class ListsController {
     @Param('id') id: string,
   ): Promise<void> {
     await this.listsService.deleteForUser(user.id, id);
+  }
+
+  @Post(':id/items/bulk')
+  addItems(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() body: AddListItemsDto,
+  ): Promise<CustomListDetail> {
+    return this.listsService.addItemsForUser(user.id, id, body);
   }
 
   @Post(':id/items')

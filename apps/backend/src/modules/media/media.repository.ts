@@ -31,6 +31,15 @@ export class MediaRepository {
     });
   }
 
+  countOwnedByIds(userId: string, ids: string[]): Promise<number> {
+    return this.prisma.mediaItem.count({
+      where: {
+        userId,
+        id: { in: ids },
+      },
+    });
+  }
+
   findByUserAndTmdb(
     userId: string,
     tmdbId: number,

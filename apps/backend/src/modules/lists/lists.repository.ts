@@ -125,6 +125,22 @@ export class ListsRepository {
     });
   }
 
+  async addItems(listId: string, mediaItemIds: string[]): Promise<number> {
+    if (mediaItemIds.length === 0) {
+      return 0;
+    }
+
+    const result = await this.prisma.customListItem.createMany({
+      data: mediaItemIds.map((mediaItemId) => ({
+        listId,
+        mediaItemId,
+      })),
+      skipDuplicates: true,
+    });
+
+    return result.count;
+  }
+
   async updateItem(
     listId: string,
     mediaItemId: string,

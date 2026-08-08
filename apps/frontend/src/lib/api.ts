@@ -1,5 +1,6 @@
 import type {
   AddListItemRequest,
+  AddListItemsRequest,
   AuthUser,
   CreateCustomListRequest,
   CustomList,
@@ -189,6 +190,16 @@ export async function addMediaToList(
   payload: AddListItemRequest,
 ): Promise<CustomListDetail> {
   return apiFetch<CustomListDetail>(`/lists/${listId}/items`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function addMediaItemsToList(
+  listId: string,
+  payload: AddListItemsRequest,
+): Promise<CustomListDetail> {
+  return apiFetch<CustomListDetail>(`/lists/${listId}/items/bulk`, {
     method: 'POST',
     body: JSON.stringify(payload),
   });

@@ -3,14 +3,28 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
+type ModalSize = 'md' | 'lg';
+
 type ModalProps = {
   open: boolean;
   title: string;
   onClose: () => void;
   children: ReactNode;
+  size?: ModalSize;
 };
 
-export function Modal({ open, title, onClose, children }: ModalProps) {
+const sizeClass: Record<ModalSize, string> = {
+  md: 'max-w-md',
+  lg: 'max-w-2xl',
+};
+
+export function Modal({
+  open,
+  title,
+  onClose,
+  children,
+  size = 'md',
+}: ModalProps) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
@@ -63,7 +77,7 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
           role="dialog"
           aria-modal="true"
           aria-labelledby={titleId}
-          className="relative z-10 w-full max-w-md rounded-lg border border-border bg-surface p-6 shadow-lg"
+          className={`relative z-10 w-full rounded-lg border border-border bg-surface p-6 shadow-lg ${sizeClass[size]}`}
         >
           <div className="mb-5 flex items-start justify-between gap-4">
             <h2

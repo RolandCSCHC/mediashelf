@@ -34,6 +34,17 @@ export class MediaService {
     return toMediaItem(item);
   }
 
+  async assertOwnedIds(userId: string, ids: string[]): Promise<void> {
+    if (ids.length === 0) {
+      return;
+    }
+
+    const ownedCount = await this.mediaRepository.countOwnedByIds(userId, ids);
+    if (ownedCount !== ids.length) {
+      throw new NotFoundException('One or more media items were not found');
+    }
+  }
+
   async importFromTmdb(
     userId: string,
     tmdbId: number,

@@ -23,6 +23,7 @@ import {
 import type { CreateCustomListDto } from './dto/create-custom-list.dto';
 import type { UpdateCustomListDto } from './dto/update-custom-list.dto';
 import type { AddListItemDto } from './dto/add-list-item.dto';
+import type { AddListItemsDto } from './dto/add-list-items.dto';
 import type { UpdateListItemDto } from './dto/update-list-item.dto';
 
 @Injectable()
@@ -161,6 +162,27 @@ export class ListsService {
       }
       throw error;
     }
+
+    return this.getForUser(userId, listId);
+  }
+
+  async addItemsForUser(
+    userId: string,
+    listId: string,
+    dto: AddListItemsDto,
+  ): Promise<CustomListDetail> {
+    const list = await this.listsRepository.findByIdForUser(listId, userId);
+    if (!list) {
+      throw new NotFoundException('List not found');
+    }
+
+    const mediaItemIds = Array.from(new Set(dto.mediaItemIds));
+    if (mediaItemIds.length === 0) {
+      throw new BadRequestException('At least one media item is required');
+    }
+
+    await this.mediaService.assertOwnedIds(userId, mediaItemIds);
+    await this.listsRepository.addItems(listId, mediaItemIds);
 
     return this.getForUser(userId, listId);
   }

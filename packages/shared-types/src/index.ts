@@ -149,6 +149,10 @@ export interface AddListItemRequest {
   currentEpisode?: number | null;
 }
 
+export interface AddListItemsRequest {
+  mediaItemIds: string[];
+}
+
 export interface UpdateListItemRequest {
   currentSeason?: number | null;
   currentEpisode?: number | null;
