@@ -46,6 +46,7 @@ export function LibraryFilterSortControls({
   onResetFilters,
 }: LibraryFilterSortControlsProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
 
   function patch(partial: Partial<LibraryFiltersState>) {
     onChange({ ...value, ...partial });
@@ -59,6 +60,10 @@ export function LibraryFilterSortControls({
     ...(showListFilter ? [value.listId] : []),
   ].filter(Boolean).length;
 
+  const sortLabel =
+    MEDIA_SORT_OPTIONS.find((option) => option.value === value.sortBy)?.label ??
+    'Sort';
+
   return (
     <>
       <Button
@@ -68,6 +73,14 @@ export function LibraryFilterSortControls({
         onClick={() => setIsFilterOpen(true)}
       >
         {activeFilterCount > 0 ? `Filters (${activeFilterCount})` : 'Filters'}
+      </Button>
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        onClick={() => setIsSortOpen(true)}
+      >
+        Sort
       </Button>
 
       <Modal
@@ -201,6 +214,46 @@ export function LibraryFilterSortControls({
         </div>
       </Modal>
 
+      <Modal
+        open={isSortOpen}
+        title="Sort"
+        onClose={() => setIsSortOpen(false)}
+      >
+        <div className="space-y-4">
+          <label className="block space-y-1.5">
+            <span className="text-xs uppercase tracking-wide text-muted">
+              Sort by
+            </span>
+            <select
+              value={value.sortBy}
+              onChange={(event) =>
+                patch({ sortBy: event.target.value as MediaSortBy })
+              }
+              className={fieldClass}
+            >
+              {MEDIA_SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <p className="text-sm text-muted">
+            Currently sorting by {sortLabel.toLowerCase()}.
+          </p>
+
+          <div className="flex justify-end pt-2">
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => setIsSortOpen(false)}
+            >
+              Done
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 }

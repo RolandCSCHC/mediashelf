@@ -5,7 +5,7 @@ import type {
   MediaType,
   Prisma,
 } from '@prisma/client';
-import type { ListMediaQuery } from '@mediashelf/shared-types';
+import { MediaSortBy, type ListMediaQuery } from '@mediashelf/shared-types';
 import { PrismaService } from '../prisma/prisma.service';
 import type { TmdbMediaDetails } from '../tmdb/tmdb.service';
 
@@ -126,8 +126,20 @@ export class MediaRepository {
   }
 
   private buildOrderBy(
-    _filters: MediaListFilters,
+    filters: MediaListFilters,
   ): Prisma.MediaItemOrderByWithRelationInput {
-    return { createdAt: 'desc' };
+    const sortBy = filters.sortBy ?? MediaSortBy.DATE_ADDED;
+
+    switch (sortBy) {
+      case MediaSortBy.TITLE:
+        return { title: 'asc' };
+      case MediaSortBy.RELEASE_DATE:
+        return { releaseDate: 'desc' };
+      case MediaSortBy.DATE_WATCHED:
+        return { dateWatched: 'desc' };
+      case MediaSortBy.DATE_ADDED:
+      default:
+        return { createdAt: 'desc' };
+    }
   }
 }

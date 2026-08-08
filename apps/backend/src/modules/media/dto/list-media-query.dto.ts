@@ -6,7 +6,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { MediaStatus, MediaType } from '@mediashelf/shared-types';
+import { MediaSortBy, MediaStatus, MediaType } from '@mediashelf/shared-types';
 
 function toOptionalBoolean(value: unknown): unknown {
   if (value === undefined || value === null || value === '') {
@@ -44,4 +44,8 @@ export class ListMediaQueryDto {
   @IsString()
   @MinLength(1)
   listId?: string;
+
+  @IsOptional()
+  @IsEnum(MediaSortBy)
+  sortBy?: MediaSortBy = MediaSortBy.DATE_ADDED;
 }
