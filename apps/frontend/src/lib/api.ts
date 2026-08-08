@@ -1,9 +1,18 @@
 import type {
+  AddListItemRequest,
   AuthUser,
+  CreateCustomListRequest,
+  CustomList,
+  CustomListDetail,
+  CustomListEntry,
   ImportMediaRequest,
+  ListMediaQuery,
   LogoutResponse,
   MediaItem,
+  MediaListMembership,
   TmdbSearchResponse,
+  UpdateCustomListRequest,
+  UpdateListItemRequest,
   UpdateMediaItemRequest,
 } from '@mediashelf/shared-types';
 
@@ -43,6 +52,32 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   return (await response.json()) as T;
+}
+
+function toQueryString(query: ListMediaQuery): string {
+  const params = new URLSearchParams();
+
+  if (query.status) {
+    params.set('status', query.status);
+  }
+  if (query.type) {
+    params.set('type', query.type);
+  }
+  if (query.genre) {
+    params.set('genre', query.genre);
+  }
+  if (query.downloaded !== undefined) {
+    params.set('downloaded', String(query.downloaded));
+  }
+  if (query.listId) {
+    params.set('listId', query.listId);
+  }
+  if (query.sortBy) {
+    params.set('sortBy', query.sortBy);
+  }
+
+  const serialized = params.toString();
+  return serialized ? `?${serialized}` : '';
 }
 
 export function getGoogleLoginUrl(): string {
@@ -85,8 +120,10 @@ export async function searchTmdb(
   return apiFetch<TmdbSearchResponse>(`/tmdb/search?${params.toString()}`);
 }
 
-export async function listMedia(): Promise<MediaItem[]> {
-  return apiFetch<MediaItem[]>('/media');
+export async function listMedia(
+  query: ListMediaQuery = {},
+): Promise<MediaItem[]> {
+  return apiFetch<MediaItem[]>(`/media${toQueryString(query)}`);
 }
 
 export async function getMedia(id: string): Promise<MediaItem> {
@@ -114,4 +151,71 @@ export async function updateMedia(
 
 export async function deleteMedia(id: string): Promise<void> {
   await apiFetch<void>(`/media/${id}`, { method: 'DELETE' });
+}
+
+export async function listCustomLists(): Promise<CustomList[]> {
+  return apiFetch<CustomList[]>('/lists');
+}
+
+export async function getCustomList(id: string): Promise<CustomListDetail> {
+  return apiFetch<CustomListDetail>(`/lists/${id}`);
+}
+
+export async function createCustomList(
+  payload: CreateCustomListRequest,
+): Promise<CustomList> {
+  return apiFetch<CustomList>('/lists', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateCustomList(
+  id: string,
+  payload: UpdateCustomListRequest,
+): Promise<CustomList> {
+  return apiFetch<CustomList>(`/lists/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteCustomList(id: string): Promise<void> {
+  await apiFetch<void>(`/lists/${id}`, { method: 'DELETE' });
+}
+
+export async function addMediaToList(
+  listId: string,
+  payload: AddListItemRequest,
+): Promise<CustomListDetail> {
+  return apiFetch<CustomListDetail>(`/lists/${listId}/items`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateListItem(
+  listId: string,
+  mediaItemId: string,
+  payload: UpdateListItemRequest,
+): Promise<CustomListEntry> {
+  return apiFetch<CustomListEntry>(`/lists/${listId}/items/${mediaItemId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function removeMediaFromList(
+  listId: string,
+  mediaItemId: string,
+): Promise<void> {
+  await apiFetch<void>(`/lists/${listId}/items/${mediaItemId}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function listMediaMemberships(
+  mediaItemId: string,
+): Promise<MediaListMembership[]> {
+  return apiFetch<MediaListMembership[]>(`/lists/for-media/${mediaItemId}`);
 }

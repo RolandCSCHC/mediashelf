@@ -208,7 +208,7 @@ Each media item should contain information such as:
 - Runtime
 - Media type (Movie / Series)
 
-Series progress fields (`currentSeason`, `currentEpisode`) are nullable and only used when `type` is `SERIES`.
+Series progress fields (`currentSeason`, `currentEpisode`) live on **list membership** (`CustomListItem`), not on the media item itself. The same series can have different progress in different lists (for example S1–2 in “Series watched” and S3 in “Series to watch”). Progress is only used when the media `type` is `SERIES`.
 
 ---
 
@@ -240,10 +240,12 @@ This allows a movie or series to be both downloaded and still waiting to be watc
 
 ## Series Progress
 
-Track:
+Track per custom list membership:
 
 - Current season
 - Current episode
+
+The same title can appear in multiple lists with different progress in each.
 
 Possible future additions:
 
@@ -278,7 +280,6 @@ Allow filtering by:
 
 - Status
 - Genre
-- Release year
 - Movie / Series
 - Downloaded
 
@@ -306,6 +307,8 @@ Examples:
 - 2026 Watchlist
 
 Users should be able to create unlimited custom lists.
+
+Series progress is stored on each list membership, so one series can track different seasons/episodes across lists.
 
 ---
 
@@ -423,7 +426,6 @@ Possible future additions:
 - PostgreSQL
 - Prisma ORM
 - Prisma migrations
-- Seed database for local development
 
 ---
 

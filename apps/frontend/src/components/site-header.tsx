@@ -45,6 +45,12 @@ export function SiteHeader() {
                 Library
               </Link>
               <Link
+                href="/lists"
+                className="hidden text-sm text-muted transition hover:text-foreground sm:inline"
+              >
+                Lists
+              </Link>
+              <Link
                 href="/search"
                 className="hidden text-sm text-muted transition hover:text-foreground sm:inline"
               >

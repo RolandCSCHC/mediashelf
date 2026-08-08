@@ -33,7 +33,7 @@ docker compose up --build
 | Login    | http://localhost:3000/login  |
 | Postgres | localhost:5432               |
 
-On startup the backend runs Prisma migrations and seeds a demo user with two media items.
+On startup the backend runs Prisma migrations. Log in with Google to create your account and start building your library.
 
 ## Google OAuth setup
 
@@ -75,7 +75,6 @@ CORS_ORIGIN=http://localhost:3000
    pnpm install
    pnpm --filter @mediashelf/shared-types build
    pnpm --filter @mediashelf/backend exec prisma migrate deploy
-   pnpm --filter @mediashelf/backend exec prisma db seed
    ```
 
 3. Run apps:
@@ -119,11 +118,16 @@ Authenticated users can search at `/search` and import titles into `/library`.
 
 On `/library` (and each title’s detail page), you can:
 
+- Filter by status, type, genre, downloaded, and custom list
+- Sort by title, date added, release date, or date watched
 - Set status: Watchlist, Watching, Watched, or Future
 - Toggle the downloaded flag
+- Track series progress **per list** (season / episode on list membership)
 - Remove a title from your library
 
-`PATCH /media/:id` updates status and downloaded; setting status to Watched also records `dateWatched`.
+Custom lists live at `/lists`. Create unlimited lists, add titles from a detail page, and set different series progress in each list (for example S1–2 in “watched” and S3 in “to watch”).
+
+`GET /media` accepts filter and sort query params. `PATCH /media/:id` updates status and downloaded. `PATCH /lists/:id/items/:mediaItemId` updates per-list series progress.
 
 ## Documentation
 

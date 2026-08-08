@@ -20,20 +20,21 @@ enum MediaStatus {
 }
 
 model User {
-  id         String      @id @default(cuid())
-  googleId   String      @unique
-  email      String      @unique
+  id         String       @id @default(cuid())
+  googleId   String       @unique
+  email      String       @unique
   name       String?
   picture    String?
   mediaItems MediaItem[]
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  lists      CustomList[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
 }
 
 model MediaItem {
-  id             String      @id @default(cuid())
+  id             String           @id @default(cuid())
   userId         String
-  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   tmdbId         Int
   type           MediaType
   title          String
@@ -43,14 +44,40 @@ model MediaItem {
   releaseDate    DateTime?
   genres         String[]
   runtime        Int?
-  status         MediaStatus @default(WATCHLIST)
-  downloaded     Boolean     @default(false)
+  status         MediaStatus      @default(WATCHLIST)
+  downloaded     Boolean          @default(false)
   currentSeason  Int?
   currentEpisode Int?
   dateWatched    DateTime?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  listItems      CustomListItem[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 
   @@unique([userId, tmdbId, type])
   @@index([userId, status])
+}
+
+model CustomList {
+  id          String           @id @default(cuid())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  items       CustomListItem[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+model CustomListItem {
+  listId      String
+  mediaItemId String
+  list        CustomList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  mediaItem   MediaItem  @relation(fields: [mediaItemId], references: [id], onDelete: Cascade)
+  addedAt     DateTime   @default(now())
+
+  @@id([listId, mediaItemId])
+  @@index([mediaItemId])
 }

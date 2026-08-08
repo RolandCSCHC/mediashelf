@@ -10,6 +10,13 @@ export enum MediaStatus {
   FUTURE = 'FUTURE',
 }
 
+export enum MediaSortBy {
+  TITLE = 'TITLE',
+  DATE_ADDED = 'DATE_ADDED',
+  RELEASE_DATE = 'RELEASE_DATE',
+  DATE_WATCHED = 'DATE_WATCHED',
+}
+
 export interface User {
   id: string;
   googleId: string;
@@ -48,8 +55,6 @@ export interface MediaItem {
   runtime: number | null;
   status: MediaStatus;
   downloaded: boolean;
-  currentSeason: number | null;
-  currentEpisode: number | null;
   dateWatched: string | null;
   createdAt: string;
   updatedAt: string;
@@ -84,4 +89,67 @@ export interface UpdateMediaItemRequest {
   status?: MediaStatus;
   downloaded?: boolean;
   dateWatched?: string | null;
+}
+
+export interface ListMediaQuery {
+  status?: MediaStatus;
+  type?: MediaType;
+  genre?: string;
+  downloaded?: boolean;
+  listId?: string;
+  sortBy?: MediaSortBy;
+}
+
+export interface CustomList {
+  id: string;
+  userId: string;
+  name: string;
+  description: string | null;
+  itemCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Series progress for one title inside one list. */
+export interface CustomListEntry {
+  listId: string;
+  mediaItemId: string;
+  currentSeason: number | null;
+  currentEpisode: number | null;
+  addedAt: string;
+  mediaItem: MediaItem;
+}
+
+export interface CustomListDetail extends CustomList {
+  items: CustomListEntry[];
+}
+
+/** Compact membership view for a media detail page. */
+export interface MediaListMembership {
+  listId: string;
+  listName: string;
+  currentSeason: number | null;
+  currentEpisode: number | null;
+  addedAt: string;
+}
+
+export interface CreateCustomListRequest {
+  name: string;
+  description?: string | null;
+}
+
+export interface UpdateCustomListRequest {
+  name?: string;
+  description?: string | null;
+}
+
+export interface AddListItemRequest {
+  mediaItemId: string;
+  currentSeason?: number | null;
+  currentEpisode?: number | null;
+}
+
+export interface UpdateListItemRequest {
+  currentSeason?: number | null;
+  currentEpisode?: number | null;
 }

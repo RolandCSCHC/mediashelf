@@ -137,6 +137,8 @@ Examples:
 
 GET /media
 
+GET /media?status=WATCHING&type=SERIES&sortBy=TITLE
+
 POST /media
 
 GET /media/:id
@@ -144,6 +146,24 @@ GET /media/:id
 PATCH /media/:id
 
 DELETE /media/:id
+
+GET /lists
+
+POST /lists
+
+GET /lists/:id
+
+PATCH /lists/:id
+
+DELETE /lists/:id
+
+POST /lists/:id/items
+
+PATCH /lists/:id/items/:mediaItemId
+
+DELETE /lists/:id/items/:mediaItemId
+
+GET /lists/for-media/:mediaItemId
 
 Return consistent HTTP status codes.
 
