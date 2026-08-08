@@ -54,7 +54,7 @@ export function SiteHeader() {
                 href="/search"
                 className="hidden text-sm text-muted transition hover:text-foreground sm:inline"
               >
-                Search
+                Search TMDB
               </Link>
               <div className="flex min-w-0 items-center gap-2">
                 {user.picture ? (

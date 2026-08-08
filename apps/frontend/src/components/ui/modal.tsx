@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
 type ModalProps = {
   open: boolean;
@@ -12,6 +13,8 @@ type ModalProps = {
 export function Modal({ open, title, onClose, children }: ModalProps) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) {
@@ -23,57 +26,64 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
-        onClose();
+        onCloseRef.current();
       }
     }
 
     window.addEventListener('keydown', handleKeyDown);
-    dialogRef.current
-      ?.querySelector<HTMLElement>('input,button,textarea,select')
-      ?.focus();
+
+    // Prefer form fields so the header Close button is not autofocused.
+    const focusTarget =
+      dialogRef.current?.querySelector<HTMLElement>(
+        'input, textarea, select, [data-autofocus]',
+      ) ?? null;
+    focusTarget?.focus();
 
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [open, onClose]);
+  }, [open]);
 
-  if (!open) {
+  if (!open || typeof document === 'undefined') {
     return null;
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+  return createPortal(
+    <div className="fixed inset-0 z-50 overflow-y-auto p-4">
       <button
         type="button"
         aria-label="Close dialog"
-        className="absolute inset-0 bg-black/55"
+        className="fixed inset-0 bg-black/55"
         onClick={onClose}
       />
-      <div
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        className="relative z-10 w-full max-w-md rounded-lg border border-border bg-surface p-6 shadow-lg"
-      >
-        <div className="mb-5 flex items-start justify-between gap-4">
-          <h2
-            id={titleId}
-            className="font-display text-2xl font-semibold tracking-tight text-foreground"
-          >
-            {title}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md px-2 py-1 text-sm text-muted transition hover:bg-[var(--overlay)] hover:text-foreground"
-          >
-            Close
-          </button>
+      <div className="relative flex min-h-full items-start justify-center pt-16 pb-8 sm:pt-20">
+        <div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          className="relative z-10 w-full max-w-md rounded-lg border border-border bg-surface p-6 shadow-lg"
+        >
+          <div className="mb-5 flex items-start justify-between gap-4">
+            <h2
+              id={titleId}
+              className="font-display text-2xl font-semibold tracking-tight text-foreground"
+            >
+              {title}
+            </h2>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-md px-2 py-1 text-sm text-muted transition hover:bg-[var(--overlay)] hover:text-foreground"
+            >
+              Close
+            </button>
+          </div>
+          {children}
         </div>
-        {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

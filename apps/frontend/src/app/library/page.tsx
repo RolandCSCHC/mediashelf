@@ -16,7 +16,7 @@ import {
 } from '@/components/library-filters';
 import { MediaCard } from '@/components/media-card';
 import { useAuth } from '@/components/auth-provider';
-import { Button, ButtonLink } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { listCustomLists, listMedia } from '@/lib/api';
 
 function toListQuery(filters: LibraryFiltersState): ListMediaQuery {
@@ -135,12 +135,6 @@ function LibraryContent() {
             onChange={setFilters}
             onResetFilters={resetFiltersOnly}
           />
-          <ButtonLink href="/lists" variant="secondary" size="sm">
-            Lists
-          </ButtonLink>
-          <ButtonLink href="/search" size="sm">
-            Search TMDB
-          </ButtonLink>
         </div>
       </div>
 

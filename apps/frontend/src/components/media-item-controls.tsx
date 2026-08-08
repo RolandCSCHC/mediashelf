@@ -142,26 +142,20 @@ export function MediaItemControls({
         </p>
       ) : null}
 
-      <div className={compact ? '' : 'pt-4'}>
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          disabled={busy}
-          onClick={() => void handleDelete()}
-          className={
-            compact
-              ? 'w-full border-danger/40 text-xs text-danger hover:bg-danger/10'
-              : 'border-danger/40 text-danger hover:bg-danger/10'
-          }
-        >
-          {isDeleting
-            ? 'Removing…'
-            : compact
-              ? 'Remove'
-              : 'Remove from library'}
-        </Button>
-      </div>
+      {!compact ? (
+        <div className="pt-4">
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            disabled={busy}
+            onClick={() => void handleDelete()}
+            className="border-danger/40 text-danger hover:bg-danger/10"
+          >
+            {isDeleting ? 'Removing…' : 'Remove from library'}
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }
