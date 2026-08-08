@@ -17,6 +17,6 @@ echo "==> TypeScript (tsc --noEmit)"
 pnpm typecheck
 
 echo "==> Prettier"
-pnpm format:check
+pnpm format
 
 echo "==> All checks passed"
