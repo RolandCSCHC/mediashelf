@@ -1,9 +1,20 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import type { AuthUser, MediaItem } from '@mediashelf/shared-types';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { MediaService } from './media.service';
 import { ImportMediaDto } from './dto/import-media.dto';
+import { UpdateMediaItemDto } from './dto/update-media-item.dto';
 
 @Controller('media')
 @UseGuards(JwtAuthGuard)
@@ -15,11 +26,37 @@ export class MediaController {
     return this.mediaService.listForUser(user.id);
   }
 
+  @Get(':id')
+  getOne(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+  ): Promise<MediaItem> {
+    return this.mediaService.getForUser(user.id, id);
+  }
+
   @Post()
   importMedia(
     @CurrentUser() user: AuthUser,
     @Body() body: ImportMediaDto,
   ): Promise<MediaItem> {
     return this.mediaService.importFromTmdb(user.id, body.tmdbId, body.type);
+  }
+
+  @Patch(':id')
+  update(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() body: UpdateMediaItemDto,
+  ): Promise<MediaItem> {
+    return this.mediaService.updateForUser(user.id, id, body);
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  async remove(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+  ): Promise<void> {
+    await this.mediaService.deleteForUser(user.id, id);
   }
 }

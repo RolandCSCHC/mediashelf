@@ -4,6 +4,7 @@ import type {
   LogoutResponse,
   MediaItem,
   TmdbSearchResponse,
+  UpdateMediaItemRequest,
 } from '@mediashelf/shared-types';
 
 const browserApiUrl =
@@ -88,6 +89,10 @@ export async function listMedia(): Promise<MediaItem[]> {
   return apiFetch<MediaItem[]>('/media');
 }
 
+export async function getMedia(id: string): Promise<MediaItem> {
+  return apiFetch<MediaItem>(`/media/${id}`);
+}
+
 export async function importMedia(
   payload: ImportMediaRequest,
 ): Promise<MediaItem> {
@@ -95,4 +100,18 @@ export async function importMedia(
     method: 'POST',
     body: JSON.stringify(payload),
   });
+}
+
+export async function updateMedia(
+  id: string,
+  payload: UpdateMediaItemRequest,
+): Promise<MediaItem> {
+  return apiFetch<MediaItem>(`/media/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteMedia(id: string): Promise<void> {
+  await apiFetch<void>(`/media/${id}`, { method: 'DELETE' });
 }

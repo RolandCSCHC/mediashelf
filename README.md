@@ -117,6 +117,14 @@ TMDB_API_KEY=your_v3_api_key
 
 Authenticated users can search at `/search` and import titles into `/library`.
 
+On `/library` (and each title’s detail page), you can:
+
+- Set status: Watchlist, Watching, Watched, or Future
+- Toggle the downloaded flag
+- Remove a title from your library
+
+`PATCH /media/:id` updates status and downloaded; setting status to Watched also records `dateWatched`.
+
 ## Documentation
 
 - [Project overview](docs/PROJECT_OVERVIEW.md)

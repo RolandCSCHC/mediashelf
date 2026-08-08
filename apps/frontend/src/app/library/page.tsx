@@ -16,6 +16,7 @@ function LibraryContent() {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -34,6 +35,18 @@ function LibraryContent() {
     void load();
   }, [load]);
 
+  function handleUpdated(updated: MediaItem) {
+    setActionError(null);
+    setItems((prev) =>
+      prev.map((item) => (item.id === updated.id ? updated : item)),
+    );
+  }
+
+  function handleDeleted(id: string) {
+    setActionError(null);
+    setItems((prev) => prev.filter((item) => item.id !== id));
+  }
+
   return (
     <AppShell width="wide">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -45,7 +58,8 @@ function LibraryContent() {
             {firstName ? `${firstName}'s shelf` : 'Your shelf'}
           </h1>
           <p className="ms-animate-fade-up ms-animate-delay-2 mt-3 max-w-xl text-muted">
-            Titles you import from TMDB land here.
+            Update status and downloads on each card, or open a title for
+            details.
           </p>
         </div>
         <div className="ms-animate-fade-up ms-animate-delay-3">
@@ -56,6 +70,12 @@ function LibraryContent() {
       {error ? (
         <p className="mt-8 text-sm text-danger" role="alert">
           {error}
+        </p>
+      ) : null}
+
+      {actionError ? (
+        <p className="mt-4 text-sm text-danger" role="alert">
+          {actionError}
         </p>
       ) : null}
 
@@ -83,7 +103,13 @@ function LibraryContent() {
       {!isLoading && items.length > 0 ? (
         <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {items.map((item) => (
-            <MediaCard key={item.id} item={item} />
+            <MediaCard
+              key={item.id}
+              item={item}
+              onUpdated={handleUpdated}
+              onDeleted={handleDeleted}
+              onError={setActionError}
+            />
           ))}
         </div>
       ) : null}

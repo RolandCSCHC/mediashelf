@@ -79,3 +79,9 @@ export interface ImportMediaRequest {
   tmdbId: number;
   type: MediaType;
 }
+
+export interface UpdateMediaItemRequest {
+  status?: MediaStatus;
+  downloaded?: boolean;
+  dateWatched?: string | null;
+}

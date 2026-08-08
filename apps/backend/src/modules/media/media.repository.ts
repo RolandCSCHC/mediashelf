@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import type { MediaItem as PrismaMediaItem, MediaType } from '@prisma/client';
+import type {
+  MediaItem as PrismaMediaItem,
+  MediaStatus,
+  MediaType,
+} from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import type { TmdbMediaDetails } from '../tmdb/tmdb.service';
 
@@ -11,6 +15,12 @@ export class MediaRepository {
     return this.prisma.mediaItem.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  findByIdForUser(id: string, userId: string): Promise<PrismaMediaItem | null> {
+    return this.prisma.mediaItem.findFirst({
+      where: { id, userId },
     });
   }
 
@@ -44,5 +54,33 @@ export class MediaRepository {
         runtime: details.runtime,
       },
     });
+  }
+
+  async updateOwned(
+    id: string,
+    userId: string,
+    data: {
+      status?: MediaStatus;
+      downloaded?: boolean;
+      dateWatched?: Date | null;
+    },
+  ): Promise<PrismaMediaItem | null> {
+    const result = await this.prisma.mediaItem.updateMany({
+      where: { id, userId },
+      data,
+    });
+
+    if (result.count === 0) {
+      return null;
+    }
+
+    return this.findByIdForUser(id, userId);
+  }
+
+  async deleteOwned(id: string, userId: string): Promise<boolean> {
+    const result = await this.prisma.mediaItem.deleteMany({
+      where: { id, userId },
+    });
+    return result.count > 0;
   }
 }
