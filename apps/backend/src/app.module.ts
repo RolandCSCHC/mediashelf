@@ -5,6 +5,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { TmdbModule } from './modules/tmdb/tmdb.module';
 import { MediaModule } from './modules/media/media.module';
 import { ListsModule } from './modules/lists/lists.module';
+import { ImportModule } from './modules/import/import.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ListsModule } from './modules/lists/lists.module';
     TmdbModule,
     MediaModule,
     ListsModule,
+    ImportModule,
   ],
 })
 export class AppModule {}

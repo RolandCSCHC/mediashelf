@@ -519,7 +519,7 @@ Possible future additions:
 
 ## Phase 7
 
-- Import existing `.txt`
+- Import existing `.txt` and hiding it
 - Export library to JSON
 
 ---

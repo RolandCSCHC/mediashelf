@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { MediaItem, MediaStatus } from '@mediashelf/shared-types';
 import { Button } from '@/components/ui/button';
 import { deleteMedia, updateMedia } from '@/lib/api';
@@ -25,8 +25,13 @@ export function MediaItemControls({
 }: MediaItemControlsProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [notesDraft, setNotesDraft] = useState(item.notes ?? '');
   const busy = disabled || isSaving || isDeleting;
   const compact = layout === 'compact';
+
+  useEffect(() => {
+    setNotesDraft(item.notes ?? '');
+  }, [item.id, item.notes]);
 
   async function handleStatusChange(status: MediaStatus) {
     if (status === item.status) {
@@ -54,6 +59,23 @@ export function MediaItemControls({
       onError?.(
         err instanceof Error ? err.message : 'Failed to update downloaded',
       );
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleNotesSave() {
+    const nextNotes = notesDraft.trim() || null;
+    if (nextNotes === (item.notes ?? null)) {
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const updated = await updateMedia(item.id, { notes: nextNotes });
+      onUpdated(updated);
+    } catch (err) {
+      onError?.(err instanceof Error ? err.message : 'Failed to update notes');
     } finally {
       setIsSaving(false);
     }
@@ -130,6 +152,33 @@ export function MediaItemControls({
           </span>
         </label>
       </div>
+
+      {!compact ? (
+        <div className="space-y-2">
+          <label className="block space-y-1.5">
+            <span className="text-sm font-medium text-foreground">Notes</span>
+            <textarea
+              value={notesDraft}
+              disabled={busy}
+              rows={3}
+              onChange={(event) => setNotesDraft(event.target.value)}
+              placeholder="Links, season ranges, or anything else"
+              className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none ring-[var(--ring)] focus:ring-2 disabled:opacity-60"
+            />
+          </label>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            disabled={
+              busy || (notesDraft.trim() || null) === (item.notes ?? null)
+            }
+            onClick={() => void handleNotesSave()}
+          >
+            Save notes
+          </Button>
+        </div>
+      ) : null}
 
       {!compact && item.status === 'WATCHED' && item.dateWatched ? (
         <p className="text-sm text-muted">

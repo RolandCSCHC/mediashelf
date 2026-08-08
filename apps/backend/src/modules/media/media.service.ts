@@ -49,6 +49,11 @@ export class MediaService {
     userId: string,
     tmdbId: number,
     type: MediaType,
+    options?: {
+      status?: MediaStatus;
+      downloaded?: boolean;
+      notes?: string | null;
+    },
   ): Promise<MediaItem> {
     const existing = await this.mediaRepository.findByUserAndTmdb(
       userId,
@@ -61,7 +66,11 @@ export class MediaService {
     }
 
     const details = await this.tmdbService.getDetails(tmdbId, type);
-    const created = await this.mediaRepository.createFromTmdb(userId, details);
+    const created = await this.mediaRepository.createFromTmdb(
+      userId,
+      details,
+      options,
+    );
     return toMediaItem(created);
   }
 
@@ -73,6 +82,7 @@ export class MediaService {
     if (
       dto.status === undefined &&
       dto.downloaded === undefined &&
+      dto.notes === undefined &&
       dto.dateWatched === undefined
     ) {
       throw new BadRequestException('No fields to update');
@@ -95,11 +105,19 @@ export class MediaService {
       }
     }
 
+    const notes =
+      dto.notes === undefined
+        ? undefined
+        : dto.notes === null
+          ? null
+          : dto.notes.trim() || null;
+
     const updated = await this.mediaRepository.updateOwned(id, userId, {
       ...(dto.status !== undefined
         ? { status: dto.status as typeof existing.status }
         : {}),
       ...(dto.downloaded !== undefined ? { downloaded: dto.downloaded } : {}),
+      ...(notes !== undefined ? { notes } : {}),
       ...(dateWatched !== undefined ? { dateWatched } : {}),
     });
 

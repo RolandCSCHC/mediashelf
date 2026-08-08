@@ -55,6 +55,11 @@ export class MediaRepository {
   createFromTmdb(
     userId: string,
     details: TmdbMediaDetails,
+    options?: {
+      status?: MediaStatus;
+      downloaded?: boolean;
+      notes?: string | null;
+    },
   ): Promise<PrismaMediaItem> {
     return this.prisma.mediaItem.create({
       data: {
@@ -68,6 +73,11 @@ export class MediaRepository {
         releaseDate: details.releaseDate,
         genres: details.genres,
         runtime: details.runtime,
+        ...(options?.status !== undefined ? { status: options.status } : {}),
+        ...(options?.downloaded !== undefined
+          ? { downloaded: options.downloaded }
+          : {}),
+        ...(options?.notes !== undefined ? { notes: options.notes } : {}),
       },
     });
   }
@@ -78,6 +88,7 @@ export class MediaRepository {
     data: {
       status?: MediaStatus;
       downloaded?: boolean;
+      notes?: string | null;
       dateWatched?: Date | null;
     },
   ): Promise<PrismaMediaItem | null> {

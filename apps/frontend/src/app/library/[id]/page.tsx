@@ -96,6 +96,31 @@ function MediaDetailContent() {
               <p className="mt-5 max-w-2xl text-muted">{item.description}</p>
             ) : null}
 
+            {item.notes ? (
+              <div className="mt-4 max-w-2xl rounded-md border border-border bg-[var(--overlay)] px-3 py-2">
+                <p className="text-xs uppercase tracking-[0.16em] text-muted">
+                  Notes
+                </p>
+                <div className="mt-1 space-y-1 text-sm text-foreground">
+                  {item.notes.split('\n').map((line, index) =>
+                    /^https?:\/\//i.test(line) ? (
+                      <a
+                        key={`${line}-${index}`}
+                        href={line}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="block break-all text-accent hover:underline"
+                      >
+                        {line}
+                      </a>
+                    ) : (
+                      <p key={`${line}-${index}`}>{line}</p>
+                    ),
+                  )}
+                </div>
+              </div>
+            ) : null}
+
             <div className="mt-8 max-w-md space-y-8">
               <MediaItemControls
                 item={item}

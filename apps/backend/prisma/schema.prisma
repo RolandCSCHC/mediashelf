@@ -46,6 +46,7 @@ model MediaItem {
   runtime      Int?
   status       MediaStatus      @default(WATCHLIST)
   downloaded   Boolean          @default(false)
+  notes        String?
   dateWatched  DateTime?
   listItems    CustomListItem[]
   createdAt    DateTime         @default(now())
