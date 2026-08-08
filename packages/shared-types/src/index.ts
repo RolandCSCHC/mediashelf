@@ -59,3 +59,23 @@ export interface HealthResponse {
   status: 'ok' | 'error';
   database: 'up' | 'down';
 }
+
+/** Normalized TMDB search hit (movie or series). */
+export interface TmdbSearchResult {
+  tmdbId: number;
+  type: MediaType;
+  title: string;
+  overview: string | null;
+  posterPath: string | null;
+  releaseDate: string | null;
+  popularity: number;
+}
+
+export interface TmdbSearchResponse {
+  results: TmdbSearchResult[];
+}
+
+export interface ImportMediaRequest {
+  tmdbId: number;
+  type: MediaType;
+}

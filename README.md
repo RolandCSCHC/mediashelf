@@ -105,6 +105,18 @@ pnpm check         # Prepare deps, then lint + typecheck + format:check
 
 GitHub Actions runs `pnpm check` and `pnpm build` on every pull request and every push to `main` (see `.github/workflows/ci.yml`).
 
+## TMDB setup
+
+1. Create an account at [TMDB](https://www.themoviedb.org/).
+2. Request an API key under [Settings → API](https://www.themoviedb.org/settings/api).
+3. Add it to `.env`:
+
+```bash
+TMDB_API_KEY=your_v3_api_key
+```
+
+Authenticated users can search at `/search` and import titles into `/library`.
+
 ## Documentation
 
 - [Project overview](docs/PROJECT_OVERVIEW.md)
