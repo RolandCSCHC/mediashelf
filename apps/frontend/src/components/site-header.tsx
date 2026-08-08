@@ -44,6 +44,12 @@ export function SiteHeader() {
               >
                 Library
               </Link>
+              <Link
+                href="/search"
+                className="hidden text-sm text-muted transition hover:text-foreground sm:inline"
+              >
+                Search
+              </Link>
               <div className="flex min-w-0 items-center gap-2">
                 {user.picture ? (
                   // eslint-disable-next-line @next/next/no-img-element

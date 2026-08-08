@@ -1,7 +1,48 @@
-import type { AuthUser, LogoutResponse } from '@mediashelf/shared-types';
+import type {
+  AuthUser,
+  ImportMediaRequest,
+  LogoutResponse,
+  MediaItem,
+  TmdbSearchResponse,
+} from '@mediashelf/shared-types';
 
 const browserApiUrl =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+
+async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(`${browserApiUrl}${path}`, {
+    credentials: 'include',
+    cache: 'no-store',
+    ...init,
+    headers: {
+      ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
+      ...init?.headers,
+    },
+  });
+
+  if (!response.ok) {
+    let message = `Request failed (${response.status})`;
+    try {
+      const payload = (await response.json()) as {
+        message?: string | string[];
+      };
+      if (typeof payload.message === 'string') {
+        message = payload.message;
+      } else if (Array.isArray(payload.message)) {
+        message = payload.message.join(', ');
+      }
+    } catch {
+      // Ignore JSON parse errors.
+    }
+    throw new Error(message);
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  return (await response.json()) as T;
+}
 
 export function getGoogleLoginUrl(): string {
   return `${browserApiUrl}/auth/google`;
@@ -29,14 +70,29 @@ export async function fetchCurrentUser(): Promise<AuthUser | null> {
 }
 
 export async function logout(): Promise<void> {
-  const response = await fetch(`${browserApiUrl}/auth/logout`, {
-    method: 'POST',
-    credentials: 'include',
+  await apiFetch<LogoutResponse>('/auth/logout', { method: 'POST' });
+}
+
+export async function searchTmdb(
+  query: string,
+  type: 'ALL' | 'MOVIE' | 'SERIES' = 'ALL',
+): Promise<TmdbSearchResponse> {
+  const params = new URLSearchParams({
+    q: query,
+    type,
   });
+  return apiFetch<TmdbSearchResponse>(`/tmdb/search?${params.toString()}`);
+}
 
-  if (!response.ok) {
-    throw new Error(`Logout failed (${response.status})`);
-  }
+export async function listMedia(): Promise<MediaItem[]> {
+  return apiFetch<MediaItem[]>('/media');
+}
 
-  (await response.json()) as LogoutResponse;
+export async function importMedia(
+  payload: ImportMediaRequest,
+): Promise<MediaItem> {
+  return apiFetch<MediaItem>('/media', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }
