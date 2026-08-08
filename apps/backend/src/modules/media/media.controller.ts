@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import type { AuthUser, MediaItem } from '@mediashelf/shared-types';
@@ -15,6 +16,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { MediaService } from './media.service';
 import { ImportMediaDto } from './dto/import-media.dto';
 import { UpdateMediaItemDto } from './dto/update-media-item.dto';
+import { ListMediaQueryDto } from './dto/list-media-query.dto';
 
 @Controller('media')
 @UseGuards(JwtAuthGuard)
@@ -22,8 +24,11 @@ export class MediaController {
   constructor(private readonly mediaService: MediaService) {}
 
   @Get()
-  list(@CurrentUser() user: AuthUser): Promise<MediaItem[]> {
-    return this.mediaService.listForUser(user.id);
+  list(
+    @CurrentUser() user: AuthUser,
+    @Query() query: ListMediaQueryDto,
+  ): Promise<MediaItem[]> {
+    return this.mediaService.listForUser(user.id, query);
   }
 
   @Get(':id')

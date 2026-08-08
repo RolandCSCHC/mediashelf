@@ -3,18 +3,25 @@ import type {
   MediaItem as PrismaMediaItem,
   MediaStatus,
   MediaType,
+  Prisma,
 } from '@prisma/client';
+import type { ListMediaQuery } from '@mediashelf/shared-types';
 import { PrismaService } from '../prisma/prisma.service';
 import type { TmdbMediaDetails } from '../tmdb/tmdb.service';
+
+export type MediaListFilters = ListMediaQuery;
 
 @Injectable()
 export class MediaRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  findByUser(userId: string): Promise<PrismaMediaItem[]> {
+  findByUser(
+    userId: string,
+    filters: MediaListFilters = {},
+  ): Promise<PrismaMediaItem[]> {
     return this.prisma.mediaItem.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
+      where: this.buildWhere(userId, filters),
+      orderBy: this.buildOrderBy(filters),
     });
   }
 
@@ -82,5 +89,45 @@ export class MediaRepository {
       where: { id, userId },
     });
     return result.count > 0;
+  }
+
+  private buildWhere(
+    userId: string,
+    filters: MediaListFilters,
+  ): Prisma.MediaItemWhereInput {
+    const where: Prisma.MediaItemWhereInput = { userId };
+
+    if (filters.status) {
+      where.status = filters.status;
+    }
+
+    if (filters.type) {
+      where.type = filters.type;
+    }
+
+    if (filters.downloaded !== undefined) {
+      where.downloaded = filters.downloaded;
+    }
+
+    if (filters.genre) {
+      where.genres = { has: filters.genre };
+    }
+
+    if (filters.listId) {
+      where.listItems = {
+        some: {
+          listId: filters.listId,
+          list: { userId },
+        },
+      };
+    }
+
+    return where;
+  }
+
+  private buildOrderBy(
+    _filters: MediaListFilters,
+  ): Prisma.MediaItemOrderByWithRelationInput {
+    return { createdAt: 'desc' };
   }
 }

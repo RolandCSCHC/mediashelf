@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { MediaItem } from '@mediashelf/shared-types';
+import type { ListMediaQuery, MediaItem } from '@mediashelf/shared-types';
 import { MediaStatus, MediaType } from '@mediashelf/shared-types';
 import { TmdbService } from '../tmdb/tmdb.service';
 import { MediaRepository } from './media.repository';
@@ -18,8 +18,11 @@ export class MediaService {
     private readonly tmdbService: TmdbService,
   ) {}
 
-  async listForUser(userId: string): Promise<MediaItem[]> {
-    const items = await this.mediaRepository.findByUser(userId);
+  async listForUser(
+    userId: string,
+    filters: ListMediaQuery = {},
+  ): Promise<MediaItem[]> {
+    const items = await this.mediaRepository.findByUser(userId, filters);
     return items.map(toMediaItem);
   }
 
