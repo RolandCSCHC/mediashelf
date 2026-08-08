@@ -4,10 +4,13 @@ import Link from 'next/link';
 import type { MediaItem, MediaType } from '@mediashelf/shared-types';
 import { MediaItemControls } from '@/components/media-item-controls';
 import { formatMediaStatus } from '@/lib/media-status';
+import { formatSeriesProgress } from '@/lib/media-filters';
 import { tmdbPosterUrl } from '@/lib/tmdb-images';
 
 type MediaCardProps = {
   item: MediaItem;
+  progressSeason?: number | null;
+  progressEpisode?: number | null;
   onUpdated: (item: MediaItem) => void;
   onDeleted: (id: string) => void;
   onError?: (message: string) => void;
@@ -15,6 +18,8 @@ type MediaCardProps = {
 
 export function MediaCard({
   item,
+  progressSeason = null,
+  progressEpisode = null,
   onUpdated,
   onDeleted,
   onError,
@@ -23,6 +28,10 @@ export function MediaCard({
   const year = item.releaseDate
     ? new Date(item.releaseDate).getFullYear()
     : null;
+  const progress =
+    item.type === 'SERIES'
+      ? formatSeriesProgress(progressSeason, progressEpisode)
+      : null;
 
   return (
     <article className="overflow-hidden rounded-lg border border-border bg-surface transition hover:border-accent/40">
@@ -53,6 +62,7 @@ export function MediaCard({
             <TypeLabel type={item.type} />
             {year ? ` · ${year}` : ''}
             {` · ${formatMediaStatus(item.status)}`}
+            {progress ? ` · ${progress}` : ''}
             {item.downloaded ? ' · Downloaded' : ''}
           </p>
         </div>

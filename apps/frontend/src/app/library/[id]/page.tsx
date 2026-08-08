@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import type { MediaItem } from '@mediashelf/shared-types';
 import { AppShell } from '@/components/app-shell';
 import { AuthGuard } from '@/components/auth-guard';
+import { ListMembershipControls } from '@/components/list-membership-controls';
 import { MediaItemControls } from '@/components/media-item-controls';
 import { getMedia } from '@/lib/api';
 import { tmdbPosterUrl } from '@/lib/tmdb-images';
@@ -95,7 +96,7 @@ function MediaDetailContent() {
               <p className="mt-5 max-w-2xl text-muted">{item.description}</p>
             ) : null}
 
-            <div className="mt-8 max-w-md">
+            <div className="mt-8 max-w-md space-y-8">
               <MediaItemControls
                 item={item}
                 layout="full"
@@ -108,6 +109,8 @@ function MediaDetailContent() {
                 }}
                 onError={setError}
               />
+
+              <ListMembershipControls mediaItem={item} onError={setError} />
             </div>
 
             {error ? (

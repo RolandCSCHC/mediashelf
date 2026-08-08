@@ -17,8 +17,6 @@ export function toMediaItem(item: PrismaMediaItem): MediaItem {
     runtime: item.runtime,
     status: item.status as MediaStatus,
     downloaded: item.downloaded,
-    currentSeason: item.currentSeason,
-    currentEpisode: item.currentEpisode,
     dateWatched: item.dateWatched?.toISOString() ?? null,
     createdAt: item.createdAt.toISOString(),
     updatedAt: item.updatedAt.toISOString(),
