@@ -5,8 +5,15 @@
   "scripts": {
     "dev": "pnpm -r --parallel --filter @mediashelf/backend --filter @mediashelf/frontend dev",
     "build": "pnpm -r --filter @mediashelf/shared-types --filter @mediashelf/backend --filter @mediashelf/frontend build",
-    "lint": "pnpm -r --filter @mediashelf/backend --filter @mediashelf/frontend lint",
+    "lint": "pnpm -r --filter @mediashelf/shared-types --filter @mediashelf/backend --filter @mediashelf/frontend lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "pnpm -r --filter @mediashelf/shared-types --filter @mediashelf/backend --filter @mediashelf/frontend typecheck",
+    "check": "bash scripts/check.sh",
     "docker:up": "docker compose up --build"
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2"
   },
   "engines": {
     "node": ">=20"

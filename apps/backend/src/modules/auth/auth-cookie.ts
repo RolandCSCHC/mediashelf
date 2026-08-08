@@ -1,8 +1,5 @@
 import type { CookieOptions } from 'express';
-import {
-  AUTH_COOKIE_MAX_AGE_MS,
-  AUTH_COOKIE_NAME,
-} from './auth.constants';
+import { AUTH_COOKIE_MAX_AGE_MS, AUTH_COOKIE_NAME } from './auth.constants';
 
 export function getAuthCookieOptions(): CookieOptions {
   // Prefer HTTPS detection over NODE_ENV so local Docker (production build on HTTP)

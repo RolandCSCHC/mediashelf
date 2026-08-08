@@ -7,7 +7,8 @@
     "dev": "nest start --watch",
     "start": "node dist/main.js",
     "start:prod": "node dist/main.js",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.{ts,tsx,mjs}\" --max-warnings 0",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
     "prisma:migrate:dev": "prisma migrate dev",
@@ -31,6 +32,7 @@
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
+    "@mediashelf/eslint-config": "workspace:*",
     "@nestjs/cli": "^10.4.9",
     "@nestjs/schematics": "^10.2.3",
     "@types/cookie-parser": "^1.4.10",
@@ -39,6 +41,7 @@
     "@types/passport": "^1.0.17",
     "@types/passport-google-oauth20": "^2.0.17",
     "@types/passport-jwt": "^4.0.1",
+    "eslint": "^9.17.0",
     "prisma": "^6.1.0",
     "typescript": "^5.7.2"
   },

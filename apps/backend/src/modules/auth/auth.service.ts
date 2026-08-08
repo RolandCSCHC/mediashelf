@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import type { AuthUser } from '@mediashelf/shared-types';
 import type { Profile } from 'passport-google-oauth20';
@@ -24,7 +21,9 @@ export class AuthService {
     const picture = profile.photos?.[0]?.value ?? null;
 
     if (!email) {
-      throw new UnauthorizedException('Google account did not provide an email');
+      throw new UnauthorizedException(
+        'Google account did not provide an email',
+      );
     }
 
     const user = await this.prisma.user.upsert({

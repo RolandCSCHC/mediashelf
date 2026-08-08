@@ -30,7 +30,11 @@ export function HealthStatus({ health }: HealthStatusProps) {
         </div>
         <div className="flex items-center justify-between gap-4 sm:block">
           <dt className="text-muted">Database</dt>
-          <dd className={health.database === 'up' ? 'text-accent' : 'text-red-400'}>
+          <dd
+            className={
+              health.database === 'up' ? 'text-accent' : 'text-red-400'
+            }
+          >
             {health.database}
           </dd>
         </div>

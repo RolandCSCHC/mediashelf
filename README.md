@@ -87,9 +87,20 @@ CORS_ORIGIN=http://localhost:3000
 ## Workspace layout
 
 ```text
-apps/frontend     Next.js
-apps/backend      NestJS + Prisma
+apps/frontend           Next.js
+apps/backend            NestJS + Prisma
 packages/shared-types   Shared enums and interfaces
+packages/eslint-config  Shared ESLint flat configs
+```
+
+## Code quality
+
+```bash
+pnpm lint          # ESLint (frontend, backend, shared-types)
+pnpm typecheck     # TypeScript --noEmit across packages
+pnpm format        # Prettier write
+pnpm format:check  # Prettier check (CI-friendly)
+pnpm check         # Run lint + typecheck + format:check
 ```
 
 ## Documentation

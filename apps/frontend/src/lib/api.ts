@@ -38,5 +38,5 @@ export async function logout(): Promise<void> {
     throw new Error(`Logout failed (${response.status})`);
   }
 
-  await response.json() as LogoutResponse;
+  (await response.json()) as LogoutResponse;
 }
