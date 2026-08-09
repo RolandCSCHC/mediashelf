@@ -1,9 +1,19 @@
 import { MediaStatus, MediaType } from '@mediashelf/shared-types';
 
+export const IMPORT_LIST_NAMES = [
+  'Upcoming Movies',
+  'Downloaded Movies',
+  'Upcoming Series',
+  'Downloaded Series',
+] as const;
+
+export type ImportListName = (typeof IMPORT_LIST_NAMES)[number];
+
 export type ParsedLibraryLine = {
   lineNumber: number;
   rawLine: string;
   searchQuery: string;
+  listName: ImportListName;
   type: MediaType;
   status: MediaStatus;
   downloaded: boolean;
@@ -11,6 +21,7 @@ export type ParsedLibraryLine = {
 };
 
 type SectionConfig = {
+  listName: ImportListName;
   type: MediaType;
   status: MediaStatus;
   downloaded: boolean;
@@ -18,21 +29,25 @@ type SectionConfig = {
 
 const SECTION_MAP: Record<string, SectionConfig> = {
   'upcoming movies': {
+    listName: 'Upcoming Movies',
     type: MediaType.MOVIE,
     status: MediaStatus.FUTURE,
     downloaded: false,
   },
   'downloaded movies': {
+    listName: 'Downloaded Movies',
     type: MediaType.MOVIE,
     status: MediaStatus.WATCHLIST,
     downloaded: true,
   },
   'upcoming series': {
+    listName: 'Upcoming Series',
     type: MediaType.SERIES,
     status: MediaStatus.FUTURE,
     downloaded: false,
   },
   'downloaded series': {
+    listName: 'Downloaded Series',
     type: MediaType.SERIES,
     status: MediaStatus.WATCHLIST,
     downloaded: true,
@@ -175,6 +190,7 @@ export function parseLibraryTxt(text: string): {
       lineNumber,
       rawLine: trimmed,
       searchQuery,
+      listName: section.listName,
       type: section.type,
       status,
       downloaded,

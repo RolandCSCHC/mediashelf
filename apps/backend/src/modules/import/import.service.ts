@@ -2,12 +2,14 @@ import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import type {
   ImportConfirmResponse,
   ImportConfirmResultItem,
+  ImportListName,
   ImportMatchConfidence,
   ImportPreviewItem,
   ImportPreviewResponse,
   TmdbSearchResult,
 } from '@mediashelf/shared-types';
 import { MediaType } from '@mediashelf/shared-types';
+import { ListsService } from '../lists/lists.service';
 import { MediaService } from '../media/media.service';
 import { TmdbService } from '../tmdb/tmdb.service';
 import type { ImportConfirmEntryDto } from './dto/import.dto';
@@ -23,6 +25,7 @@ export class ImportService {
   constructor(
     private readonly tmdbService: TmdbService,
     private readonly mediaService: MediaService,
+    private readonly listsService: ListsService,
   ) {}
 
   async preview(userId: string, text: string): Promise<ImportPreviewResponse> {
@@ -65,6 +68,7 @@ export class ImportService {
           lineNumber: entry.lineNumber,
           rawLine: entry.rawLine,
           searchQuery: entry.searchQuery,
+          listName: entry.listName,
           type: entry.type,
           status: entry.status,
           downloaded: entry.downloaded,
@@ -89,6 +93,9 @@ export class ImportService {
     let skippedCount = 0;
     let errorCount = 0;
 
+    const listIdsByName = new Map<ImportListName, string>();
+    const mediaIdsByList = new Map<ImportListName, string[]>();
+
     // Sequential to avoid hammering TMDB details + DB writes.
     for (const item of items) {
       const notes =
@@ -99,36 +106,58 @@ export class ImportService {
             : item.notes.trim() || null;
 
       try {
-        const mediaItem = await this.mediaService.importFromTmdb(
-          userId,
-          item.tmdbId,
-          item.type,
-          {
-            status: item.status,
-            downloaded: item.downloaded,
-            notes,
-          },
-        );
+        let mediaItemId: string | null = null;
 
-        importedCount += 1;
-        results.push({
-          tmdbId: item.tmdbId,
-          type: item.type,
-          status: 'imported',
-          mediaItem,
-        });
-      } catch (error) {
-        if (error instanceof ConflictException) {
+        try {
+          const mediaItem = await this.mediaService.importFromTmdb(
+            userId,
+            item.tmdbId,
+            item.type,
+            {
+              status: item.status,
+              downloaded: item.downloaded,
+              notes,
+            },
+          );
+          mediaItemId = mediaItem.id;
+          importedCount += 1;
+          results.push({
+            tmdbId: item.tmdbId,
+            type: item.type,
+            status: 'imported',
+            mediaItem,
+          });
+        } catch (error) {
+          if (!(error instanceof ConflictException)) {
+            throw error;
+          }
+
+          const existing = await this.mediaService.findByTmdbForUser(
+            userId,
+            item.tmdbId,
+            item.type,
+          );
+          if (!existing) {
+            throw error;
+          }
+
+          mediaItemId = existing.id;
           skippedCount += 1;
           results.push({
             tmdbId: item.tmdbId,
             type: item.type,
             status: 'skipped_existing',
+            mediaItem: existing,
             error: 'This title is already in your library',
           });
-          continue;
         }
 
+        if (mediaItemId) {
+          const bucket = mediaIdsByList.get(item.listName) ?? [];
+          bucket.push(mediaItemId);
+          mediaIdsByList.set(item.listName, bucket);
+        }
+      } catch (error) {
         errorCount += 1;
         results.push({
           tmdbId: item.tmdbId,
@@ -137,6 +166,25 @@ export class ImportService {
           error: error instanceof Error ? error.message : 'Import failed',
         });
       }
+    }
+
+    for (const [listName, mediaItemIds] of mediaIdsByList.entries()) {
+      let listId = listIdsByName.get(listName);
+      if (!listId) {
+        const list = await this.listsService.ensureByName(
+          userId,
+          listName,
+          'Created automatically from library import',
+        );
+        listId = list.id;
+        listIdsByName.set(listName, listId);
+      }
+
+      await this.listsService.addOwnedItemsToList(
+        userId,
+        listId,
+        mediaItemIds,
+      );
     }
 
     return { results, importedCount, skippedCount, errorCount };

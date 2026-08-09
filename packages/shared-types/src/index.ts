@@ -95,12 +95,19 @@ export interface UpdateMediaItemRequest {
 
 export type ImportMatchConfidence = 'high' | 'medium' | 'low' | 'none';
 
+export type ImportListName =
+  | 'Upcoming Movies'
+  | 'Downloaded Movies'
+  | 'Upcoming Series'
+  | 'Downloaded Series';
+
 /** One parsed line from a library .txt, with TMDB match suggestions. */
 export interface ImportPreviewItem {
   key: string;
   lineNumber: number;
   rawLine: string;
   searchQuery: string;
+  listName: ImportListName;
   type: MediaType;
   status: MediaStatus;
   downloaded: boolean;
@@ -125,6 +132,7 @@ export interface ImportConfirmItem {
   type: MediaType;
   status: MediaStatus;
   downloaded: boolean;
+  listName: ImportListName;
   notes?: string | null;
 }
 

@@ -5,6 +5,7 @@ import {
   IsArray,
   IsBoolean,
   IsEnum,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -14,6 +15,13 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { MediaStatus, MediaType } from '@mediashelf/shared-types';
+
+const IMPORT_LIST_NAMES = [
+  'Upcoming Movies',
+  'Downloaded Movies',
+  'Upcoming Series',
+  'Downloaded Series',
+] as const;
 
 export class ImportPreviewDto {
   @IsString()
@@ -34,6 +42,9 @@ export class ImportConfirmEntryDto {
 
   @IsBoolean()
   downloaded!: boolean;
+
+  @IsIn(IMPORT_LIST_NAMES)
+  listName!: (typeof IMPORT_LIST_NAMES)[number];
 
   @ValidateIf((_, value) => value !== null && value !== undefined)
   @IsString()

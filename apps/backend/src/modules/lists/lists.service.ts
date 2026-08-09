@@ -67,6 +67,58 @@ export class ListsService {
     return toCustomList(created);
   }
 
+  /** Find a list by exact name, or create it if missing. */
+  async ensureByName(
+    userId: string,
+    name: string,
+    description?: string | null,
+  ): Promise<CustomList> {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      throw new BadRequestException('List name is required');
+    }
+
+    const existing = await this.listsRepository.findByUserAndName(
+      userId,
+      trimmed,
+    );
+    if (existing) {
+      const withCount = await this.listsRepository.findByIdForUser(
+        existing.id,
+        userId,
+      );
+      if (!withCount) {
+        throw new NotFoundException('List not found');
+      }
+      return toCustomList(withCount);
+    }
+
+    const created = await this.listsRepository.create(userId, {
+      name: trimmed,
+      description: description?.trim() || null,
+    });
+    return toCustomList(created);
+  }
+
+  async addOwnedItemsToList(
+    userId: string,
+    listId: string,
+    mediaItemIds: string[],
+  ): Promise<void> {
+    const list = await this.listsRepository.findByIdForUser(listId, userId);
+    if (!list) {
+      throw new NotFoundException('List not found');
+    }
+
+    const uniqueIds = Array.from(new Set(mediaItemIds));
+    if (uniqueIds.length === 0) {
+      return;
+    }
+
+    await this.mediaService.assertOwnedIds(userId, uniqueIds);
+    await this.listsRepository.addItems(listId, uniqueIds);
+  }
+
   async updateForUser(
     userId: string,
     id: string,

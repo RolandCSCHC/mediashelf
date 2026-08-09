@@ -163,6 +163,7 @@ function ImportContent() {
         type: item.selected!.type,
         status: item.status,
         downloaded: item.downloaded,
+        listName: item.listName,
         notes: item.notes,
       }));
 
@@ -201,7 +202,8 @@ function ImportContent() {
         Paste your existing .txt, preview TMDB matches, then confirm. Upcoming
         becomes Future; Downloaded becomes Watchlist + downloaded;{' '}
         <code className="text-foreground">---------------</code> marks
-        Watching; links go into notes.
+        Watching; links go into notes. Confirm also creates the four section
+        lists and adds each title to the matching list.
       </p>
 
       <div className="ms-animate-fade-up ms-animate-delay-3 mt-8 space-y-4">
@@ -402,7 +404,7 @@ function ImportPreviewRow({
         <div className="min-w-0 flex-1 space-y-3">
           <div>
             <p className="text-xs uppercase tracking-[0.16em] text-muted">
-              Line {item.lineNumber} · {formatType(item.type)}
+              Line {item.lineNumber} · {item.listName}
             </p>
             <p className="mt-1 font-medium text-foreground">
               {item.searchQuery}

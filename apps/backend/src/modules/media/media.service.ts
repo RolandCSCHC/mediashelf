@@ -34,6 +34,19 @@ export class MediaService {
     return toMediaItem(item);
   }
 
+  async findByTmdbForUser(
+    userId: string,
+    tmdbId: number,
+    type: MediaType,
+  ): Promise<MediaItem | null> {
+    const item = await this.mediaRepository.findByUserAndTmdb(
+      userId,
+      tmdbId,
+      type,
+    );
+    return item ? toMediaItem(item) : null;
+  }
+
   async assertOwnedIds(userId: string, ids: string[]): Promise<void> {
     if (ids.length === 0) {
       return;

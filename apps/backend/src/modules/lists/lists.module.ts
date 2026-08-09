@@ -9,5 +9,6 @@ import { ListsRepository } from './lists.repository';
   imports: [AuthModule, MediaModule],
   controllers: [ListsController],
   providers: [ListsService, ListsRepository],
+  exports: [ListsService],
 })
 export class ListsModule {}
