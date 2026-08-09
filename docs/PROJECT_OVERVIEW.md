@@ -557,6 +557,7 @@ Possible future additions:
 
 - Panel/List toggle in Library and Lists ✓
 - Fix so Google Auth works in Safari in cellphone ✓
+- Fix so the Google button enables when the app is ready to work after sleep ✓
 
 ---
 

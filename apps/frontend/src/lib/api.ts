@@ -7,6 +7,7 @@ import type {
   CustomList,
   CustomListDetail,
   CustomListEntry,
+  HealthResponse,
   ImportMediaRequest,
   LibraryBackupImportRequest,
   LibraryBackupImportResponse,
@@ -91,6 +92,30 @@ function toQueryString(query: ListMediaQuery): string {
 
 export function getGoogleLoginUrl(): string {
   return `${browserApiUrl}/auth/google`;
+}
+
+/** Browser-side health check via the same-origin BFF proxy (wakes a sleeping API). */
+export async function fetchApiHealth(
+  timeoutMs = 20_000,
+): Promise<HealthResponse | null> {
+  try {
+    const response = await fetch(`${browserApiUrl}/health`, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return (await response.json()) as HealthResponse;
+  } catch {
+    return null;
+  }
+}
+
+export function isApiHealthy(health: HealthResponse | null): boolean {
+  return health?.status === 'ok' && health.database === 'up';
 }
 
 export async function fetchCurrentUser(): Promise<AuthUser | null> {

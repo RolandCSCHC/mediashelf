@@ -28,7 +28,7 @@ function buttonClassName(
   className?: string,
 ): string {
   return [
-    'inline-flex items-center justify-center gap-2 rounded-md font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]',
+    'inline-flex items-center justify-center gap-2 rounded-md font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-60',
     variants[variant],
     sizes[size],
     className,
