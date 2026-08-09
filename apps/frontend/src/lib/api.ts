@@ -7,11 +7,7 @@ import type {
   CustomList,
   CustomListDetail,
   CustomListEntry,
-  ImportConfirmRequest,
-  ImportConfirmResponse,
   ImportMediaRequest,
-  ImportPreviewRequest,
-  ImportPreviewResponse,
   LibraryBackupImportRequest,
   LibraryBackupImportResponse,
   LibraryBackupPayload,
@@ -172,24 +168,6 @@ export async function updateMedia(
 
 export async function deleteMedia(id: string): Promise<void> {
   await apiFetch<void>(`/media/${id}`, { method: 'DELETE' });
-}
-
-export async function previewLibraryImport(
-  payload: ImportPreviewRequest,
-): Promise<ImportPreviewResponse> {
-  return apiFetch<ImportPreviewResponse>('/import/preview', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-}
-
-export async function confirmLibraryImport(
-  payload: ImportConfirmRequest,
-): Promise<ImportConfirmResponse> {
-  return apiFetch<ImportConfirmResponse>('/import/confirm', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
 }
 
 export async function listCustomLists(): Promise<CustomList[]> {

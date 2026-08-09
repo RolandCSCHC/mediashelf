@@ -103,68 +103,6 @@ export interface UpdateMediaItemRequest {
   dateWatched?: string | null;
 }
 
-export type ImportMatchConfidence = 'high' | 'medium' | 'low' | 'none';
-
-export type ImportListName =
-  | 'Upcoming Movies'
-  | 'Downloaded Movies'
-  | 'Upcoming Series'
-  | 'Downloaded Series';
-
-/** One parsed line from a library .txt, with TMDB match suggestions. */
-export interface ImportPreviewItem {
-  key: string;
-  lineNumber: number;
-  rawLine: string;
-  searchQuery: string;
-  listName: ImportListName;
-  type: MediaType;
-  status: MediaStatus;
-  downloaded: boolean;
-  notes: string | null;
-  confidence: ImportMatchConfidence;
-  selected: TmdbSearchResult | null;
-  candidates: TmdbSearchResult[];
-  alreadyInLibrary: boolean;
-}
-
-export interface ImportPreviewRequest {
-  text: string;
-}
-
-export interface ImportPreviewResponse {
-  items: ImportPreviewItem[];
-  skippedEmptyLines: number;
-}
-
-export interface ImportConfirmItem {
-  tmdbId: number;
-  type: MediaType;
-  status: MediaStatus;
-  downloaded: boolean;
-  listName: ImportListName;
-  notes?: string | null;
-}
-
-export interface ImportConfirmRequest {
-  items: ImportConfirmItem[];
-}
-
-export interface ImportConfirmResultItem {
-  tmdbId: number;
-  type: MediaType;
-  status: 'imported' | 'skipped_existing' | 'error';
-  mediaItem?: MediaItem;
-  error?: string;
-}
-
-export interface ImportConfirmResponse {
-  results: ImportConfirmResultItem[];
-  importedCount: number;
-  skippedCount: number;
-  errorCount: number;
-}
-
 export interface ListMediaQuery {
   status?: MediaStatus;
   type?: MediaType;

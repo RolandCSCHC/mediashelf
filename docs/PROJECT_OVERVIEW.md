@@ -24,9 +24,7 @@ The application should be something I personally use every day while also showca
 
 # Purpose of the Application
 
-I currently keep track of movies and TV series inside a `.txt` file.
-
-MediaShelf will replace that with an online platform that I can access from anywhere after deploying it to Render.
+MediaShelf is an online personal media library I can access from anywhere after deploying it to Render.
 
 Each authenticated user has their own private media library.
 
@@ -314,16 +312,6 @@ Series progress is stored on each list membership, so one series can track diffe
 
 ---
 
-## Import
-
-Temporary feature.
-
-Import my existing `.txt` file containing approximately 170+ movies and TV series.
-
-This functionality can be removed once my library has been migrated.
-
----
-
 ## Export / JSON backup
 
 Export the personal media library (and custom lists) to JSON.
@@ -530,7 +518,6 @@ Possible future additions:
 
 ## Phase 7
 
-- Import existing `.txt` and hiding it
 - Search in Library and Lists
 - Manual entry if you can't find a movie/series
 - Export / import library JSON (merge)

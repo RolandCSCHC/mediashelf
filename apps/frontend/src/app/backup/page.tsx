@@ -216,13 +216,6 @@ function BackupContent() {
           </div>
         ) : null}
       </section>
-
-      <p className="mt-12 text-sm text-muted">
-        Looking for the old text import?{' '}
-        <Link href="/import" className="text-accent hover:underline">
-          Use .txt import
-        </Link>
-      </p>
     </AppShell>
   );
 }
