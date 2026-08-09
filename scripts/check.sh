@@ -16,6 +16,9 @@ pnpm lint
 echo "==> TypeScript (tsc --noEmit)"
 pnpm typecheck
 
+echo "==> Unit tests"
+pnpm test
+
 echo "==> Prettier"
 pnpm format
 

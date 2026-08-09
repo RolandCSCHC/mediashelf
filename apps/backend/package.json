@@ -9,6 +9,8 @@
     "start:prod": "node dist/main.js",
     "lint": "eslint \"{src,apps,libs,test}/**/*.{ts,tsx,mjs}\" --max-warnings 0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
     "prisma:migrate:dev": "prisma migrate dev"
@@ -37,12 +39,15 @@
     "@nestjs/schematics": "^10.2.3",
     "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.0",
+    "@types/jest": "^30.0.0",
     "@types/node": "^22.10.2",
     "@types/passport": "^1.0.17",
     "@types/passport-google-oauth20": "^2.0.17",
     "@types/passport-jwt": "^4.0.1",
     "eslint": "^9.17.0",
+    "jest": "^30.4.2",
     "prisma": "^6.1.0",
+    "ts-jest": "^29.4.12",
     "typescript": "^5.7.2"
   }
 }

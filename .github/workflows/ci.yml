@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   quality:
-    name: Lint, typecheck, format, build
+    name: Lint, typecheck, format, test, build
     runs-on: ubuntu-latest
 
     steps:

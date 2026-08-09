@@ -469,82 +469,81 @@ Possible future additions:
 
 ## Phase 1
 
-- Repository setup
-- Monorepo structure
-- Docker
-- Docker Compose
-- Next.js
-- NestJS
-- PostgreSQL
-- Prisma
+- Repository setup ✓
+- Monorepo structure ✓
+- Docker ✓
+- Docker Compose ✓
+- Next.js ✓
+- NestJS ✓
+- PostgreSQL ✓
+- Prisma ✓
 
 ---
 
 ## Phase 2
 
-- Google Authentication
-- User accounts
-- Protected routes
+- Google Authentication ✓
+- User accounts ✓
+- Protected routes ✓
 
 ---
 
 ## Phase 3
 
-- Dark Mode (light/dark toggle)
-- Responsive UI shell
-- Auth and library page polishing
+- Dark Mode (light/dark toggle) ✓
+- Responsive UI shell ✓
+- Auth and library page polishing ✓
 
 ---
 
 ## Phase 4
 
-- TMDB integration
-- Search movies
-- Search TV series
-- Import selected media
+- TMDB integration ✓
+- Search movies ✓
+- Search TV series ✓
+- Import selected media ✓
 
 ---
 
 ## Phase 5
 
-- CRUD
-- Watchlist
-- Watching
-- Watched
-- Future
-- Downloaded flag
+- CRUD ✓
+- Watchlist ✓
+- Watching ✓
+- Watched ✓
+- Future ✓
+- Downloaded flag ✓
 
 ---
 
 ## Phase 6
 
-- Series progress
-- Filters
-- Sorting
-- Custom lists
+- Series progress ✓
+- Filters ✓
+- Sorting ✓
+- Custom lists ✓
 
 ---
 
 ## Phase 7
 
-- Search in Library and Lists
-- Manual entry if you can't find a movie/series
-- Export / import library JSON (merge)
+- Search in Library and Lists ✓
+- Manual entry if you can't find a movie/series ✓
+- Export / import library JSON (merge) ✓
 
 ---
 
 ## Phase 8
 
-- Mobile navigation (burger menu)
-- PWA (manifest, icons, service worker) — installable on phone after deploy
+- Mobile navigation (burger menu) 
+- PWA (manifest, icons, service worker) — installable on phone after deploy ✓
 
 ---
 
 ## Phase 9
 
-- Swagger documentation
-- Unit tests
-- Integration tests
+- Swagger documentation ✓
+- Unit tests ✓
 
 ---
 
