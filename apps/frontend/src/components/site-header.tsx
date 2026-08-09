@@ -145,7 +145,10 @@ export function SiteHeader() {
                 aria-label={menuOpen ? 'Close menu' : 'Open menu'}
                 onClick={() => setMenuOpen((open) => !open)}
               >
-                <span aria-hidden className="flex h-4 w-4 flex-col justify-center gap-1">
+                <span
+                  aria-hidden
+                  className="flex h-4 w-4 flex-col justify-center gap-1"
+                >
                   <span
                     className={[
                       'block h-0.5 w-full rounded-full bg-current transition',

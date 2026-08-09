@@ -5,7 +5,10 @@ import type {
   LibraryBackupPayload,
   MediaType,
 } from '@mediashelf/shared-types';
-import { LIBRARY_BACKUP_VERSION, MediaType as MediaTypeEnum } from '@mediashelf/shared-types';
+import {
+  LIBRARY_BACKUP_VERSION,
+  MediaType as MediaTypeEnum,
+} from '@mediashelf/shared-types';
 import { ListsService } from '../lists/lists.service';
 import { MediaService } from '../media/media.service';
 

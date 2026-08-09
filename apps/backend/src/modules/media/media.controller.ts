@@ -80,7 +80,9 @@ export class MediaController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update status, downloaded flag, notes, or date watched' })
+  @ApiOperation({
+    summary: 'Update status, downloaded flag, notes, or date watched',
+  })
   @ApiParam({ name: 'id', description: 'Media item id' })
   @ApiOkResponse({ type: MediaItemSchema })
   update(

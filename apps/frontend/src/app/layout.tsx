@@ -18,8 +18,7 @@ const sans = Source_Sans_3({
 });
 
 const APP_NAME = 'MediaShelf';
-const APP_DESCRIPTION =
-  'Track movies and TV series in one private library.';
+const APP_DESCRIPTION = 'Track movies and TV series in one private library.';
 
 export const metadata: Metadata = {
   applicationName: APP_NAME,

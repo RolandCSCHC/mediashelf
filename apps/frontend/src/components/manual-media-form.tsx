@@ -151,9 +151,7 @@ export function ManualMediaForm({
           <span className="text-sm font-medium text-foreground">Status</span>
           <select
             value={status}
-            onChange={(event) =>
-              setStatus(event.target.value as MediaStatus)
-            }
+            onChange={(event) => setStatus(event.target.value as MediaStatus)}
             className={fieldClass}
             aria-label="Status"
           >

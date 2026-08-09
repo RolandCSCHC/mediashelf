@@ -31,9 +31,7 @@ export class BackupController {
   @Get()
   @ApiOperation({ summary: 'Export library as JSON backup' })
   @ApiOkResponse({ type: LibraryBackupPayloadSchema })
-  exportLibrary(
-    @CurrentUser() user: AuthUser,
-  ): Promise<LibraryBackupPayload> {
+  exportLibrary(@CurrentUser() user: AuthUser): Promise<LibraryBackupPayload> {
     return this.backupService.exportForUser(user.id);
   }
 
