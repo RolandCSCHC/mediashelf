@@ -14,7 +14,7 @@ type AppShellProps = {
 const widthClass = {
   narrow: 'max-w-md',
   default: 'max-w-3xl',
-  wide: 'max-w-5xl',
+  wide: 'max-w-7xl',
 } as const;
 
 export function AppShell({

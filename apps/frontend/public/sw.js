@@ -1,5 +1,5 @@
 /* Minimal service worker — enables installability; caches the app shell lightly. */
-const CACHE = 'mediashelf-shell-v1';
+const CACHE = 'mediashelf-shell-v2';
 const PRECACHE = ['/', '/manifest.webmanifest', '/icons/icon-192.png'];
 
 self.addEventListener('install', (event) => {
@@ -35,10 +35,19 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-first for navigations and API; cache-first for static icons.
+  // Network-first for icons so updated assets show after deploy;
+  // fall back to cache when offline.
   if (url.pathname.startsWith('/icons/')) {
     event.respondWith(
-      caches.match(request).then((cached) => cached || fetch(request)),
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            void caches.open(CACHE).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request).then((cached) => cached || Response.error())),
     );
     return;
   }

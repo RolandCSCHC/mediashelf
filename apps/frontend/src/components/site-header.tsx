@@ -68,11 +68,20 @@ export function SiteHeader() {
 
   return (
     <header className="border-b border-border/60 backdrop-blur-sm">
-      <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-6 py-3.5">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-6 py-3.5">
         <Link
           href="/"
-          className="font-display text-lg font-semibold tracking-tight text-foreground transition hover:text-accent sm:text-xl"
+          className="flex items-center gap-2 font-display text-lg font-semibold tracking-tight text-foreground transition hover:text-accent sm:gap-2.5 sm:text-xl"
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/icons/icon-192.png"
+            alt=""
+            width={32}
+            height={32}
+            className="size-7 shrink-0 sm:size-8"
+            aria-hidden
+          />
           MediaShelf
         </Link>
 
@@ -170,7 +179,7 @@ export function SiteHeader() {
           id={menuId}
           className="border-t border-border/60 bg-surface/95 sm:hidden"
         >
-          <div className="mx-auto flex w-full max-w-5xl flex-col gap-1 px-6 py-3">
+          <div className="mx-auto flex w-full max-w-7xl flex-col gap-1 px-6 py-3">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
