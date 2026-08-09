@@ -9,6 +9,16 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiCookieAuth,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import type {
   AuthUser,
   CustomList,
@@ -24,18 +34,32 @@ import { UpdateCustomListDto } from './dto/update-custom-list.dto';
 import { AddListItemDto } from './dto/add-list-item.dto';
 import { AddListItemsDto } from './dto/add-list-items.dto';
 import { UpdateListItemDto } from './dto/update-list-item.dto';
+import {
+  CustomListDetailSchema,
+  CustomListEntrySchema,
+  CustomListSchema,
+  MediaListMembershipSchema,
+} from '../../swagger/api-schemas';
 
+@ApiTags('Lists')
+@ApiCookieAuth()
+@ApiUnauthorizedResponse({ description: 'Missing or invalid auth cookie' })
 @Controller('lists')
 @UseGuards(JwtAuthGuard)
 export class ListsController {
   constructor(private readonly listsService: ListsService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List custom lists' })
+  @ApiOkResponse({ type: [CustomListSchema] })
   list(@CurrentUser() user: AuthUser): Promise<CustomList[]> {
     return this.listsService.listForUser(user.id);
   }
 
   @Get('for-media/:mediaItemId')
+  @ApiOperation({ summary: 'List memberships for a media item' })
+  @ApiParam({ name: 'mediaItemId', description: 'Media item id' })
+  @ApiOkResponse({ type: [MediaListMembershipSchema] })
   membershipsForMedia(
     @CurrentUser() user: AuthUser,
     @Param('mediaItemId') mediaItemId: string,
@@ -44,6 +68,9 @@ export class ListsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get a custom list with items' })
+  @ApiParam({ name: 'id', description: 'List id' })
+  @ApiOkResponse({ type: CustomListDetailSchema })
   getOne(
     @CurrentUser() user: AuthUser,
     @Param('id') id: string,
@@ -52,6 +79,8 @@ export class ListsController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create a custom list' })
+  @ApiCreatedResponse({ type: CustomListSchema })
   create(
     @CurrentUser() user: AuthUser,
     @Body() body: CreateCustomListDto,
@@ -60,6 +89,9 @@ export class ListsController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Update a custom list' })
+  @ApiParam({ name: 'id', description: 'List id' })
+  @ApiOkResponse({ type: CustomListSchema })
   update(
     @CurrentUser() user: AuthUser,
     @Param('id') id: string,
@@ -70,6 +102,9 @@ export class ListsController {
 
   @Delete(':id')
   @HttpCode(204)
+  @ApiOperation({ summary: 'Delete a custom list' })
+  @ApiParam({ name: 'id', description: 'List id' })
+  @ApiNoContentResponse()
   async remove(
     @CurrentUser() user: AuthUser,
     @Param('id') id: string,
@@ -78,6 +113,9 @@ export class ListsController {
   }
 
   @Post(':id/items/bulk')
+  @ApiOperation({ summary: 'Add multiple media items to a list' })
+  @ApiParam({ name: 'id', description: 'List id' })
+  @ApiOkResponse({ type: CustomListDetailSchema })
   addItems(
     @CurrentUser() user: AuthUser,
     @Param('id') id: string,
@@ -87,6 +125,9 @@ export class ListsController {
   }
 
   @Post(':id/items')
+  @ApiOperation({ summary: 'Add one media item to a list' })
+  @ApiParam({ name: 'id', description: 'List id' })
+  @ApiOkResponse({ type: CustomListDetailSchema })
   addItem(
     @CurrentUser() user: AuthUser,
     @Param('id') id: string,
@@ -96,6 +137,10 @@ export class ListsController {
   }
 
   @Patch(':id/items/:mediaItemId')
+  @ApiOperation({ summary: 'Update series progress on a list entry' })
+  @ApiParam({ name: 'id', description: 'List id' })
+  @ApiParam({ name: 'mediaItemId', description: 'Media item id' })
+  @ApiOkResponse({ type: CustomListEntrySchema })
   updateItem(
     @CurrentUser() user: AuthUser,
     @Param('id') id: string,
@@ -107,6 +152,10 @@ export class ListsController {
 
   @Delete(':id/items/:mediaItemId')
   @HttpCode(204)
+  @ApiOperation({ summary: 'Remove a media item from a list' })
+  @ApiParam({ name: 'id', description: 'List id' })
+  @ApiParam({ name: 'mediaItemId', description: 'Media item id' })
+  @ApiNoContentResponse()
   async removeItem(
     @CurrentUser() user: AuthUser,
     @Param('id') id: string,

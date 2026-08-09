@@ -10,6 +10,16 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiCookieAuth,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import type { AuthUser, MediaItem } from '@mediashelf/shared-types';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -18,13 +28,19 @@ import { CreateManualMediaDto } from './dto/create-manual-media.dto';
 import { ImportMediaDto } from './dto/import-media.dto';
 import { UpdateMediaItemDto } from './dto/update-media-item.dto';
 import { ListMediaQueryDto } from './dto/list-media-query.dto';
+import { MediaItemSchema } from '../../swagger/api-schemas';
 
+@ApiTags('Media')
+@ApiCookieAuth()
+@ApiUnauthorizedResponse({ description: 'Missing or invalid auth cookie' })
 @Controller('media')
 @UseGuards(JwtAuthGuard)
 export class MediaController {
   constructor(private readonly mediaService: MediaService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List library items (filter, search, sort)' })
+  @ApiOkResponse({ type: [MediaItemSchema] })
   list(
     @CurrentUser() user: AuthUser,
     @Query() query: ListMediaQueryDto,
@@ -33,6 +49,9 @@ export class MediaController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get one library item' })
+  @ApiParam({ name: 'id', description: 'Media item id' })
+  @ApiOkResponse({ type: MediaItemSchema })
   getOne(
     @CurrentUser() user: AuthUser,
     @Param('id') id: string,
@@ -41,6 +60,8 @@ export class MediaController {
   }
 
   @Post('manual')
+  @ApiOperation({ summary: 'Create a manual library item (no TMDB match)' })
+  @ApiCreatedResponse({ type: MediaItemSchema })
   createManual(
     @CurrentUser() user: AuthUser,
     @Body() body: CreateManualMediaDto,
@@ -49,6 +70,8 @@ export class MediaController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'Import a movie or series from TMDB' })
+  @ApiCreatedResponse({ type: MediaItemSchema })
   importMedia(
     @CurrentUser() user: AuthUser,
     @Body() body: ImportMediaDto,
@@ -57,6 +80,9 @@ export class MediaController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Update status, downloaded flag, notes, or date watched' })
+  @ApiParam({ name: 'id', description: 'Media item id' })
+  @ApiOkResponse({ type: MediaItemSchema })
   update(
     @CurrentUser() user: AuthUser,
     @Param('id') id: string,
@@ -67,6 +93,9 @@ export class MediaController {
 
   @Delete(':id')
   @HttpCode(204)
+  @ApiOperation({ summary: 'Delete a library item' })
+  @ApiParam({ name: 'id', description: 'Media item id' })
+  @ApiNoContentResponse()
   async remove(
     @CurrentUser() user: AuthUser,
     @Param('id') id: string,
