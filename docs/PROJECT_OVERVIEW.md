@@ -329,7 +329,7 @@ The backup stores resolved TMDB IDs, so ambiguous titles do not need to be re-ma
 
 ## Responsive Design
 
-This is **not** a mobile application.
+This is **not** a native mobile application.
 
 The website should work correctly on desktop, tablet and mobile browsers.
 
@@ -338,11 +338,20 @@ Requirements:
 - Mobile-friendly layouts
 - Touch-friendly controls
 - No horizontal scrolling
-- Responsive navigation
+- Responsive navigation (including a mobile menu)
 
-Future enhancement:
+## Progressive Web App (PWA)
 
-- Convert the application into a Progressive Web App (PWA).
+MediaShelf is installable as a Progressive Web App so it can be added to a
+phone home screen after deployment (HTTPS).
+
+Included:
+
+- Web app manifest
+- App icons
+- Minimal service worker (installability + light shell caching)
+
+This is still a responsive web app, not a store-distributed mobile app.
 
 ---
 
@@ -526,8 +535,8 @@ Possible future additions:
 
 ## Phase 8
 
-- Feature UI polish (media cards, filters chrome)
-- PWA (optional)
+- Mobile navigation (burger menu)
+- PWA (manifest, icons, service worker) — installable on phone after deploy
 
 ---
 

@@ -1,7 +1,8 @@
-import type {
-  AnchorHTMLAttributes,
-  ButtonHTMLAttributes,
-  ReactNode,
+import {
+  forwardRef,
+  type AnchorHTMLAttributes,
+  type ButtonHTMLAttributes,
+  type ReactNode,
 } from 'react';
 
 const variants = {
@@ -42,19 +43,22 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   children: ReactNode;
 };
 
-export function Button({
-  variant = 'primary',
-  size = 'md',
-  className,
-  children,
-  ...props
-}: ButtonProps) {
-  return (
-    <button className={buttonClassName(variant, size, className)} {...props}>
-      {children}
-    </button>
-  );
-}
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  function Button(
+    { variant = 'primary', size = 'md', className, children, ...props },
+    ref,
+  ) {
+    return (
+      <button
+        ref={ref}
+        className={buttonClassName(variant, size, className)}
+        {...props}
+      >
+        {children}
+      </button>
+    );
+  },
+);
 
 type ButtonLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
   variant?: Variant;
