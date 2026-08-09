@@ -553,6 +553,10 @@ Possible future additions:
 
 ---
 
+## Phase 11
+
+- Panel/List toggle in Library and Lists ✓
+
 # Portfolio Goals
 
 This project should demonstrate proficiency in:

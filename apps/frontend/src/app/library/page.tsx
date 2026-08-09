@@ -15,9 +15,14 @@ import {
   type LibraryFiltersState,
 } from '@/components/library-filters';
 import { MediaCard } from '@/components/media-card';
+import {
+  MediaViewToggle,
+  useMediaViewMode,
+} from '@/components/media-view-toggle';
 import { useAuth } from '@/components/auth-provider';
 import { Button } from '@/components/ui/button';
 import { listCustomLists, listMedia } from '@/lib/api';
+import { mediaCollectionClassName } from '@/lib/media-view-mode';
 
 function toListQuery(filters: LibraryFiltersState): ListMediaQuery {
   const search = filters.search.trim();
@@ -47,6 +52,7 @@ function LibraryContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useMediaViewMode();
 
   useEffect(() => {
     const handle = window.setTimeout(() => {
@@ -161,7 +167,8 @@ function LibraryContent() {
             </Link>
           </p>
         </div>
-        <div className="ms-animate-fade-up ms-animate-delay-3 flex flex-wrap gap-2">
+        <div className="ms-animate-fade-up ms-animate-delay-3 flex flex-wrap items-center gap-2">
+          <MediaViewToggle value={viewMode} onChange={setViewMode} />
           <LibraryFilterSortControls
             value={filters}
             genres={genres}
@@ -222,11 +229,12 @@ function LibraryContent() {
       ) : null}
 
       {!isLoading && items.length > 0 ? (
-        <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
+        <div className={mediaCollectionClassName(viewMode)}>
           {items.map((item) => (
             <MediaCard
               key={item.id}
               item={item}
+              variant={viewMode}
               onUpdated={handleUpdated}
               onDeleted={handleDeleted}
               onError={setActionError}

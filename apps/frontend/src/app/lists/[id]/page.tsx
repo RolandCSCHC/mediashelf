@@ -24,6 +24,10 @@ import {
   type LibraryFiltersState,
 } from '@/components/library-filters';
 import { MediaCard } from '@/components/media-card';
+import {
+  MediaViewToggle,
+  useMediaViewMode,
+} from '@/components/media-view-toggle';
 import { SeriesProgressControls } from '@/components/series-progress-controls';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
@@ -35,6 +39,7 @@ import {
   updateListItem,
 } from '@/lib/api';
 import { compareMediaItems, matchesMediaFilters } from '@/lib/media-filters';
+import { mediaCollectionClassName } from '@/lib/media-view-mode';
 
 function ListDetailContent() {
   const params = useParams<{ id: string }>();
@@ -54,6 +59,7 @@ function ListDetailContent() {
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useMediaViewMode();
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -296,7 +302,8 @@ function ListDetailContent() {
                 {hasActiveFilters ? ` · showing ${visibleItems.length}` : ''}
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <MediaViewToggle value={viewMode} onChange={setViewMode} />
               <LibraryFilterSortControls
                 value={filters}
                 genres={genres}
@@ -393,43 +400,51 @@ function ListDetailContent() {
               </Button>
             </div>
           ) : (
-            <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
+            <div className={mediaCollectionClassName(viewMode)}>
               {visibleItems.map((entry) => (
-                <div key={entry.mediaItemId} className="space-y-2">
-                  <MediaCard
-                    item={entry.mediaItem}
-                    progressSeason={entry.currentSeason}
-                    progressEpisode={entry.currentEpisode}
-                    onUpdated={handleUpdated}
-                    onDeleted={(mediaId) => void handleDeleted(mediaId)}
-                    onError={setActionError}
-                  />
-                  {entry.mediaItem.type === MediaType.SERIES ? (
-                    <SeriesProgressControls
-                      currentSeason={entry.currentSeason}
-                      currentEpisode={entry.currentEpisode}
-                      compact
-                      onSave={async (progress) => {
-                        const updated = await updateListItem(
-                          list.id,
-                          entry.mediaItemId,
-                          progress,
-                        );
-                        handleProgressUpdated(updated);
-                      }}
-                      onError={setActionError}
-                    />
-                  ) : null}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="w-full text-xs"
-                    onClick={() => void handleRemoveFromList(entry.mediaItemId)}
-                  >
-                    Remove from list
-                  </Button>
-                </div>
+                <MediaCard
+                  key={entry.mediaItemId}
+                  item={entry.mediaItem}
+                  variant={viewMode}
+                  progressSeason={entry.currentSeason}
+                  progressEpisode={entry.currentEpisode}
+                  onUpdated={handleUpdated}
+                  onDeleted={(mediaId) => void handleDeleted(mediaId)}
+                  onError={setActionError}
+                  actions={
+                    <>
+                      {entry.mediaItem.type === MediaType.SERIES ? (
+                        <SeriesProgressControls
+                          currentSeason={entry.currentSeason}
+                          currentEpisode={entry.currentEpisode}
+                          compact
+                          onSave={async (progress) => {
+                            const updated = await updateListItem(
+                              list.id,
+                              entry.mediaItemId,
+                              progress,
+                            );
+                            handleProgressUpdated(updated);
+                          }}
+                          onError={setActionError}
+                        />
+                      ) : null}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className={
+                          viewMode === 'grid' ? 'w-full text-xs' : 'text-xs'
+                        }
+                        onClick={() =>
+                          void handleRemoveFromList(entry.mediaItemId)
+                        }
+                      >
+                        Remove from list
+                      </Button>
+                    </>
+                  }
+                />
               ))}
             </div>
           )}

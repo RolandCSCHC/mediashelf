@@ -8,7 +8,7 @@ import { MEDIA_STATUS_OPTIONS } from '@/lib/media-status';
 
 type MediaItemControlsProps = {
   item: MediaItem;
-  layout?: 'full' | 'compact';
+  layout?: 'full' | 'compact' | 'inline';
   disabled?: boolean;
   onUpdated: (item: MediaItem) => void;
   onDeleted: (id: string) => void;
@@ -27,7 +27,8 @@ export function MediaItemControls({
   const [isDeleting, setIsDeleting] = useState(false);
   const [notesDraft, setNotesDraft] = useState(item.notes ?? '');
   const busy = disabled || isSaving || isDeleting;
-  const compact = layout === 'compact';
+  const compact = layout === 'compact' || layout === 'inline';
+  const inline = layout === 'inline';
 
   useEffect(() => {
     setNotesDraft(item.notes ?? '');
@@ -100,13 +101,23 @@ export function MediaItemControls({
   }
 
   const selectClass = compact
-    ? 'w-full rounded-md border border-border bg-surface px-2 py-1 text-xs text-foreground outline-none ring-[var(--ring)] focus:ring-2 disabled:opacity-60'
+    ? inline
+      ? 'min-w-[7.5rem] rounded-md border border-border bg-surface px-2 py-1 text-xs text-foreground outline-none ring-[var(--ring)] focus:ring-2 disabled:opacity-60'
+      : 'w-full rounded-md border border-border bg-surface px-2 py-1 text-xs text-foreground outline-none ring-[var(--ring)] focus:ring-2 disabled:opacity-60'
     : 'w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none ring-[var(--ring)] focus:ring-2 disabled:opacity-60';
 
   return (
-    <div className={compact ? 'space-y-2' : 'space-y-6'}>
-      <div className={compact ? 'space-y-2' : 'grid gap-6 sm:grid-cols-2'}>
-        <label className="block space-y-1.5">
+    <div className={compact ? (inline ? '' : 'space-y-2') : 'space-y-6'}>
+      <div
+        className={
+          inline
+            ? 'flex flex-wrap items-center gap-3'
+            : compact
+              ? 'space-y-2'
+              : 'grid gap-6 sm:grid-cols-2'
+        }
+      >
+        <label className={inline ? 'block' : 'block space-y-1.5'}>
           {!compact ? (
             <span className="text-sm font-medium text-foreground">Status</span>
           ) : (
