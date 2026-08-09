@@ -232,3 +232,61 @@ export interface UpdateListItemRequest {
   currentSeason?: number | null;
   currentEpisode?: number | null;
 }
+
+/** Portable library backup format (export / merge-import). */
+export const LIBRARY_BACKUP_VERSION = 1 as const;
+
+export interface LibraryBackupMediaItem {
+  /** Stable within-file reference used by list memberships. */
+  ref: string;
+  tmdbId: number | null;
+  type: MediaType;
+  title: string;
+  description: string | null;
+  posterPath: string | null;
+  backdropPath: string | null;
+  releaseDate: string | null;
+  genres: string[];
+  runtime: number | null;
+  status: MediaStatus;
+  downloaded: boolean;
+  notes: string | null;
+  dateWatched: string | null;
+}
+
+export interface LibraryBackupListItem {
+  mediaRef: string;
+  currentSeason: number | null;
+  currentEpisode: number | null;
+}
+
+export interface LibraryBackupList {
+  name: string;
+  description: string | null;
+  items: LibraryBackupListItem[];
+}
+
+export interface LibraryBackupPayload {
+  version: typeof LIBRARY_BACKUP_VERSION;
+  exportedAt: string;
+  media: LibraryBackupMediaItem[];
+  lists: LibraryBackupList[];
+}
+
+export interface LibraryBackupImportRequest {
+  version: typeof LIBRARY_BACKUP_VERSION;
+  exportedAt?: string;
+  media: LibraryBackupMediaItem[];
+  lists: LibraryBackupList[];
+}
+
+export interface LibraryBackupImportResponse {
+  mediaImported: number;
+  mediaSkipped: number;
+  listsCreated: number;
+  listsReused: number;
+  membershipsAdded: number;
+  membershipsSkipped: number;
+  errorCount: number;
+  errors: string[];
+}

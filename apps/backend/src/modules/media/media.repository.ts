@@ -52,6 +52,22 @@ export class MediaRepository {
     });
   }
 
+  /** Match a manual (non-TMDB) title for merge import. */
+  findManualByTitle(
+    userId: string,
+    title: string,
+    type: MediaType,
+  ): Promise<PrismaMediaItem | null> {
+    return this.prisma.mediaItem.findFirst({
+      where: {
+        userId,
+        type,
+        tmdbId: null,
+        title: { equals: title, mode: 'insensitive' },
+      },
+    });
+  }
+
   createFromTmdb(
     userId: string,
     details: TmdbMediaDetails,
@@ -107,6 +123,45 @@ export class MediaRepository {
         runtime: null,
         notes: data.notes,
         ...(data.status !== undefined ? { status: data.status } : {}),
+      },
+    });
+  }
+
+  /** Restore a full media snapshot from a library backup (TMDB or manual). */
+  createFromSnapshot(
+    userId: string,
+    data: {
+      tmdbId: number | null;
+      type: MediaType;
+      title: string;
+      description: string | null;
+      posterPath: string | null;
+      backdropPath: string | null;
+      releaseDate: Date | null;
+      genres: string[];
+      runtime: number | null;
+      status: MediaStatus;
+      downloaded: boolean;
+      notes: string | null;
+      dateWatched: Date | null;
+    },
+  ): Promise<PrismaMediaItem> {
+    return this.prisma.mediaItem.create({
+      data: {
+        userId,
+        tmdbId: data.tmdbId,
+        type: data.type,
+        title: data.title,
+        description: data.description,
+        posterPath: data.posterPath,
+        backdropPath: data.backdropPath,
+        releaseDate: data.releaseDate,
+        genres: data.genres,
+        runtime: data.runtime,
+        status: data.status,
+        downloaded: data.downloaded,
+        notes: data.notes,
+        dateWatched: data.dateWatched,
       },
     });
   }

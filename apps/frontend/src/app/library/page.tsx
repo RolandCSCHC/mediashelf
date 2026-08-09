@@ -155,7 +155,10 @@ function LibraryContent() {
           </h1>
           <p className="ms-animate-fade-up ms-animate-delay-2 mt-3 max-w-xl text-muted">
             Filter and sort your shelf, organize titles into custom lists, and
-            track series progress per list.
+            track series progress per list.{' '}
+            <Link href="/backup" className="text-accent hover:underline">
+              Export or import JSON
+            </Link>
           </p>
         </div>
         <div className="ms-animate-fade-up ms-animate-delay-3 flex flex-wrap gap-2">

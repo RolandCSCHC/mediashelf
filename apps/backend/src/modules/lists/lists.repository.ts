@@ -53,6 +53,20 @@ export class ListsRepository {
     });
   }
 
+  findAllDetailsForUser(userId: string): Promise<ListWithItems[]> {
+    return this.prisma.customList.findMany({
+      where: { userId },
+      include: {
+        _count: { select: { items: true } },
+        items: {
+          include: { mediaItem: true },
+          orderBy: { addedAt: 'asc' },
+        },
+      },
+      orderBy: { name: 'asc' },
+    });
+  }
+
   findByUserAndName(
     userId: string,
     name: string,

@@ -48,6 +48,19 @@ export class MediaService {
     return item ? toMediaItem(item) : null;
   }
 
+  async findManualByTitleForUser(
+    userId: string,
+    title: string,
+    type: MediaType,
+  ): Promise<MediaItem | null> {
+    const item = await this.mediaRepository.findManualByTitle(
+      userId,
+      title,
+      type,
+    );
+    return item ? toMediaItem(item) : null;
+  }
+
   async assertOwnedIds(userId: string, ids: string[]): Promise<void> {
     if (ids.length === 0) {
       return;
@@ -121,6 +134,48 @@ export class MediaService {
       ...(dto.status !== undefined
         ? { status: dto.status as MediaStatus }
         : {}),
+    });
+
+    return toMediaItem(created);
+  }
+
+  async createFromSnapshot(
+    userId: string,
+    data: {
+      tmdbId: number | null;
+      type: MediaType;
+      title: string;
+      description: string | null;
+      posterPath: string | null;
+      backdropPath: string | null;
+      releaseDate: string | null;
+      genres: string[];
+      runtime: number | null;
+      status: MediaStatus;
+      downloaded: boolean;
+      notes: string | null;
+      dateWatched: string | null;
+    },
+  ): Promise<MediaItem> {
+    const title = data.title.trim();
+    if (!title) {
+      throw new BadRequestException('Title is required');
+    }
+
+    const created = await this.mediaRepository.createFromSnapshot(userId, {
+      tmdbId: data.tmdbId,
+      type: data.type,
+      title,
+      description: data.description?.trim() || null,
+      posterPath: data.posterPath,
+      backdropPath: data.backdropPath,
+      releaseDate: data.releaseDate ? new Date(data.releaseDate) : null,
+      genres: data.genres,
+      runtime: data.runtime,
+      status: data.status,
+      downloaded: data.downloaded,
+      notes: data.notes?.trim() || null,
+      dateWatched: data.dateWatched ? new Date(data.dateWatched) : null,
     });
 
     return toMediaItem(created);

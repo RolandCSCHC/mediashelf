@@ -324,9 +324,18 @@ This functionality can be removed once my library has been migrated.
 
 ---
 
-## Export
+## Export / JSON backup
 
-Export the personal media library to JSON.
+Export the personal media library (and custom lists) to JSON.
+
+Import the same JSON with **merge** semantics:
+
+- TMDB titles match on `(tmdbId, type)` and are skipped if already present
+- Manual titles match on `(title, type)` and are skipped if already present
+- Missing lists are created by name; existing lists are reused
+- Missing list memberships are added; existing memberships (and series progress) are left unchanged
+
+The backup stores resolved TMDB IDs, so ambiguous titles do not need to be re-matched on import.
 
 ---
 
@@ -524,7 +533,7 @@ Possible future additions:
 - Import existing `.txt` and hiding it
 - Search in Library and Lists
 - Manual entry if you can't find a movie/series
-- Export library to JSON
+- Export / import library JSON (merge)
 
 ---
 

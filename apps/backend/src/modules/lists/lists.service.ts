@@ -46,6 +46,11 @@ export class ListsService {
     return toCustomListDetail(list);
   }
 
+  async listDetailsForUser(userId: string): Promise<CustomListDetail[]> {
+    const lists = await this.listsRepository.findAllDetailsForUser(userId);
+    return lists.map(toCustomListDetail);
+  }
+
   async createForUser(
     userId: string,
     dto: CreateCustomListDto,
@@ -216,6 +221,49 @@ export class ListsService {
     }
 
     return this.getForUser(userId, listId);
+  }
+
+  /** Add a list membership if missing. Does not overwrite existing progress. */
+  async addItemIfMissing(
+    userId: string,
+    listId: string,
+    mediaItemId: string,
+    progress?: {
+      currentSeason?: number | null;
+      currentEpisode?: number | null;
+    },
+  ): Promise<'added' | 'skipped'> {
+    const list = await this.listsRepository.findByIdForUser(listId, userId);
+    if (!list) {
+      throw new NotFoundException('List not found');
+    }
+
+    const media = await this.mediaService.getForUser(userId, mediaItemId);
+    this.assertProgressAllowed(media.type, progress ?? {});
+
+    const already = await this.listsRepository.findListItem(
+      listId,
+      mediaItemId,
+    );
+    if (already) {
+      return 'skipped';
+    }
+
+    try {
+      await this.listsRepository.addItem(listId, mediaItemId, {
+        currentSeason: progress?.currentSeason,
+        currentEpisode: progress?.currentEpisode,
+      });
+      return 'added';
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        return 'skipped';
+      }
+      throw error;
+    }
   }
 
   async addItemsForUser(

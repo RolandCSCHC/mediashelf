@@ -12,6 +12,9 @@ import type {
   ImportMediaRequest,
   ImportPreviewRequest,
   ImportPreviewResponse,
+  LibraryBackupImportRequest,
+  LibraryBackupImportResponse,
+  LibraryBackupPayload,
   ListMediaQuery,
   LogoutResponse,
   MediaItem,
@@ -264,4 +267,17 @@ export async function listMediaMemberships(
   mediaItemId: string,
 ): Promise<MediaListMembership[]> {
   return apiFetch<MediaListMembership[]>(`/lists/for-media/${mediaItemId}`);
+}
+
+export async function exportLibraryBackup(): Promise<LibraryBackupPayload> {
+  return apiFetch<LibraryBackupPayload>('/backup');
+}
+
+export async function importLibraryBackup(
+  payload: LibraryBackupImportRequest,
+): Promise<LibraryBackupImportResponse> {
+  return apiFetch<LibraryBackupImportResponse>('/backup/import', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }

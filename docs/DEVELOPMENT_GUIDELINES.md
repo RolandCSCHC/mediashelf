@@ -165,6 +165,10 @@ DELETE /lists/:id/items/:mediaItemId
 
 GET /lists/for-media/:mediaItemId
 
+GET /backup
+
+POST /backup/import
+
 Return consistent HTTP status codes.
 
 Return meaningful error messages.
