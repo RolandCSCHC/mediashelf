@@ -142,6 +142,10 @@ export class MediaRepository {
       };
     }
 
+    if (filters.search) {
+      where.title = { contains: filters.search, mode: 'insensitive' };
+    }
+
     return where;
   }
 

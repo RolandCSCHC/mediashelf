@@ -49,6 +49,7 @@ export type MediaFilterSortInput = {
   type: '' | MediaType;
   genre: string;
   downloaded: '' | 'true' | 'false';
+  search?: string;
   sortBy: MediaSortBy;
 };
 
@@ -69,6 +70,10 @@ export function matchesMediaFilters(
     return false;
   }
   if (filters.downloaded === 'false' && item.downloaded) {
+    return false;
+  }
+  const query = filters.search?.trim().toLowerCase();
+  if (query && !item.title.toLowerCase().includes(query)) {
     return false;
   }
   return true;

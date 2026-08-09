@@ -77,6 +77,9 @@ function toQueryString(query: ListMediaQuery): string {
   if (query.listId) {
     params.set('listId', query.listId);
   }
+  if (query.search) {
+    params.set('search', query.search);
+  }
   if (query.sortBy) {
     params.set('sortBy', query.sortBy);
   }

@@ -258,7 +258,8 @@ function ListDetailContent() {
     filters.status !== '' ||
     filters.type !== '' ||
     filters.genre !== '' ||
-    filters.downloaded !== '';
+    filters.downloaded !== '' ||
+    filters.search.trim() !== '';
 
   const fieldClass =
     'w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none ring-[var(--ring)] focus:ring-2';

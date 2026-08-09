@@ -22,6 +22,7 @@ export type LibraryFiltersState = {
   genre: string;
   downloaded: '' | 'true' | 'false';
   listId: string;
+  search: string;
   sortBy: MediaSortBy;
 };
 
@@ -66,6 +67,14 @@ export function LibraryFilterSortControls({
 
   return (
     <>
+      <input
+        type="search"
+        value={value.search}
+        onChange={(event) => patch({ search: event.target.value })}
+        placeholder="Search titles…"
+        aria-label="Search titles"
+        className="min-w-[10rem] flex-1 rounded-md border border-border bg-surface px-3 py-1.5 text-sm text-foreground outline-none ring-[var(--ring)] placeholder:text-muted focus:ring-2 sm:max-w-[14rem] sm:flex-none"
+      />
       <Button
         type="button"
         variant="secondary"
@@ -264,5 +273,6 @@ export const DEFAULT_LIBRARY_FILTERS: LibraryFiltersState = {
   genre: '',
   downloaded: '',
   listId: '',
+  search: '',
   sortBy: MediaSortBy.DATE_ADDED,
 };

@@ -46,6 +46,11 @@ export class ListMediaQueryDto {
   listId?: string;
 
   @IsOptional()
+  @IsString()
+  @MinLength(1)
+  search?: string;
+
+  @IsOptional()
   @IsEnum(MediaSortBy)
   sortBy?: MediaSortBy = MediaSortBy.DATE_ADDED;
 }

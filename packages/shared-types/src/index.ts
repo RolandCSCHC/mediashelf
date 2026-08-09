@@ -161,6 +161,7 @@ export interface ListMediaQuery {
   genre?: string;
   downloaded?: boolean;
   listId?: string;
+  search?: string;
   sortBy?: MediaSortBy;
 }
 

@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { listCustomLists, listMedia } from '@/lib/api';
 
 function toListQuery(filters: LibraryFiltersState): ListMediaQuery {
+  const search = filters.search.trim();
   return {
     ...(filters.status ? { status: filters.status } : {}),
     ...(filters.type ? { type: filters.type } : {}),
@@ -28,6 +29,7 @@ function toListQuery(filters: LibraryFiltersState): ListMediaQuery {
       ? { downloaded: filters.downloaded === 'true' }
       : {}),
     ...(filters.listId ? { listId: filters.listId } : {}),
+    ...(search ? { search } : {}),
     sortBy: filters.sortBy,
   };
 }
@@ -41,11 +43,39 @@ function LibraryContent() {
   const [filters, setFilters] = useState<LibraryFiltersState>(
     DEFAULT_LIBRARY_FILTERS,
   );
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const query = useMemo(() => toListQuery(filters), [filters]);
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      setDebouncedSearch(filters.search.trim());
+    }, 300);
+    return () => window.clearTimeout(handle);
+  }, [filters.search]);
+
+  const query = useMemo(
+    () =>
+      toListQuery({
+        status: filters.status,
+        type: filters.type,
+        genre: filters.genre,
+        downloaded: filters.downloaded,
+        listId: filters.listId,
+        search: debouncedSearch,
+        sortBy: filters.sortBy,
+      }),
+    [
+      filters.status,
+      filters.type,
+      filters.genre,
+      filters.downloaded,
+      filters.listId,
+      filters.sortBy,
+      debouncedSearch,
+    ],
+  );
 
   const loadOptions = useCallback(async () => {
     const [allItems, customLists] = await Promise.all([
@@ -110,7 +140,8 @@ function LibraryContent() {
     filters.type !== '' ||
     filters.genre !== '' ||
     filters.downloaded !== '' ||
-    filters.listId !== '';
+    filters.listId !== '' ||
+    filters.search.trim() !== '';
 
   return (
     <AppShell width="wide">
