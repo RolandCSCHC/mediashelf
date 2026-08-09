@@ -3,6 +3,7 @@ import type {
   AddListItemsRequest,
   AuthUser,
   CreateCustomListRequest,
+  CreateManualMediaRequest,
   CustomList,
   CustomListDetail,
   CustomListEntry,
@@ -142,6 +143,15 @@ export async function importMedia(
   payload: ImportMediaRequest,
 ): Promise<MediaItem> {
   return apiFetch<MediaItem>('/media', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function createManualMedia(
+  payload: CreateManualMediaRequest,
+): Promise<MediaItem> {
+  return apiFetch<MediaItem>('/media/manual', {
     method: 'POST',
     body: JSON.stringify(payload),
   });

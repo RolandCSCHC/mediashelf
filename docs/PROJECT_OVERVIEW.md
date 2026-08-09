@@ -198,7 +198,7 @@ Each item has a `type` of `MOVIE` or `SERIES`. The REST resource is `/media`.
 
 Each media item should contain information such as:
 
-- TMDB ID
+- TMDB ID (nullable for manually added titles)
 - Title
 - Description
 - Poster
@@ -271,6 +271,8 @@ Results appear with posters.
 The user selects one.
 
 MediaShelf automatically imports all relevant information.
+
+When a title cannot be found on TMDB, the user can add it manually (title and type required; year, description, notes, and status optional). Manual items have no TMDB ID or poster.
 
 ---
 
@@ -520,6 +522,8 @@ Possible future additions:
 ## Phase 7
 
 - Import existing `.txt` and hiding it
+- Search in Library and Lists
+- Manual entry if you can't find a movie/series
 - Export library to JSON
 
 ---

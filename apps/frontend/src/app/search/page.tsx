@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import type { MediaType, TmdbSearchResult } from '@mediashelf/shared-types';
+import { MediaType, type TmdbSearchResult } from '@mediashelf/shared-types';
 import { AppShell } from '@/components/app-shell';
 import { AuthGuard } from '@/components/auth-guard';
+import { ManualMediaForm } from '@/components/manual-media-form';
 import { SearchResultCard } from '@/components/search-result-card';
 import { Button } from '@/components/ui/button';
 import { listMedia, searchTmdb } from '@/lib/api';
@@ -18,12 +19,22 @@ function SearchContent() {
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showManualForm, setShowManualForm] = useState(false);
+  const [manualTitle, setManualTitle] = useState('');
 
   const filters: { value: SearchFilter; label: string }[] = [
     { value: 'ALL', label: 'All' },
     { value: 'MOVIE', label: 'Movies' },
     { value: 'SERIES', label: 'Series' },
   ];
+
+  const initialManualType =
+    filter === 'SERIES' ? MediaType.SERIES : MediaType.MOVIE;
+
+  function openManualForm(title = '') {
+    setManualTitle(title);
+    setShowManualForm(true);
+  }
 
   async function runSearch(event: React.FormEvent) {
     event.preventDefault();
@@ -35,6 +46,7 @@ function SearchContent() {
     setIsSearching(true);
     setError(null);
     setHasSearched(true);
+    setShowManualForm(false);
 
     try {
       const [searchResponse, media] = await Promise.all([
@@ -44,8 +56,16 @@ function SearchContent() {
 
       setResults(searchResponse.results);
       setLibraryKeys(
-        new Set(media.map((item) => `${item.type}:${item.tmdbId}`)),
+        new Set(
+          media
+            .filter((item) => item.tmdbId != null)
+            .map((item) => `${item.type}:${item.tmdbId}`),
+        ),
       );
+
+      if (searchResponse.results.length === 0) {
+        openManualForm(trimmed);
+      }
     } catch (err) {
       setResults([]);
       setError(err instanceof Error ? err.message : 'Search failed');
@@ -67,7 +87,8 @@ function SearchContent() {
         Search TMDB
       </h1>
       <p className="ms-animate-fade-up ms-animate-delay-2 mt-3 max-w-xl text-muted">
-        Find a movie or series, then add it to your private library.
+        Find a movie or series, then add it to your private library. If TMDB
+        does not have it, add it manually.
       </p>
 
       <form
@@ -88,26 +109,39 @@ function SearchContent() {
           </Button>
         </div>
 
-        <div
-          className="flex flex-wrap gap-2"
-          role="group"
-          aria-label="Type filter"
-        >
-          {filters.map((option) => (
-            <button
-              key={option.value}
+        <div className="flex flex-wrap items-center gap-2">
+          <div
+            className="flex flex-wrap gap-2"
+            role="group"
+            aria-label="Type filter"
+          >
+            {filters.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setFilter(option.value)}
+                className={[
+                  'rounded-md border px-3 py-1.5 text-sm transition',
+                  filter === option.value
+                    ? 'border-accent bg-accent text-white'
+                    : 'border-border bg-surface text-muted hover:text-foreground',
+                ].join(' ')}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          {!showManualForm ? (
+            <Button
               type="button"
-              onClick={() => setFilter(option.value)}
-              className={[
-                'rounded-md border px-3 py-1.5 text-sm transition',
-                filter === option.value
-                  ? 'border-accent bg-accent text-white'
-                  : 'border-border bg-surface text-muted hover:text-foreground',
-              ].join(' ')}
+              variant="secondary"
+              size="sm"
+              onClick={() => openManualForm(query.trim())}
             >
-              {option.label}
-            </button>
-          ))}
+              Add manually
+            </Button>
+          ) : null}
         </div>
       </form>
 
@@ -117,15 +151,38 @@ function SearchContent() {
         </p>
       ) : null}
 
+      {showManualForm ? (
+        <div className="mt-8">
+          <ManualMediaForm
+            initialTitle={manualTitle}
+            initialType={initialManualType}
+            onCancel={() => setShowManualForm(false)}
+          />
+        </div>
+      ) : null}
+
       <div className="mt-8 space-y-4">
-        {!hasSearched ? (
+        {!hasSearched && !showManualForm ? (
           <p className="text-sm text-muted">
             Enter a title to search The Movie Database.
           </p>
         ) : null}
 
-        {hasSearched && !isSearching && results.length === 0 && !error ? (
-          <p className="text-sm text-muted">No results found.</p>
+        {hasSearched &&
+        !isSearching &&
+        results.length === 0 &&
+        !error &&
+        !showManualForm ? (
+          <p className="text-sm text-muted">
+            No results found.{' '}
+            <button
+              type="button"
+              className="text-accent hover:underline"
+              onClick={() => openManualForm(query.trim())}
+            >
+              Add manually
+            </button>
+          </p>
         ) : null}
 
         {results.map((result) => (

@@ -44,7 +44,7 @@ export interface LogoutResponse {
 export interface MediaItem {
   id: string;
   userId: string;
-  tmdbId: number;
+  tmdbId: number | null;
   type: MediaType;
   title: string;
   description: string | null;
@@ -59,6 +59,16 @@ export interface MediaItem {
   dateWatched: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+/** Create a library item without a TMDB match. */
+export interface CreateManualMediaRequest {
+  title: string;
+  type: MediaType;
+  releaseYear?: number;
+  description?: string | null;
+  notes?: string | null;
+  status?: MediaStatus;
 }
 
 export interface HealthResponse {

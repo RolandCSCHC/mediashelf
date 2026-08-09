@@ -9,6 +9,7 @@ import { MediaStatus, MediaType } from '@mediashelf/shared-types';
 import { TmdbService } from '../tmdb/tmdb.service';
 import { MediaRepository } from './media.repository';
 import { toMediaItem } from './media.mapper';
+import type { CreateManualMediaDto } from './dto/create-manual-media.dto';
 import type { UpdateMediaItemDto } from './dto/update-media-item.dto';
 
 @Injectable()
@@ -84,6 +85,44 @@ export class MediaService {
       details,
       options,
     );
+    return toMediaItem(created);
+  }
+
+  async createManual(
+    userId: string,
+    dto: CreateManualMediaDto,
+  ): Promise<MediaItem> {
+    const title = dto.title.trim();
+    if (!title) {
+      throw new BadRequestException('Title is required');
+    }
+
+    const description =
+      dto.description === undefined || dto.description === null
+        ? null
+        : dto.description.trim() || null;
+
+    const notes =
+      dto.notes === undefined || dto.notes === null
+        ? null
+        : dto.notes.trim() || null;
+
+    const releaseDate =
+      dto.releaseYear !== undefined
+        ? new Date(Date.UTC(dto.releaseYear, 0, 1))
+        : null;
+
+    const created = await this.mediaRepository.createManual(userId, {
+      type: dto.type as MediaType,
+      title,
+      description,
+      releaseDate,
+      notes,
+      ...(dto.status !== undefined
+        ? { status: dto.status as MediaStatus }
+        : {}),
+    });
+
     return toMediaItem(created);
   }
 

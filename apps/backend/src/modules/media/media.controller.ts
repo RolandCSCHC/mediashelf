@@ -14,6 +14,7 @@ import type { AuthUser, MediaItem } from '@mediashelf/shared-types';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { MediaService } from './media.service';
+import { CreateManualMediaDto } from './dto/create-manual-media.dto';
 import { ImportMediaDto } from './dto/import-media.dto';
 import { UpdateMediaItemDto } from './dto/update-media-item.dto';
 import { ListMediaQueryDto } from './dto/list-media-query.dto';
@@ -37,6 +38,14 @@ export class MediaController {
     @Param('id') id: string,
   ): Promise<MediaItem> {
     return this.mediaService.getForUser(user.id, id);
+  }
+
+  @Post('manual')
+  createManual(
+    @CurrentUser() user: AuthUser,
+    @Body() body: CreateManualMediaDto,
+  ): Promise<MediaItem> {
+    return this.mediaService.createManual(user.id, body);
   }
 
   @Post()

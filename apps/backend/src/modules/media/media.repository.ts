@@ -82,6 +82,35 @@ export class MediaRepository {
     });
   }
 
+  createManual(
+    userId: string,
+    data: {
+      type: MediaType;
+      title: string;
+      description: string | null;
+      releaseDate: Date | null;
+      notes: string | null;
+      status?: MediaStatus;
+    },
+  ): Promise<PrismaMediaItem> {
+    return this.prisma.mediaItem.create({
+      data: {
+        userId,
+        tmdbId: null,
+        type: data.type,
+        title: data.title,
+        description: data.description,
+        posterPath: null,
+        backdropPath: null,
+        releaseDate: data.releaseDate,
+        genres: [],
+        runtime: null,
+        notes: data.notes,
+        ...(data.status !== undefined ? { status: data.status } : {}),
+      },
+    });
+  }
+
   async updateOwned(
     id: string,
     userId: string,
