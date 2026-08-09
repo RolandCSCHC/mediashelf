@@ -21,8 +21,9 @@ import type {
   UpdateMediaItemRequest,
 } from '@mediashelf/shared-types';
 
-const browserApiUrl =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+// Prefer same-origin `/api` (Next.js BFF proxy) so the auth cookie is first-party
+// on Safari. Absolute API URLs break login on iOS when frontend/API are cross-site.
+const browserApiUrl = process.env.NEXT_PUBLIC_API_URL ?? '/api';
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${browserApiUrl}${path}`, {

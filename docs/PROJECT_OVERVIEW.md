@@ -556,6 +556,13 @@ Possible future additions:
 ## Phase 11
 
 - Panel/List toggle in Library and Lists ✓
+- Fix so Google Auth works in Safari in cellphone ✓
+
+---
+
+## Phase 12
+
+- Move Movies/Series between lists?
 
 # Portfolio Goals
 

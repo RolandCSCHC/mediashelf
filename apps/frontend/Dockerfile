@@ -17,7 +17,7 @@ COPY apps/frontend ./apps/frontend
 RUN pnpm --filter @mediashelf/shared-types build
 
 ENV NEXT_TELEMETRY_DISABLED=1
-ARG NEXT_PUBLIC_API_URL=http://localhost:3001
+ARG NEXT_PUBLIC_API_URL=/api
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN pnpm --filter @mediashelf/frontend build
 

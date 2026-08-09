@@ -5,10 +5,12 @@ import { HealthStatus } from '@/components/health-status';
 import { ButtonLink } from '@/components/ui/button';
 
 async function fetchHealth(): Promise<HealthResponse | null> {
-  // API_URL is for server-side (Docker internal network); NEXT_PUBLIC_* for the browser
+  // Server components call Nest directly (Docker internal URL or localhost).
+  // Do not use NEXT_PUBLIC_API_URL=/api here — that path is browser-only.
+  const publicApiUrl = process.env.NEXT_PUBLIC_API_URL;
   const apiUrl =
     process.env.API_URL ??
-    process.env.NEXT_PUBLIC_API_URL ??
+    (publicApiUrl?.startsWith('http') ? publicApiUrl : undefined) ??
     'http://localhost:3001';
 
   try {

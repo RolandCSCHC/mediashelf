@@ -73,28 +73,36 @@ On startup the backend runs Prisma migrations. Log in with Google to create your
 1. Open [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials).
 2. Create an **OAuth 2.0 Client ID** (application type: Web application).
 3. Add authorized JavaScript origin: `http://localhost:3000`
-4. Add authorized redirect URI: `http://localhost:3001/auth/google/callback`
+4. Add authorized redirect URI: `http://localhost:3000/api/auth/google/callback`
 5. Copy the client ID and secret into `.env`:
 
 ```bash
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
-GOOGLE_CALLBACK_URL=http://localhost:3001/auth/google/callback
+GOOGLE_CALLBACK_URL=http://localhost:3000/api/auth/google/callback
 JWT_SECRET=use-a-long-random-string
 FRONTEND_URL=http://localhost:3000
 CORS_ORIGIN=http://localhost:3000
+NEXT_PUBLIC_API_URL=/api
+API_URL=http://localhost:3001
 TMDB_API_KEY=your_v3_api_key
 ```
 
 ## Auth flow
 
-1. Frontend sends the browser to `GET /auth/google`.
-2. NestJS completes the Google OAuth handshake at `/auth/google/callback`.
-3. The backend upserts the `User` row and sets an httpOnly JWT cookie (`mediashelf_token`).
-4. Protected API routes use `JwtAuthGuard` (cookie-based).
-5. Protected UI routes (e.g. `/library`) call `GET /auth/me` with credentials and redirect to `/login` when unauthenticated.
+1. Frontend sends the browser to same-origin `GET /api/auth/google` (Next.js proxies to Nest).
+2. NestJS completes the Google OAuth handshake at `/api/auth/google/callback` (also proxied).
+3. The backend upserts the `User` row and sets an httpOnly JWT cookie (`mediashelf_token`) on the **frontend** origin.
+4. Protected API routes use `JwtAuthGuard` (cookie-based); the browser calls `/api/...` so the cookie is first-party.
+5. Protected UI routes (e.g. `/library`) call `GET /api/auth/me` with credentials and redirect to `/login` when unauthenticated.
 
-Cross-origin production (separate frontend/API hosts) uses `Secure` + `SameSite=None` cookies when `FRONTEND_URL` is `https://…`. Local HTTP keeps `SameSite=Lax`.
+This same-origin proxy is required in production: separate `*.onrender.com` frontend/API hosts are cross-site, and **Safari blocks third-party auth cookies** (desktop Chrome is more lenient). Cookies use `SameSite=Lax` (+ `Secure` on HTTPS).
+
+### Production (Render) checklist after deploy
+
+1. Frontend service env: `NEXT_PUBLIC_API_URL=/api`, `API_URL=https://mediashelf-api-cetd.onrender.com` (rebuild frontend so `NEXT_PUBLIC_*` is baked in).
+2. Backend service env: `GOOGLE_CALLBACK_URL=https://mediashelf-m5rq.onrender.com/api/auth/google/callback` (and matching `FRONTEND_URL` / `CORS_ORIGIN`).
+3. Google Cloud Console → add authorized redirect URI: `https://mediashelf-m5rq.onrender.com/api/auth/google/callback`.
 
 ## Local development (apps outside Docker)
 

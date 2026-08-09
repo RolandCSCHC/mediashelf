@@ -25,13 +25,13 @@ describe('auth-cookie', () => {
       });
     });
 
-    it('uses secure SameSite=None cookies for https frontend', () => {
+    it('uses secure SameSite=Lax cookies for https frontend (same-origin proxy)', () => {
       process.env.FRONTEND_URL = 'https://mediashelf.example';
 
       expect(getAuthCookieOptions()).toEqual({
         httpOnly: true,
         secure: true,
-        sameSite: 'none',
+        sameSite: 'lax',
         maxAge: AUTH_COOKIE_MAX_AGE_MS,
         path: '/',
       });
@@ -45,7 +45,7 @@ describe('auth-cookie', () => {
       expect(getClearAuthCookieOptions()).toEqual({
         httpOnly: true,
         secure: true,
-        sameSite: 'none',
+        sameSite: 'lax',
         path: '/',
       });
     });
