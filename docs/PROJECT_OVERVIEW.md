@@ -567,6 +567,7 @@ Production hosting: Next.js and NestJS on Vercel; database on Supabase.
 
 ## Phase 12
 
+- Redirect to Library when user is logged in ✓
 - Move Movies/Series between lists?
 
 # Portfolio Goals

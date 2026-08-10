@@ -1,6 +1,7 @@
 import type { HealthResponse } from '@mediashelf/shared-types';
 import { AppShell } from '@/components/app-shell';
 import { GoogleLoginButton } from '@/components/google-login-button';
+import { GuestGuard } from '@/components/guest-guard';
 import { HealthStatus } from '@/components/health-status';
 import { ButtonLink } from '@/components/ui/button';
 
@@ -32,24 +33,26 @@ export default async function HomePage() {
   const health = await fetchHealth();
 
   return (
-    <AppShell center footer={<HealthStatus health={health} compact />}>
-      <p className="ms-animate-fade-up mb-3 text-sm uppercase tracking-[0.2em] text-muted">
-        Your private media library
-      </p>
-      <h1 className="ms-animate-fade-up ms-animate-delay-1 font-display text-5xl font-semibold tracking-tight text-foreground sm:text-6xl md:text-7xl">
-        MediaShelf
-      </h1>
-      <p className="ms-animate-fade-up ms-animate-delay-2 mt-4 max-w-xl text-lg text-muted">
-        Track movies and TV series in one place. Sign in with Google to open
-        your private library.
-      </p>
+    <GuestGuard>
+      <AppShell center footer={<HealthStatus health={health} compact />}>
+        <p className="ms-animate-fade-up mb-3 text-sm uppercase tracking-[0.2em] text-muted">
+          Your private media library
+        </p>
+        <h1 className="ms-animate-fade-up ms-animate-delay-1 font-display text-5xl font-semibold tracking-tight text-foreground sm:text-6xl md:text-7xl">
+          MediaShelf
+        </h1>
+        <p className="ms-animate-fade-up ms-animate-delay-2 mt-4 max-w-xl text-lg text-muted">
+          Track movies and TV series in one place. Sign in with Google to open
+          your private library.
+        </p>
 
-      <div className="ms-animate-fade-up ms-animate-delay-3 mt-8 flex flex-wrap items-center gap-3">
-        <GoogleLoginButton />
-        <ButtonLink href="/library" variant="ghost" size="md">
-          Go to library
-        </ButtonLink>
-      </div>
-    </AppShell>
+        <div className="ms-animate-fade-up ms-animate-delay-3 mt-8 flex flex-wrap items-center gap-3">
+          <GoogleLoginButton />
+          <ButtonLink href="/library" variant="ghost" size="md">
+            Go to library
+          </ButtonLink>
+        </div>
+      </AppShell>
+    </GuestGuard>
   );
 }

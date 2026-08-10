@@ -116,6 +116,8 @@ This same-origin proxy is required in production: separate `*.vercel.app` fronte
 
    ```bash
    cp .env.example .env
+   # Keep DATABASE_URL and DIRECT_URL pointed at local Postgres for this flow
+   # (Docker Compose sets both itself; Vercel/Supabase uses pooler + direct).
    pnpm install
    pnpm --filter @mediashelf/shared-types build
    pnpm --filter @mediashelf/backend exec prisma migrate deploy
