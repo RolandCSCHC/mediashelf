@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic';
 const HOP_BY_HOP_HEADERS = new Set([
   'connection',
   'content-length',
+  'content-encoding',
   'host',
   'keep-alive',
   'proxy-authenticate',
@@ -61,9 +62,16 @@ async function proxy(
   const responseHeaders = new Headers();
   upstream.headers.forEach((value, key) => {
     const lower = key.toLowerCase();
-    if (HOP_BY_HOP_HEADERS.has(lower) || lower === 'set-cookie') {
+
+    if (
+      HOP_BY_HOP_HEADERS.has(lower) ||
+      lower === 'set-cookie' ||
+      lower === 'content-encoding' ||
+      lower === 'content-length'
+    ) {
       return;
     }
+
     responseHeaders.set(key, value);
   });
 
