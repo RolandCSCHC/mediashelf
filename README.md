@@ -1,19 +1,17 @@
 # MediaShelf
 
-Personal media library for movies and TV series — Google login, TMDB search, custom lists, watch progress, JSON backup, and installable PWA. Built as a production-style portfolio app and deployed on Render.
+Personal media library for movies and TV series — Google login, TMDB search, custom lists, watch progress, JSON backup, and installable PWA. Built as a production-style portfolio app; frontend and API on Vercel, database on Supabase.
 
 ## Deployment
 
-Deployed on Render (Docker web services + managed PostgreSQL).
+| Service  | URL                                      |
+| -------- | ---------------------------------------- |
+| Frontend | https://mediashelf-frontend.vercel.app   |
+| API      | https://mediashelf-api.vercel.app        |
+| Health   | https://mediashelf-api.vercel.app/health |
+| Swagger  | https://mediashelf-api.vercel.app/docs   |
 
-| Service  | URL                                             |
-| -------- | ----------------------------------------------- |
-| Frontend | https://mediashelf-m5rq.onrender.com            |
-| API      | https://mediashelf-api-cetd.onrender.com        |
-| Health   | https://mediashelf-api-cetd.onrender.com/health |
-| Swagger  | https://mediashelf-api-cetd.onrender.com/docs   |
-
-Free-tier services may sleep when idle; the first request after a pause can take ~30–60s.
+Database: [Supabase](https://supabase.com/) managed PostgreSQL (Prisma uses a pooled `DATABASE_URL` at runtime and a direct `DIRECT_URL` for migrations).
 
 ## Features
 
@@ -35,11 +33,11 @@ Free-tier services may sleep when idle; the first request after a pause can take
 
 - **Frontend:** Next.js (App Router), TypeScript, Tailwind CSS
 - **Backend:** NestJS, TypeScript, Prisma
-- **Database:** PostgreSQL
+- **Database:** PostgreSQL (Supabase in production; Docker Postgres locally)
 - **Auth:** Google OAuth + JWT httpOnly cookie
 - **Monorepo:** pnpm workspaces
 - **Containers:** Docker + Docker Compose (local)
-- **Production:** Render (frontend + backend web services, managed Postgres)
+- **Production:** Vercel (frontend + API) + Supabase (Postgres)
 
 ## Prerequisites
 
@@ -96,13 +94,15 @@ TMDB_API_KEY=your_v3_api_key
 4. Protected API routes use `JwtAuthGuard` (cookie-based); the browser calls `/api/...` so the cookie is first-party.
 5. Protected UI routes (e.g. `/library`) call `GET /api/auth/me` with credentials and redirect to `/login` when unauthenticated.
 
-This same-origin proxy is required in production: separate `*.onrender.com` frontend/API hosts are cross-site, and **Safari blocks third-party auth cookies** (desktop Chrome is more lenient). Cookies use `SameSite=Lax` (+ `Secure` on HTTPS).
+This same-origin proxy is required in production: separate `*.vercel.app` frontend/API hosts are cross-site, and **Safari blocks third-party auth cookies** (desktop Chrome is more lenient). Cookies use `SameSite=Lax` (+ `Secure` on HTTPS).
 
-### Production (Render) checklist after deploy
+### Production (Vercel + Supabase) checklist
 
-1. Frontend service env: `NEXT_PUBLIC_API_URL=/api`, `API_URL=https://mediashelf-api-cetd.onrender.com` (rebuild frontend so `NEXT_PUBLIC_*` is baked in).
-2. Backend service env: `GOOGLE_CALLBACK_URL=https://mediashelf-m5rq.onrender.com/api/auth/google/callback` (and matching `FRONTEND_URL` / `CORS_ORIGIN`).
-3. Google Cloud Console → add authorized redirect URI: `https://mediashelf-m5rq.onrender.com/api/auth/google/callback`.
+1. **Frontend** project env: `NEXT_PUBLIC_API_URL=/api`, `API_URL=https://mediashelf-api.vercel.app` (redeploy so `NEXT_PUBLIC_*` is baked in).
+2. **Backend** project env: `DATABASE_URL` (Supabase transaction pooler, port `6543`, `?pgbouncer=true`), `DIRECT_URL` (Supabase direct host `db.<project-ref>.supabase.co:5432`), plus `GOOGLE_*`, `JWT_SECRET`, `FRONTEND_URL`, `CORS_ORIGIN`.
+3. Backend: `GOOGLE_CALLBACK_URL=https://mediashelf-frontend.vercel.app/api/auth/google/callback` (and matching `FRONTEND_URL` / `CORS_ORIGIN`).
+4. Google Cloud Console → authorized JavaScript origin: `https://mediashelf-frontend.vercel.app`; redirect URI: `https://mediashelf-frontend.vercel.app/api/auth/google/callback`.
+5. Apply schema: from a machine with `DIRECT_URL` set, run `pnpm --filter @mediashelf/backend exec prisma migrate deploy`.
 
 ## Local development (apps outside Docker)
 

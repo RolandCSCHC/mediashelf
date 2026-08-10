@@ -24,7 +24,7 @@ The application should be something I personally use every day while also showca
 
 # Purpose of the Application
 
-MediaShelf is an online personal media library I can access from anywhere after deploying it to Render.
+MediaShelf is an online personal media library I can access from anywhere after deploying it to Vercel (apps) and Supabase (database).
 
 Each authenticated user has their own private media library.
 
@@ -67,7 +67,7 @@ ORM:
 
 ### Reason
 
-The data is highly relational, PostgreSQL is widely used in production, Render provides managed PostgreSQL, and Prisma offers an excellent developer experience with type safety, migrations and a modern ORM.
+The data is highly relational, PostgreSQL is widely used in production, Supabase provides managed PostgreSQL (with connection pooling for serverless), and Prisma offers an excellent developer experience with type safety, migrations and a modern ORM.
 
 ---
 
@@ -108,15 +108,16 @@ Only store the TMDB ID together with the metadata required by the application.
 
 ## Deployment
 
-Platform:
+Platforms:
 
-- Render
+- **Vercel** — frontend (Next.js) and backend (NestJS) as separate projects
+- **Supabase** — managed PostgreSQL
 
 Services:
 
-- Frontend
-- Backend
-- Managed PostgreSQL
+- Frontend (`mediashelf-frontend`)
+- Backend / API (`mediashelf-api`)
+- Managed PostgreSQL on Supabase (`DATABASE_URL` pooler + `DIRECT_URL` for Prisma migrations)
 
 ---
 
@@ -455,13 +456,15 @@ Possible future additions:
                           Prisma ORM
                              |
                   +----------v-----------+
-                  |    PostgreSQL        |
+                  | PostgreSQL (Supabase)|
                   +----------+-----------+
                              |
                   +----------v-----------+
                   |      TMDB API        |
                   +----------------------+
 ```
+
+Production hosting: Next.js and NestJS on Vercel; database on Supabase.
 
 ---
 
@@ -549,7 +552,8 @@ Possible future additions:
 
 ## Phase 10
 
-- Production deployment on Render ✓
+- Production deployment on Vercel (frontend + backend) ✓
+- Managed PostgreSQL on Supabase ✓
 
 ---
 
@@ -584,7 +588,8 @@ This project should demonstrate proficiency in:
 - GitHub best practices
 - Database design
 - Modern full-stack architecture
-- Deployment to Render
+- Deployment to Vercel
+- Managed PostgreSQL on Supabase
 - Monorepo architecture
 
 The final result should resemble a real production application rather than a simple CRUD project, showcasing both software engineering practices and a polished user experience suitable for a professional portfolio.
