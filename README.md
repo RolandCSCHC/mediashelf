@@ -20,8 +20,8 @@ Database: [Supabase](https://supabase.com/) managed PostgreSQL (Prisma uses a po
 - **Manual entries** when a title is missing from TMDB
 - **Library CRUD** with status (Watchlist / Watching / Watched / Future) and downloaded flag
 - **Filters & sort** by status, type, genre, downloaded, list; sort by title (default), date added, release date, or date watched; title search
-- **Custom lists** with bulk add from the library
-- **Series progress per list** (season / episode on membership, not on the media item)
+- **Custom lists** with optional default status / downloaded (both are per list membership), bulk add from the library, and per-list edit
+- **Series progress per list** (season / episode, status, and downloaded on membership, not only on the media item)
 - **Panels / list view toggle** on library and list pages (persisted in `localStorage`)
 - **Pagination** on library and lists (server-side; default 2 panel rows or 10 list rows; 25 / 50 / 100 / all)
 - **JSON export / merge import** for library + lists (`/backup`)
@@ -141,7 +141,7 @@ This same-origin proxy is required in production: separate `*.vercel.app` fronte
 | `/lists/[id]`   | List detail, pagination, bulk add, per-list series progress             |
 | `/backup`       | Export library JSON / merge-import a backup                             |
 
-`GET /media` accepts filter, sort, and pagination query params (`page`, `pageSize`, including `search`). `PATCH /media/:id` updates status and downloaded. `PATCH /lists/:id/items/:mediaItemId` updates per-list series progress. `GET /backup` / `POST /backup/import` handle JSON backup.
+`GET /media` accepts filter, sort, and pagination query params (`page`, `pageSize`, including `search`). `PATCH /media/:id` updates library status and downloaded. `PATCH /lists/:id/items/:mediaItemId` updates per-list status, downloaded, and series progress. `GET /backup` / `POST /backup/import` handle JSON backup.
 
 ## Workspace layout
 

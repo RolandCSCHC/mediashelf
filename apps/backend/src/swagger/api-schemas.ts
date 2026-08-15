@@ -132,6 +132,12 @@ export class CustomListSchema {
   @ApiPropertyOptional({ nullable: true, type: String })
   description!: string | null;
 
+  @ApiPropertyOptional({ enum: MediaStatus, nullable: true })
+  defaultStatus!: MediaStatus | null;
+
+  @ApiPropertyOptional({ nullable: true, type: Boolean })
+  defaultDownloaded!: boolean | null;
+
   @ApiProperty()
   itemCount!: number;
 
@@ -148,6 +154,12 @@ export class CustomListEntrySchema {
 
   @ApiProperty()
   mediaItemId!: string;
+
+  @ApiProperty({ enum: MediaStatus })
+  status!: MediaStatus;
+
+  @ApiProperty()
+  downloaded!: boolean;
 
   @ApiPropertyOptional({ nullable: true, type: Number })
   currentSeason!: number | null;
@@ -212,6 +224,12 @@ export class MediaListMembershipSchema {
   @ApiProperty()
   listName!: string;
 
+  @ApiProperty({ enum: MediaStatus })
+  status!: MediaStatus;
+
+  @ApiProperty()
+  downloaded!: boolean;
+
   @ApiPropertyOptional({ nullable: true, type: Number })
   currentSeason!: number | null;
 
@@ -270,6 +288,12 @@ export class LibraryBackupListItemSchema {
   @ApiProperty()
   mediaRef!: string;
 
+  @ApiPropertyOptional({ enum: MediaStatus })
+  status?: MediaStatus;
+
+  @ApiPropertyOptional()
+  downloaded?: boolean;
+
   @ApiPropertyOptional({ nullable: true, type: Number })
   currentSeason!: number | null;
 
@@ -283,6 +307,12 @@ export class LibraryBackupListSchema {
 
   @ApiPropertyOptional({ nullable: true, type: String })
   description!: string | null;
+
+  @ApiPropertyOptional({ enum: MediaStatus, nullable: true })
+  defaultStatus?: MediaStatus | null;
+
+  @ApiPropertyOptional({ nullable: true, type: Boolean })
+  defaultDownloaded?: boolean | null;
 
   @ApiProperty({ type: [LibraryBackupListItemSchema] })
   items!: LibraryBackupListItemSchema[];

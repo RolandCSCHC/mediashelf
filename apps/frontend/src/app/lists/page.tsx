@@ -5,17 +5,30 @@ import Link from 'next/link';
 import type { CustomList } from '@mediashelf/shared-types';
 import { AppShell } from '@/components/app-shell';
 import { AuthGuard } from '@/components/auth-guard';
+import {
+  ListEditorFields,
+  emptyListEditorValues,
+  listEditorPayload,
+  listEditorValuesFromList,
+  type ListEditorValues,
+} from '@/components/list-editor-fields';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
-import { createCustomList, deleteCustomList, listCustomLists } from '@/lib/api';
+import {
+  createCustomList,
+  deleteCustomList,
+  listCustomLists,
+  updateCustomList,
+} from '@/lib/api';
+import { formatListStateSummary } from '@/lib/list-state';
 
 function ListsContent() {
   const [lists, setLists] = useState<CustomList[]>([]);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+  const [values, setValues] = useState<ListEditorValues>(emptyListEditorValues);
+  const [editingList, setEditingList] = useState<CustomList | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -37,47 +50,65 @@ function ListsContent() {
   }, [load]);
 
   function openCreateModal() {
-    setName('');
-    setDescription('');
+    setEditingList(null);
+    setValues(emptyListEditorValues());
     setFormError(null);
-    setIsCreateOpen(true);
+    setIsEditorOpen(true);
   }
 
-  function closeCreateModal() {
-    if (isCreating) {
+  function openEditModal(list: CustomList) {
+    setEditingList(list);
+    setValues(listEditorValuesFromList(list));
+    setFormError(null);
+    setIsEditorOpen(true);
+  }
+
+  function closeEditorModal() {
+    if (isSaving) {
       return;
     }
-    setIsCreateOpen(false);
+    setIsEditorOpen(false);
+    setEditingList(null);
     setFormError(null);
   }
 
-  async function handleCreate(event: FormEvent) {
+  async function handleSave(event: FormEvent) {
     event.preventDefault();
-    const trimmed = name.trim();
-    if (!trimmed) {
+    const payload = listEditorPayload(values);
+    if (!payload.name) {
       setFormError('List name is required');
       return;
     }
 
-    setIsCreating(true);
+    setIsSaving(true);
     setFormError(null);
     try {
-      const created = await createCustomList({
-        name: trimmed,
-        description: description.trim() || null,
-      });
-      setLists((prev) =>
-        [...prev, created].sort((a, b) => a.name.localeCompare(b.name)),
-      );
-      setName('');
-      setDescription('');
-      setIsCreateOpen(false);
+      if (editingList) {
+        const updated = await updateCustomList(editingList.id, payload);
+        setLists((prev) =>
+          [...prev.filter((entry) => entry.id !== updated.id), updated].sort(
+            (a, b) => a.name.localeCompare(b.name),
+          ),
+        );
+      } else {
+        const created = await createCustomList(payload);
+        setLists((prev) =>
+          [...prev, created].sort((a, b) => a.name.localeCompare(b.name)),
+        );
+      }
+      setValues(emptyListEditorValues());
+      setEditingList(null);
+      setIsEditorOpen(false);
     } catch (err) {
       setFormError(
-        err instanceof Error ? err.message : 'Failed to create list',
+        err instanceof Error
+          ? err.message
+          : editingList
+            ? 'Failed to update list'
+            : 'Failed to create list',
       );
     } finally {
-      setIsCreating(false);
+      setIsSaving(false);
     }
   }
 
@@ -94,9 +125,6 @@ function ListsContent() {
       setError(err instanceof Error ? err.message : 'Failed to delete list');
     }
   }
-
-  const fieldClass =
-    'w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none ring-[var(--ring)] focus:ring-2';
 
   return (
     <AppShell width="wide">
@@ -149,79 +177,76 @@ function ListsContent() {
 
       {!isLoading && lists.length > 0 ? (
         <ul className="mt-10 divide-y divide-border border-y border-border">
-          {lists.map((list) => (
-            <li
-              key={list.id}
-              className="group relative flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <Link
-                href={`/lists/${list.id}`}
-                className="absolute inset-0 z-[1] rounded-sm transition hover:bg-[var(--overlay)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
-                aria-label={`Open ${list.name}`}
-              />
-              <div>
-                <p className="font-display text-xl text-foreground transition group-hover:text-accent">
-                  {list.name}
-                </p>
-                <p className="mt-1 text-sm text-muted">
-                  {list.itemCount} {list.itemCount === 1 ? 'title' : 'titles'}
-                  {list.description ? ` · ${list.description}` : ''}
-                </p>
-              </div>
-              <div className="relative z-[2]">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-danger hover:bg-danger/10"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    void handleDelete(list);
-                  }}
-                >
-                  Delete
-                </Button>
-              </div>
-            </li>
-          ))}
+          {lists.map((list) => {
+            const stateSummary = formatListStateSummary(list);
+
+            return (
+              <li
+                key={list.id}
+                className="group relative flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <Link
+                  href={`/lists/${list.id}`}
+                  className="absolute inset-0 z-[1] rounded-sm transition hover:bg-[var(--overlay)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
+                  aria-label={`Open ${list.name}`}
+                />
+                <div>
+                  <p className="font-display text-xl text-foreground transition group-hover:text-accent">
+                    {list.name}
+                  </p>
+                  <p className="mt-1 text-sm text-muted">
+                    {list.itemCount} {list.itemCount === 1 ? 'title' : 'titles'}
+                    {list.description ? ` · ${list.description}` : ''}
+                    {stateSummary ? ` · ${stateSummary}` : ''}
+                  </p>
+                </div>
+                <div className="relative z-[2] flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      openEditModal(list);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-danger hover:bg-danger/10"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      void handleDelete(list);
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       ) : null}
 
       <Modal
-        open={isCreateOpen}
-        title="Create a list"
-        onClose={closeCreateModal}
+        open={isEditorOpen}
+        title={editingList ? 'Edit list' : 'Create a list'}
+        onClose={closeEditorModal}
       >
         <form
-          onSubmit={(event) => void handleCreate(event)}
+          onSubmit={(event) => void handleSave(event)}
           className="space-y-4"
         >
-          <label className="block space-y-1.5">
-            <span className="text-xs uppercase tracking-wide text-muted">
-              Name
-            </span>
-            <input
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              className={fieldClass}
-              placeholder="Favorites"
-              maxLength={80}
-              required
-            />
-          </label>
-          <label className="block space-y-1.5">
-            <span className="text-xs uppercase tracking-wide text-muted">
-              Description
-            </span>
-            <input
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              className={fieldClass}
-              placeholder="Optional"
-              maxLength={280}
-            />
-          </label>
+          <ListEditorFields
+            values={values}
+            disabled={isSaving}
+            onChange={setValues}
+          />
 
           {formError ? (
             <p className="text-sm text-danger" role="alert">
@@ -234,13 +259,19 @@ function ListsContent() {
               type="button"
               variant="ghost"
               size="sm"
-              disabled={isCreating}
-              onClick={closeCreateModal}
+              disabled={isSaving}
+              onClick={closeEditorModal}
             >
               Cancel
             </Button>
-            <Button type="submit" size="sm" disabled={isCreating}>
-              {isCreating ? 'Creating…' : 'Create list'}
+            <Button type="submit" size="sm" disabled={isSaving}>
+              {isSaving
+                ? editingList
+                  ? 'Saving…'
+                  : 'Creating…'
+                : editingList
+                  ? 'Save changes'
+                  : 'Create list'}
             </Button>
           </div>
         </form>

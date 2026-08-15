@@ -15,10 +15,17 @@ import type {
   ListMediaQuery,
   MediaItem,
 } from '@mediashelf/shared-types';
-import { MediaType } from '@mediashelf/shared-types';
+import { allowedStatusesForList, MediaType } from '@mediashelf/shared-types';
 import { AppShell } from '@/components/app-shell';
 import { AuthGuard } from '@/components/auth-guard';
 import { AddLibraryToListModal } from '@/components/add-library-to-list-modal';
+import {
+  ListEditorFields,
+  emptyListEditorValues,
+  listEditorPayload,
+  listEditorValuesFromList,
+  type ListEditorValues,
+} from '@/components/list-editor-fields';
 import {
   DEFAULT_LIBRARY_FILTERS,
   LibraryFilterSortControls,
@@ -46,6 +53,7 @@ import {
 } from '@/lib/api';
 import { resolvePageSize } from '@/lib/media-pagination';
 import { mediaCollectionClassName } from '@/lib/media-view-mode';
+import { formatListStateSummary } from '@/lib/list-state';
 
 function toListQuery(filters: LibraryFiltersState): ListMediaQuery {
   const search = filters.search.trim();
@@ -67,8 +75,9 @@ function ListDetailContent() {
   const id = params.id;
 
   const [list, setList] = useState<CustomListDetail | null>(null);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+  const [editorValues, setEditorValues] = useState<ListEditorValues>(
+    emptyListEditorValues(),
+  );
   const [filters, setFilters] = useState<LibraryFiltersState>(
     DEFAULT_LIBRARY_FILTERS,
   );
@@ -139,8 +148,7 @@ function ListDetailContent() {
         pageSize: resolvedPageSize,
       });
       setList(detail);
-      setName(detail.name);
-      setDescription(detail.description ?? '');
+      setEditorValues(listEditorValuesFromList(detail));
       if (detail.page !== page) {
         setPage(detail.page);
       }
@@ -160,8 +168,7 @@ function ListDetailContent() {
     if (!list) {
       return;
     }
-    setName(list.name);
-    setDescription(list.description ?? '');
+    setEditorValues(listEditorValuesFromList(list));
     setFormError(null);
     setIsEditOpen(true);
   }
@@ -180,8 +187,8 @@ function ListDetailContent() {
       return;
     }
 
-    const trimmedName = name.trim();
-    if (!trimmedName) {
+    const payload = listEditorPayload(editorValues);
+    if (!payload.name) {
       setFormError('List name is required');
       return;
     }
@@ -189,20 +196,20 @@ function ListDetailContent() {
     setIsSaving(true);
     setFormError(null);
     try {
-      const updated = await updateCustomList(list.id, {
-        name: trimmedName,
-        description: description.trim() || null,
-      });
+      const updated = await updateCustomList(list.id, payload);
       setList((prev) =>
         prev
           ? {
               ...prev,
               name: updated.name,
               description: updated.description,
+              defaultStatus: updated.defaultStatus,
+              defaultDownloaded: updated.defaultDownloaded,
               updatedAt: updated.updatedAt,
             }
           : prev,
       );
+      setEditorValues(listEditorValuesFromList(updated));
       setIsEditOpen(false);
     } catch (err) {
       setFormError(
@@ -267,7 +274,7 @@ function ListDetailContent() {
     }
   }
 
-  function handleProgressUpdated(updated: CustomListEntry) {
+  function handleEntryUpdated(updated: CustomListEntry) {
     setList((prev) =>
       prev
         ? {
@@ -305,8 +312,10 @@ function ListDetailContent() {
     filters.downloaded !== '' ||
     filters.search.trim() !== '';
 
-  const fieldClass =
-    'w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none ring-[var(--ring)] focus:ring-2';
+  const stateSummary = list ? formatListStateSummary(list) : null;
+  const allowedStatuses = list
+    ? allowedStatusesForList(list.defaultStatus)
+    : null;
 
   return (
     <AppShell width="wide">
@@ -336,6 +345,9 @@ function ListDetailContent() {
               </h1>
               {list.description ? (
                 <p className="mt-2 text-sm text-muted">{list.description}</p>
+              ) : null}
+              {stateSummary ? (
+                <p className="mt-2 text-sm text-muted">{stateSummary}</p>
               ) : null}
               <p className="mt-2 text-sm text-muted">
                 {list.itemCount} {list.itemCount === 1 ? 'title' : 'titles'}
@@ -466,6 +478,25 @@ function ListDetailContent() {
                     item={entry.mediaItem}
                     variant={viewMode}
                     fromListId={list.id}
+                    allowedStatuses={allowedStatuses}
+                    status={entry.status}
+                    onStatusChange={async (nextStatus) => {
+                      const updated = await updateListItem(
+                        list.id,
+                        entry.mediaItemId,
+                        { status: nextStatus },
+                      );
+                      handleEntryUpdated(updated);
+                    }}
+                    downloaded={entry.downloaded}
+                    onDownloadedChange={async (nextDownloaded) => {
+                      const updated = await updateListItem(
+                        list.id,
+                        entry.mediaItemId,
+                        { downloaded: nextDownloaded },
+                      );
+                      handleEntryUpdated(updated);
+                    }}
                     progressSeason={entry.currentSeason}
                     progressEpisode={entry.currentEpisode}
                     onUpdated={handleUpdated}
@@ -484,7 +515,7 @@ function ListDetailContent() {
                                 entry.mediaItemId,
                                 progress,
                               );
-                              handleProgressUpdated(updated);
+                              handleEntryUpdated(updated);
                             }}
                             onError={setActionError}
                           />
@@ -515,30 +546,11 @@ function ListDetailContent() {
               onSubmit={(event) => void handleSave(event)}
               className="space-y-4"
             >
-              <label className="block space-y-1.5">
-                <span className="text-xs uppercase tracking-wide text-muted">
-                  Name
-                </span>
-                <input
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  className={fieldClass}
-                  maxLength={80}
-                  required
-                />
-              </label>
-              <label className="block space-y-1.5">
-                <span className="text-xs uppercase tracking-wide text-muted">
-                  Description
-                </span>
-                <input
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                  className={fieldClass}
-                  placeholder="Optional"
-                  maxLength={280}
-                />
-              </label>
+              <ListEditorFields
+                values={editorValues}
+                disabled={isSaving}
+                onChange={setEditorValues}
+              />
 
               {formError ? (
                 <p className="text-sm text-danger" role="alert">

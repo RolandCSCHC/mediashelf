@@ -143,7 +143,14 @@ function MediaDetailContent() {
                 onError={setError}
               />
 
-              <ListMembershipControls mediaItem={item} onError={setError} />
+              <ListMembershipControls
+                mediaItem={item}
+                onMediaUpdated={(updated) => {
+                  setError(null);
+                  setItem(updated);
+                }}
+                onError={setError}
+              />
             </div>
 
             {error ? (

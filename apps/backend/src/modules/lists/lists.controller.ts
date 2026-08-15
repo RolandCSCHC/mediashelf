@@ -141,7 +141,10 @@ export class ListsController {
   }
 
   @Patch(':id/items/:mediaItemId')
-  @ApiOperation({ summary: 'Update series progress on a list entry' })
+  @ApiOperation({
+    summary:
+      'Update status, downloaded flag, or series progress on a list entry',
+  })
   @ApiParam({ name: 'id', description: 'List id' })
   @ApiParam({ name: 'mediaItemId', description: 'Media item id' })
   @ApiOkResponse({ type: CustomListEntrySchema })
@@ -156,7 +159,8 @@ export class ListsController {
 
   @Post(':id/items/:mediaItemId/move')
   @ApiOperation({
-    summary: 'Move a media item to another list, preserving series progress',
+    summary:
+      'Move a media item to another list, preserving series progress and applying the destination list state',
   })
   @ApiParam({ name: 'id', description: 'Source list id' })
   @ApiParam({ name: 'mediaItemId', description: 'Media item id' })

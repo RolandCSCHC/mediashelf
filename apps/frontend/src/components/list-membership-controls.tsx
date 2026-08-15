@@ -4,29 +4,35 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import type {
   CustomList,
+  CustomListEntry,
   MediaItem,
   MediaListMembership,
+  MediaStatus,
 } from '@mediashelf/shared-types';
-import { MediaType } from '@mediashelf/shared-types';
+import { allowedStatusesForList, MediaType } from '@mediashelf/shared-types';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
 import { SeriesProgressControls } from '@/components/series-progress-controls';
 import {
   addMediaToList,
+  getMedia,
   listCustomLists,
   listMediaMemberships,
   moveMediaBetweenLists,
   updateListItem,
 } from '@/lib/api';
 import { formatSeriesProgress } from '@/lib/media-filters';
+import { MEDIA_STATUS_OPTIONS } from '@/lib/media-status';
 
 type ListMembershipControlsProps = {
   mediaItem: MediaItem;
+  onMediaUpdated?: (item: MediaItem) => void;
   onError?: (message: string) => void;
 };
 
 export function ListMembershipControls({
   mediaItem,
+  onMediaUpdated,
   onError,
 }: ListMembershipControlsProps) {
   const [lists, setLists] = useState<CustomList[]>([]);
@@ -85,6 +91,10 @@ export function ListMembershipControls({
       await addMediaToList(listId, { mediaItemId: mediaItem.id });
       setMessage('Added to list');
       await load({ silent: true });
+      if (onMediaUpdated) {
+        const updated = await getMedia(mediaItem.id);
+        onMediaUpdated(updated);
+      }
     } catch (err) {
       onError?.(err instanceof Error ? err.message : 'Failed to add to list');
     } finally {
@@ -129,10 +139,46 @@ export function ListMembershipControls({
       setMoveTargetListId('');
       setMessage('Moved to list');
       await load({ silent: true });
+      if (onMediaUpdated) {
+        const updated = await getMedia(mediaItem.id);
+        onMediaUpdated(updated);
+      }
     } catch (err) {
       onError?.(err instanceof Error ? err.message : 'Failed to move to list');
     } finally {
       setIsMoving(false);
+    }
+  }
+
+  async function handleMembershipStatusChange(
+    listId: string,
+    nextStatus: MediaStatus,
+  ) {
+    try {
+      const updated = await updateListItem(listId, mediaItem.id, {
+        status: nextStatus,
+      });
+      setMemberships((prev) => applyListItemUpdate(prev, listId, updated));
+    } catch (err) {
+      onError?.(
+        err instanceof Error ? err.message : 'Failed to update list status',
+      );
+    }
+  }
+
+  async function handleMembershipDownloadedChange(
+    listId: string,
+    nextDownloaded: boolean,
+  ) {
+    try {
+      const updated = await updateListItem(listId, mediaItem.id, {
+        downloaded: nextDownloaded,
+      });
+      setMemberships((prev) => applyListItemUpdate(prev, listId, updated));
+    } catch (err) {
+      onError?.(
+        err instanceof Error ? err.message : 'Failed to update list downloaded',
+      );
     }
   }
 
@@ -142,6 +188,8 @@ export function ListMembershipControls({
 
   const memberIds = new Set(memberships.map((entry) => entry.listId));
   const availableLists = lists.filter((list) => !memberIds.has(list.id));
+  const statusSelectClass =
+    'rounded-md border border-border bg-surface px-2 py-1 text-xs text-foreground outline-none ring-[var(--ring)] focus:ring-2 disabled:opacity-60';
 
   return (
     <div className="space-y-6">
@@ -159,6 +207,21 @@ export function ListMembershipControls({
                     membership.currentEpisode,
                   )
                 : null;
+              const list = lists.find(
+                (entry) => entry.id === membership.listId,
+              );
+              const allowedStatuses = allowedStatusesForList(
+                list?.defaultStatus ?? null,
+              );
+              const statusOptions = MEDIA_STATUS_OPTIONS.filter((option) => {
+                if (!allowedStatuses) {
+                  return true;
+                }
+                return (
+                  allowedStatuses.includes(option.value) ||
+                  option.value === membership.status
+                );
+              });
 
               return (
                 <li
@@ -179,19 +242,68 @@ export function ListMembershipControls({
                         </span>
                       ) : null}
                     </div>
-                    {availableLists.length > 0 ? (
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        className="shrink-0"
-                        aria-label={`Move from ${membership.listName}`}
-                        disabled={isSaving || isMoving}
-                        onClick={() => openMove(membership)}
+                    <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                      <label
+                        className="sr-only"
+                        htmlFor={`list-status-${membership.listId}`}
                       >
-                        Move
-                      </Button>
-                    ) : null}
+                        Status in {membership.listName}
+                      </label>
+                      <select
+                        id={`list-status-${membership.listId}`}
+                        value={membership.status}
+                        disabled={isSaving || isMoving}
+                        aria-label={`Status in ${membership.listName}`}
+                        onChange={(event) =>
+                          void handleMembershipStatusChange(
+                            membership.listId,
+                            event.target.value as MediaStatus,
+                          )
+                        }
+                        className={statusSelectClass}
+                      >
+                        {statusOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      <label
+                        className="flex items-center gap-2"
+                        htmlFor={`list-downloaded-${membership.listId}`}
+                      >
+                        <input
+                          id={`list-downloaded-${membership.listId}`}
+                          type="checkbox"
+                          checked={membership.downloaded}
+                          disabled={isSaving || isMoving}
+                          aria-label={`Downloaded in ${membership.listName}`}
+                          onChange={() =>
+                            void handleMembershipDownloadedChange(
+                              membership.listId,
+                              !membership.downloaded,
+                            )
+                          }
+                          className="h-4 w-4 rounded border-border accent-[var(--accent)]"
+                        />
+                        <span className="text-xs font-medium text-foreground">
+                          Downloaded
+                        </span>
+                      </label>
+                      {availableLists.length > 0 ? (
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          className="shrink-0"
+                          aria-label={`Move from ${membership.listName}`}
+                          disabled={isSaving || isMoving}
+                          onClick={() => openMove(membership)}
+                        >
+                          Move
+                        </Button>
+                      ) : null}
+                    </div>
                   </div>
 
                   {isSeries ? (
@@ -206,15 +318,7 @@ export function ListMembershipControls({
                           progressUpdate,
                         );
                         setMemberships((prev) =>
-                          prev.map((entry) =>
-                            entry.listId === membership.listId
-                              ? {
-                                  ...entry,
-                                  currentSeason: updated.currentSeason,
-                                  currentEpisode: updated.currentEpisode,
-                                }
-                              : entry,
-                          ),
+                          applyListItemUpdate(prev, membership.listId, updated),
                         );
                       }}
                       onError={onError}
@@ -329,5 +433,23 @@ export function ListMembershipControls({
         </div>
       </Modal>
     </div>
+  );
+}
+
+function applyListItemUpdate(
+  prev: MediaListMembership[],
+  listId: string,
+  updated: CustomListEntry,
+): MediaListMembership[] {
+  return prev.map((entry) =>
+    entry.listId === listId
+      ? {
+          ...entry,
+          status: updated.status,
+          downloaded: updated.downloaded,
+          currentSeason: updated.currentSeason,
+          currentEpisode: updated.currentEpisode,
+        }
+      : entry,
   );
 }

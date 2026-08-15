@@ -58,14 +58,16 @@ model MediaItem {
 }
 
 model CustomList {
-  id          String           @id @default(cuid())
-  userId      String
-  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name        String
-  description String?
-  items       CustomListItem[]
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id                String           @id @default(cuid())
+  userId            String
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name              String
+  description       String?
+  defaultStatus     MediaStatus?
+  defaultDownloaded Boolean?
+  items             CustomListItem[]
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 
   @@unique([userId, name])
   @@index([userId])
@@ -76,10 +78,14 @@ model CustomListItem {
   mediaItemId    String
   list           CustomList @relation(fields: [listId], references: [id], onDelete: Cascade)
   mediaItem      MediaItem  @relation(fields: [mediaItemId], references: [id], onDelete: Cascade)
+  status         MediaStatus @default(WATCHLIST)
+  downloaded     Boolean     @default(false)
   currentSeason  Int?
   currentEpisode Int?
-  addedAt        DateTime   @default(now())
+  addedAt        DateTime    @default(now())
 
   @@id([listId, mediaItemId])
   @@index([mediaItemId])
+  @@index([listId, status])
+  @@index([listId, downloaded])
 }

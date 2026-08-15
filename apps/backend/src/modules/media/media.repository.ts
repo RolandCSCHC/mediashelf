@@ -81,6 +81,19 @@ export class MediaRepository {
     });
   }
 
+  findOwnedByIds(userId: string, ids: string[]): Promise<PrismaMediaItem[]> {
+    if (ids.length === 0) {
+      return Promise.resolve([]);
+    }
+
+    return this.prisma.mediaItem.findMany({
+      where: {
+        userId,
+        id: { in: ids },
+      },
+    });
+  }
+
   findByUserAndTmdb(
     userId: string,
     tmdbId: number,

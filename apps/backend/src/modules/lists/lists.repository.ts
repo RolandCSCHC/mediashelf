@@ -66,9 +66,12 @@ export class ListsRepository {
       return null;
     }
 
+    const { status, downloaded, ...mediaFilters } = filters;
     const itemWhere: Prisma.CustomListItemWhereInput = {
       listId: id,
-      mediaItem: buildMediaItemWhere(filters),
+      ...(status ? { status } : {}),
+      ...(downloaded !== undefined ? { downloaded } : {}),
+      mediaItem: buildMediaItemWhere(mediaFilters),
     };
 
     const [total, metaRows] = await Promise.all([
@@ -132,13 +135,20 @@ export class ListsRepository {
 
   create(
     userId: string,
-    data: { name: string; description?: string | null },
+    data: {
+      name: string;
+      description?: string | null;
+      defaultStatus?: PrismaCustomList['defaultStatus'];
+      defaultDownloaded?: boolean | null;
+    },
   ): Promise<ListWithCount> {
     return this.prisma.customList.create({
       data: {
         userId,
         name: data.name,
         description: data.description ?? null,
+        defaultStatus: data.defaultStatus ?? null,
+        defaultDownloaded: data.defaultDownloaded ?? null,
       },
       include: { _count: { select: { items: true } } },
     });
@@ -147,7 +157,12 @@ export class ListsRepository {
   async updateOwned(
     id: string,
     userId: string,
-    data: { name?: string; description?: string | null },
+    data: {
+      name?: string;
+      description?: string | null;
+      defaultStatus?: PrismaCustomList['defaultStatus'];
+      defaultDownloaded?: boolean | null;
+    },
   ): Promise<ListWithCount | null> {
     const result = await this.prisma.customList.updateMany({
       where: { id, userId },
@@ -155,6 +170,12 @@ export class ListsRepository {
         ...(data.name !== undefined ? { name: data.name } : {}),
         ...(data.description !== undefined
           ? { description: data.description }
+          : {}),
+        ...(data.defaultStatus !== undefined
+          ? { defaultStatus: data.defaultStatus }
+          : {}),
+        ...(data.defaultDownloaded !== undefined
+          ? { defaultDownloaded: data.defaultDownloaded }
           : {}),
       },
     });
@@ -176,7 +197,9 @@ export class ListsRepository {
   async addItem(
     listId: string,
     mediaItemId: string,
-    progress?: {
+    data?: {
+      status?: PrismaCustomListItem['status'];
+      downloaded?: boolean;
       currentSeason?: number | null;
       currentEpisode?: number | null;
     },
@@ -185,21 +208,34 @@ export class ListsRepository {
       data: {
         listId,
         mediaItemId,
-        currentSeason: progress?.currentSeason ?? null,
-        currentEpisode: progress?.currentEpisode ?? null,
+        ...(data?.status !== undefined ? { status: data.status } : {}),
+        ...(data?.downloaded !== undefined
+          ? { downloaded: data.downloaded }
+          : {}),
+        currentSeason: data?.currentSeason ?? null,
+        currentEpisode: data?.currentEpisode ?? null,
       },
     });
   }
 
-  async addItems(listId: string, mediaItemIds: string[]): Promise<number> {
-    if (mediaItemIds.length === 0) {
+  async addItems(
+    listId: string,
+    items: {
+      mediaItemId: string;
+      status: PrismaCustomListItem['status'];
+      downloaded: boolean;
+    }[],
+  ): Promise<number> {
+    if (items.length === 0) {
       return 0;
     }
 
     const result = await this.prisma.customListItem.createMany({
-      data: mediaItemIds.map((mediaItemId) => ({
+      data: items.map((item) => ({
         listId,
-        mediaItemId,
+        mediaItemId: item.mediaItemId,
+        status: item.status,
+        downloaded: item.downloaded,
       })),
       skipDuplicates: true,
     });
@@ -211,6 +247,8 @@ export class ListsRepository {
     listId: string,
     mediaItemId: string,
     data: {
+      status?: PrismaCustomListItem['status'];
+      downloaded?: boolean;
       currentSeason?: number | null;
       currentEpisode?: number | null;
     },
@@ -218,6 +256,10 @@ export class ListsRepository {
     const result = await this.prisma.customListItem.updateMany({
       where: { listId, mediaItemId },
       data: {
+        ...(data.status !== undefined ? { status: data.status } : {}),
+        ...(data.downloaded !== undefined
+          ? { downloaded: data.downloaded }
+          : {}),
         ...(data.currentSeason !== undefined
           ? { currentSeason: data.currentSeason }
           : {}),
@@ -250,7 +292,9 @@ export class ListsRepository {
     sourceListId: string,
     targetListId: string,
     mediaItemId: string,
-    progress: {
+    data: {
+      status: PrismaCustomListItem['status'];
+      downloaded: boolean;
       currentSeason: number | null;
       currentEpisode: number | null;
     },
@@ -260,8 +304,10 @@ export class ListsRepository {
         data: {
           listId: targetListId,
           mediaItemId,
-          currentSeason: progress.currentSeason,
-          currentEpisode: progress.currentEpisode,
+          status: data.status,
+          downloaded: data.downloaded,
+          currentSeason: data.currentSeason,
+          currentEpisode: data.currentEpisode,
         },
       }),
       this.prisma.customListItem.delete({
@@ -281,6 +327,21 @@ export class ListsRepository {
         listId_mediaItemId: { listId, mediaItemId },
       },
     });
+  }
+
+  async findExistingMediaItemIds(
+    listId: string,
+    mediaItemIds: string[],
+  ): Promise<string[]> {
+    if (mediaItemIds.length === 0) {
+      return [];
+    }
+
+    const rows = await this.prisma.customListItem.findMany({
+      where: { listId, mediaItemId: { in: mediaItemIds } },
+      select: { mediaItemId: true },
+    });
+    return rows.map((row) => row.mediaItemId);
   }
 
   findMembershipsForMedia(

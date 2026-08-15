@@ -2,7 +2,11 @@
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import type { MediaItem, MediaType } from '@mediashelf/shared-types';
+import type {
+  MediaItem,
+  MediaStatus,
+  MediaType,
+} from '@mediashelf/shared-types';
 import { MediaItemControls } from '@/components/media-item-controls';
 import { formatMediaStatus } from '@/lib/media-status';
 import { formatSeriesProgress } from '@/lib/media-filters';
@@ -14,6 +18,14 @@ type MediaCardProps = {
   variant?: MediaViewMode;
   /** When set, the details page back link returns to this list. */
   fromListId?: string;
+  /** Limit the status dropdown (list default + Watching). */
+  allowedStatuses?: MediaStatus[] | null;
+  /** Status in this list. When set, the card edits list membership status. */
+  status?: MediaStatus;
+  onStatusChange?: (status: MediaStatus) => Promise<void>;
+  /** Downloaded in this list. When set, the card edits list membership. */
+  downloaded?: boolean;
+  onDownloadedChange?: (downloaded: boolean) => Promise<void>;
   progressSeason?: number | null;
   progressEpisode?: number | null;
   actions?: ReactNode;
@@ -35,6 +47,11 @@ export function MediaCard({
   item,
   variant = 'grid',
   fromListId,
+  allowedStatuses,
+  status,
+  onStatusChange,
+  downloaded,
+  onDownloadedChange,
   progressSeason = null,
   progressEpisode = null,
   actions,
@@ -54,13 +71,15 @@ export function MediaCard({
     item.type === 'SERIES'
       ? formatSeriesProgress(progressSeason, progressEpisode)
       : null;
+  const displayedStatus = status ?? item.status;
+  const displayedDownloaded = downloaded ?? item.downloaded;
   const meta = (
     <>
       <TypeLabel type={item.type} />
       {year ? ` · ${year}` : ''}
-      {` · ${formatMediaStatus(item.status)}`}
+      {` · ${formatMediaStatus(displayedStatus)}`}
       {progress ? ` · ${progress}` : ''}
-      {item.downloaded ? ' · Downloaded' : ''}
+      {displayedDownloaded ? ' · Downloaded' : ''}
     </>
   );
 
@@ -99,6 +118,11 @@ export function MediaCard({
             <MediaItemControls
               item={item}
               layout="inline"
+              allowedStatuses={allowedStatuses}
+              status={status}
+              onStatusChange={onStatusChange}
+              downloaded={downloaded}
+              onDownloadedChange={onDownloadedChange}
               onUpdated={onUpdated}
               onDeleted={onDeleted}
               onError={onError}
@@ -145,6 +169,11 @@ export function MediaCard({
         <MediaItemControls
           item={item}
           layout="compact"
+          allowedStatuses={allowedStatuses}
+          status={status}
+          onStatusChange={onStatusChange}
+          downloaded={downloaded}
+          onDownloadedChange={onDownloadedChange}
           onUpdated={onUpdated}
           onDeleted={onDeleted}
           onError={onError}

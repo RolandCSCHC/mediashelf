@@ -10,6 +10,7 @@ import type {
   MediaListMembership,
   PaginationMeta,
 } from '@mediashelf/shared-types';
+import { MediaStatus } from '@mediashelf/shared-types';
 import { toMediaItem } from '../media/media.mapper';
 import { uniqueSortedGenres } from '../../common/pagination';
 
@@ -34,6 +35,8 @@ export function toCustomList(list: ListWithCount): CustomList {
     userId: list.userId,
     name: list.name,
     description: list.description,
+    defaultStatus: list.defaultStatus as MediaStatus | null,
+    defaultDownloaded: list.defaultDownloaded,
     itemCount: list._count.items,
     createdAt: list.createdAt.toISOString(),
     updatedAt: list.updatedAt.toISOString(),
@@ -44,6 +47,8 @@ export function toCustomListEntry(entry: ListItemWithMedia): CustomListEntry {
   return {
     listId: entry.listId,
     mediaItemId: entry.mediaItemId,
+    status: entry.status as MediaStatus,
+    downloaded: entry.downloaded,
     currentSeason: entry.currentSeason,
     currentEpisode: entry.currentEpisode,
     addedAt: entry.addedAt.toISOString(),
@@ -83,6 +88,8 @@ export function toMediaListMembership(
   return {
     listId: entry.list.id,
     listName: entry.list.name,
+    status: entry.status as MediaStatus,
+    downloaded: entry.downloaded,
     currentSeason: entry.currentSeason,
     currentEpisode: entry.currentEpisode,
     addedAt: entry.addedAt.toISOString(),

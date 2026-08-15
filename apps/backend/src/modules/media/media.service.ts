@@ -91,6 +91,16 @@ export class MediaService {
     }
   }
 
+  async findOwnedByIds(userId: string, ids: string[]): Promise<MediaItem[]> {
+    const uniqueIds = Array.from(new Set(ids));
+    const items = await this.mediaRepository.findOwnedByIds(userId, uniqueIds);
+    if (items.length !== uniqueIds.length) {
+      throw new NotFoundException('One or more media items were not found');
+    }
+
+    return items.map(toMediaItem);
+  }
+
   async importFromTmdb(
     userId: string,
     tmdbId: number,

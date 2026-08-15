@@ -44,6 +44,8 @@ function buildPrismaList(
     userId: 'user_1',
     name: 'Favorites',
     description: 'Top picks',
+    defaultStatus: null,
+    defaultDownloaded: null,
     createdAt: new Date('2024-03-01T00:00:00.000Z'),
     updatedAt: new Date('2024-03-02T00:00:00.000Z'),
     ...overrides,
@@ -56,6 +58,8 @@ function buildPrismaListItem(
   return {
     listId: 'list_1',
     mediaItemId: 'media_1',
+    status: 'WATCHING',
+    downloaded: false,
     currentSeason: 2,
     currentEpisode: 5,
     addedAt: new Date('2024-03-05T12:00:00.000Z'),
@@ -76,6 +80,8 @@ describe('lists.mapper', () => {
         userId: 'user_1',
         name: 'Favorites',
         description: 'Top picks',
+        defaultStatus: null,
+        defaultDownloaded: null,
         itemCount: 3,
         createdAt: '2024-03-01T00:00:00.000Z',
         updatedAt: '2024-03-02T00:00:00.000Z',
@@ -91,6 +97,19 @@ describe('lists.mapper', () => {
       expect(result.description).toBeNull();
       expect(result.itemCount).toBe(0);
     });
+
+    it('maps list default state', () => {
+      const result = toCustomList({
+        ...buildPrismaList({
+          defaultStatus: 'WATCHLIST',
+          defaultDownloaded: true,
+        }),
+        _count: { items: 2 },
+      });
+
+      expect(result.defaultStatus).toBe(MediaStatus.WATCHLIST);
+      expect(result.defaultDownloaded).toBe(true);
+    });
   });
 
   describe('toCustomListEntry', () => {
@@ -103,12 +122,34 @@ describe('lists.mapper', () => {
 
       expect(result.listId).toBe('list_1');
       expect(result.mediaItemId).toBe('media_1');
+      expect(result.status).toBe(MediaStatus.WATCHING);
+      expect(result.downloaded).toBe(false);
       expect(result.currentSeason).toBe(2);
       expect(result.currentEpisode).toBe(5);
       expect(result.addedAt).toBe('2024-03-05T12:00:00.000Z');
       expect(result.mediaItem.type).toBe(MediaType.SERIES);
       expect(result.mediaItem.status).toBe(MediaStatus.WATCHING);
       expect(result.mediaItem.title).toBe('Show');
+    });
+
+    it('maps membership status independently of the library title', () => {
+      const result = toCustomListEntry({
+        ...buildPrismaListItem({ status: 'WATCHED' }),
+        mediaItem: buildPrismaMediaItem({ status: 'WATCHLIST' }),
+      });
+
+      expect(result.status).toBe(MediaStatus.WATCHED);
+      expect(result.mediaItem.status).toBe(MediaStatus.WATCHLIST);
+    });
+
+    it('maps membership downloaded independently of the library title', () => {
+      const result = toCustomListEntry({
+        ...buildPrismaListItem({ downloaded: true }),
+        mediaItem: buildPrismaMediaItem({ downloaded: false }),
+      });
+
+      expect(result.downloaded).toBe(true);
+      expect(result.mediaItem.downloaded).toBe(false);
     });
 
     it('preserves null progress fields', () => {
@@ -160,6 +201,8 @@ describe('lists.mapper', () => {
       expect(result).toEqual({
         listId: 'list_1',
         listName: 'Favorites',
+        status: MediaStatus.WATCHING,
+        downloaded: false,
         currentSeason: 2,
         currentEpisode: 5,
         addedAt: '2024-03-05T12:00:00.000Z',

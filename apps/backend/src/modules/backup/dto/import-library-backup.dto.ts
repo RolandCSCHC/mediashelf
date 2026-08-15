@@ -93,6 +93,14 @@ export class LibraryBackupListItemDto {
   @MaxLength(64)
   mediaRef!: string;
 
+  @IsOptional()
+  @IsEnum(MediaStatus)
+  status?: MediaStatus;
+
+  @IsOptional()
+  @IsBoolean()
+  downloaded?: boolean;
+
   @ValidateIf((_, value) => value !== null)
   @IsInt()
   @Min(0)
@@ -114,6 +122,14 @@ export class LibraryBackupListDto {
   @IsString()
   @MaxLength(2000)
   description!: string | null;
+
+  @IsOptional()
+  @IsEnum(MediaStatus)
+  defaultStatus?: MediaStatus | null;
+
+  @IsOptional()
+  @IsBoolean()
+  defaultDownloaded?: boolean | null;
 
   @IsArray()
   @ArrayMaxSize(2000)

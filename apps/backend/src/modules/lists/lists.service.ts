@@ -11,10 +11,14 @@ import type {
   ListMediaQuery,
   MediaListMembership,
 } from '@mediashelf/shared-types';
-import { MediaType } from '@mediashelf/shared-types';
+import { MediaStatus, MediaType } from '@mediashelf/shared-types';
 import { Prisma } from '@prisma/client';
 import { MediaService } from '../media/media.service';
 import { ListsRepository } from './lists.repository';
+import {
+  resolveMembershipDownloaded,
+  resolveMembershipStatus,
+} from './list-state';
 import {
   toCustomList,
   toCustomListDetail,
@@ -92,6 +96,8 @@ export class ListsService {
     const created = await this.listsRepository.create(userId, {
       name,
       description: dto.description?.trim() || null,
+      defaultStatus: dto.defaultStatus ?? null,
+      defaultDownloaded: dto.defaultDownloaded ?? null,
     });
     return toCustomList(created);
   }
@@ -100,7 +106,11 @@ export class ListsService {
   async ensureByName(
     userId: string,
     name: string,
-    description?: string | null,
+    details?: {
+      description?: string | null;
+      defaultStatus?: MediaStatus | null;
+      defaultDownloaded?: boolean | null;
+    },
   ): Promise<CustomList> {
     const trimmed = name.trim();
     if (!trimmed) {
@@ -124,7 +134,9 @@ export class ListsService {
 
     const created = await this.listsRepository.create(userId, {
       name: trimmed,
-      description: description?.trim() || null,
+      description: details?.description?.trim() || null,
+      defaultStatus: details?.defaultStatus ?? null,
+      defaultDownloaded: details?.defaultDownloaded ?? null,
     });
     return toCustomList(created);
   }
@@ -144,8 +156,24 @@ export class ListsService {
       return;
     }
 
-    await this.mediaService.assertOwnedIds(userId, uniqueIds);
-    await this.listsRepository.addItems(listId, uniqueIds);
+    const mediaItems = await this.mediaService.findOwnedByIds(
+      userId,
+      uniqueIds,
+    );
+    const existingIds = await this.listsRepository.findExistingMediaItemIds(
+      listId,
+      uniqueIds,
+    );
+    const existingSet = new Set(existingIds);
+    const newItems = mediaItems.filter((item) => !existingSet.has(item.id));
+    await this.listsRepository.addItems(
+      listId,
+      newItems.map((item) => ({
+        mediaItemId: item.id,
+        status: this.membershipStatusFor(list, item.status),
+        downloaded: this.membershipDownloadedFor(list, item.downloaded),
+      })),
+    );
   }
 
   async updateForUser(
@@ -153,7 +181,12 @@ export class ListsService {
     id: string,
     dto: UpdateCustomListDto,
   ): Promise<CustomList> {
-    if (dto.name === undefined && dto.description === undefined) {
+    if (
+      dto.name === undefined &&
+      dto.description === undefined &&
+      dto.defaultStatus === undefined &&
+      dto.defaultDownloaded === undefined
+    ) {
       throw new BadRequestException('No fields to update');
     }
 
@@ -179,6 +212,12 @@ export class ListsService {
       ...(name !== undefined ? { name } : {}),
       ...(dto.description !== undefined
         ? { description: dto.description?.trim() || null }
+        : {}),
+      ...(dto.defaultStatus !== undefined
+        ? { defaultStatus: dto.defaultStatus }
+        : {}),
+      ...(dto.defaultDownloaded !== undefined
+        ? { defaultDownloaded: dto.defaultDownloaded }
         : {}),
     });
 
@@ -231,6 +270,8 @@ export class ListsService {
 
     try {
       await this.listsRepository.addItem(listId, dto.mediaItemId, {
+        status: this.membershipStatusFor(list, media.status),
+        downloaded: this.membershipDownloadedFor(list, media.downloaded),
         currentSeason: dto.currentSeason,
         currentEpisode: dto.currentEpisode,
       });
@@ -252,7 +293,9 @@ export class ListsService {
     userId: string,
     listId: string,
     mediaItemId: string,
-    progress?: {
+    membership?: {
+      status?: MediaStatus;
+      downloaded?: boolean;
       currentSeason?: number | null;
       currentEpisode?: number | null;
     },
@@ -263,7 +306,7 @@ export class ListsService {
     }
 
     const media = await this.mediaService.getForUser(userId, mediaItemId);
-    this.assertProgressAllowed(media.type, progress ?? {});
+    this.assertProgressAllowed(media.type, membership ?? {});
 
     const already = await this.listsRepository.findListItem(
       listId,
@@ -275,8 +318,13 @@ export class ListsService {
 
     try {
       await this.listsRepository.addItem(listId, mediaItemId, {
-        currentSeason: progress?.currentSeason,
-        currentEpisode: progress?.currentEpisode,
+        status:
+          membership?.status ?? this.membershipStatusFor(list, media.status),
+        downloaded:
+          membership?.downloaded ??
+          this.membershipDownloadedFor(list, media.downloaded),
+        currentSeason: membership?.currentSeason,
+        currentEpisode: membership?.currentEpisode,
       });
       return 'added';
     } catch (error) {
@@ -305,8 +353,24 @@ export class ListsService {
       throw new BadRequestException('At least one media item is required');
     }
 
-    await this.mediaService.assertOwnedIds(userId, mediaItemIds);
-    await this.listsRepository.addItems(listId, mediaItemIds);
+    const mediaItems = await this.mediaService.findOwnedByIds(
+      userId,
+      mediaItemIds,
+    );
+    const existingIds = await this.listsRepository.findExistingMediaItemIds(
+      listId,
+      mediaItemIds,
+    );
+    const existingSet = new Set(existingIds);
+    const newItems = mediaItems.filter((item) => !existingSet.has(item.id));
+    await this.listsRepository.addItems(
+      listId,
+      newItems.map((item) => ({
+        mediaItemId: item.id,
+        status: this.membershipStatusFor(list, item.status),
+        downloaded: this.membershipDownloadedFor(list, item.downloaded),
+      })),
+    );
 
     return this.getForUser(userId, listId);
   }
@@ -317,7 +381,12 @@ export class ListsService {
     mediaItemId: string,
     dto: UpdateListItemDto,
   ): Promise<CustomListEntry> {
-    if (dto.currentSeason === undefined && dto.currentEpisode === undefined) {
+    if (
+      dto.status === undefined &&
+      dto.downloaded === undefined &&
+      dto.currentSeason === undefined &&
+      dto.currentEpisode === undefined
+    ) {
       throw new BadRequestException('No fields to update');
     }
 
@@ -338,6 +407,8 @@ export class ListsService {
     }
 
     const updated = await this.listsRepository.updateItem(listId, mediaItemId, {
+      ...(dto.status !== undefined ? { status: dto.status } : {}),
+      ...(dto.downloaded !== undefined ? { downloaded: dto.downloaded } : {}),
       ...(dto.currentSeason !== undefined
         ? { currentSeason: dto.currentSeason }
         : {}),
@@ -403,6 +474,14 @@ export class ListsService {
         dto.targetListId,
         mediaItemId,
         {
+          status: this.membershipStatusFor(
+            targetList,
+            sourceItem.status as MediaStatus,
+          ),
+          downloaded: this.membershipDownloadedFor(
+            targetList,
+            sourceItem.downloaded,
+          ),
           currentSeason: sourceItem.currentSeason,
           currentEpisode: sourceItem.currentEpisode,
         },
@@ -434,6 +513,23 @@ export class ListsService {
     if (!removed) {
       throw new NotFoundException('List item not found');
     }
+  }
+
+  private membershipStatusFor(
+    list: { defaultStatus: string | null },
+    fallback: MediaStatus,
+  ): MediaStatus {
+    return resolveMembershipStatus(
+      list.defaultStatus as MediaStatus | null,
+      fallback,
+    );
+  }
+
+  private membershipDownloadedFor(
+    list: { defaultDownloaded: boolean | null },
+    fallback: boolean,
+  ): boolean {
+    return resolveMembershipDownloaded(list.defaultDownloaded, fallback);
   }
 
   private assertProgressAllowed(

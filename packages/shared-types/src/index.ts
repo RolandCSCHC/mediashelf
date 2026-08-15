@@ -138,15 +138,34 @@ export interface CustomList {
   userId: string;
   name: string;
   description: string | null;
+  /** Status applied to list memberships when titles are added or moved into this list. */
+  defaultStatus: MediaStatus | null;
+  /** Downloaded flag applied to list memberships when titles are added or moved into this list. */
+  defaultDownloaded: boolean | null;
   itemCount: number;
   createdAt: string;
   updatedAt: string;
 }
 
-/** Series progress for one title inside one list. */
+/** Statuses the list UI should offer: the configured default plus Watching. */
+export function allowedStatusesForList(
+  defaultStatus: MediaStatus | null,
+): MediaStatus[] | null {
+  if (!defaultStatus) {
+    return null;
+  }
+  if (defaultStatus === MediaStatus.WATCHING) {
+    return [MediaStatus.WATCHING];
+  }
+  return [defaultStatus, MediaStatus.WATCHING];
+}
+
+/** Series progress, status, and downloaded flag for one title inside one list. */
 export interface CustomListEntry {
   listId: string;
   mediaItemId: string;
+  status: MediaStatus;
+  downloaded: boolean;
   currentSeason: number | null;
   currentEpisode: number | null;
   addedAt: string;
@@ -165,6 +184,8 @@ export interface CustomListDetail extends CustomList, PaginationMeta {
 export interface MediaListMembership {
   listId: string;
   listName: string;
+  status: MediaStatus;
+  downloaded: boolean;
   currentSeason: number | null;
   currentEpisode: number | null;
   addedAt: string;
@@ -173,11 +194,15 @@ export interface MediaListMembership {
 export interface CreateCustomListRequest {
   name: string;
   description?: string | null;
+  defaultStatus?: MediaStatus | null;
+  defaultDownloaded?: boolean | null;
 }
 
 export interface UpdateCustomListRequest {
   name?: string;
   description?: string | null;
+  defaultStatus?: MediaStatus | null;
+  defaultDownloaded?: boolean | null;
 }
 
 export interface AddListItemRequest {
@@ -191,6 +216,8 @@ export interface AddListItemsRequest {
 }
 
 export interface UpdateListItemRequest {
+  status?: MediaStatus;
+  downloaded?: boolean;
   currentSeason?: number | null;
   currentEpisode?: number | null;
 }
@@ -222,6 +249,8 @@ export interface LibraryBackupMediaItem {
 
 export interface LibraryBackupListItem {
   mediaRef: string;
+  status?: MediaStatus;
+  downloaded?: boolean;
   currentSeason: number | null;
   currentEpisode: number | null;
 }
@@ -229,6 +258,8 @@ export interface LibraryBackupListItem {
 export interface LibraryBackupList {
   name: string;
   description: string | null;
+  defaultStatus?: MediaStatus | null;
+  defaultDownloaded?: boolean | null;
   items: LibraryBackupListItem[];
 }
 

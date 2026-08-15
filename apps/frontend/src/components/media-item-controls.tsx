@@ -10,6 +10,15 @@ type MediaItemControlsProps = {
   item: MediaItem;
   layout?: 'full' | 'compact' | 'inline';
   disabled?: boolean;
+  allowedStatuses?: MediaStatus[] | null;
+  /** Status shown in the dropdown. Defaults to the library title status. */
+  status?: MediaStatus;
+  /** When set, status changes go here instead of PATCH /media/:id. */
+  onStatusChange?: (status: MediaStatus) => Promise<void>;
+  /** Downloaded flag shown in the checkbox. Defaults to the library title. */
+  downloaded?: boolean;
+  /** When set, downloaded changes go here instead of PATCH /media/:id. */
+  onDownloadedChange?: (downloaded: boolean) => Promise<void>;
   onUpdated: (item: MediaItem) => void;
   onDeleted: (id: string) => void;
   onError?: (message: string) => void;
@@ -19,6 +28,11 @@ export function MediaItemControls({
   item,
   layout = 'full',
   disabled = false,
+  allowedStatuses,
+  status,
+  onStatusChange,
+  downloaded,
+  onDownloadedChange,
   onUpdated,
   onDeleted,
   onError,
@@ -29,19 +43,33 @@ export function MediaItemControls({
   const busy = disabled || isSaving || isDeleting;
   const compact = layout === 'compact' || layout === 'inline';
   const inline = layout === 'inline';
+  const displayedStatus = status ?? item.status;
+  const displayedDownloaded = downloaded ?? item.downloaded;
+  const statusOptions = MEDIA_STATUS_OPTIONS.filter((option) => {
+    if (!allowedStatuses) {
+      return true;
+    }
+    return (
+      allowedStatuses.includes(option.value) || option.value === displayedStatus
+    );
+  });
 
   useEffect(() => {
     setNotesDraft(item.notes ?? '');
   }, [item.id, item.notes]);
 
-  async function handleStatusChange(status: MediaStatus) {
-    if (status === item.status) {
+  async function handleStatusChange(nextStatus: MediaStatus) {
+    if (nextStatus === displayedStatus) {
       return;
     }
     setIsSaving(true);
     try {
-      const updated = await updateMedia(item.id, { status });
-      onUpdated(updated);
+      if (onStatusChange) {
+        await onStatusChange(nextStatus);
+      } else {
+        const updated = await updateMedia(item.id, { status: nextStatus });
+        onUpdated(updated);
+      }
     } catch (err) {
       onError?.(err instanceof Error ? err.message : 'Failed to update status');
     } finally {
@@ -50,12 +78,17 @@ export function MediaItemControls({
   }
 
   async function handleDownloadedToggle() {
+    const nextDownloaded = !displayedDownloaded;
     setIsSaving(true);
     try {
-      const updated = await updateMedia(item.id, {
-        downloaded: !item.downloaded,
-      });
-      onUpdated(updated);
+      if (onDownloadedChange) {
+        await onDownloadedChange(nextDownloaded);
+      } else {
+        const updated = await updateMedia(item.id, {
+          downloaded: nextDownloaded,
+        });
+        onUpdated(updated);
+      }
     } catch (err) {
       onError?.(
         err instanceof Error ? err.message : 'Failed to update downloaded',
@@ -124,7 +157,7 @@ export function MediaItemControls({
             <span className="sr-only">Status</span>
           )}
           <select
-            value={item.status}
+            value={displayedStatus}
             disabled={busy}
             aria-label="Status"
             onChange={(event) =>
@@ -132,7 +165,7 @@ export function MediaItemControls({
             }
             className={selectClass}
           >
-            {MEDIA_STATUS_OPTIONS.map((option) => (
+            {statusOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -147,7 +180,7 @@ export function MediaItemControls({
         >
           <input
             type="checkbox"
-            checked={item.downloaded}
+            checked={displayedDownloaded}
             disabled={busy}
             onChange={() => void handleDownloadedToggle()}
             className="h-4 w-4 rounded border-border accent-[var(--accent)]"
@@ -191,7 +224,7 @@ export function MediaItemControls({
         </div>
       ) : null}
 
-      {!compact && item.status === 'WATCHED' && item.dateWatched ? (
+      {!compact && displayedStatus === 'WATCHED' && item.dateWatched ? (
         <p className="text-sm text-muted">
           Watched on{' '}
           {new Date(item.dateWatched).toLocaleDateString(undefined, {

@@ -207,13 +207,13 @@ Each media item should contain information such as:
 - Runtime
 - Media type (Movie / Series)
 
-Series progress fields (`currentSeason`, `currentEpisode`) live on **list membership** (`CustomListItem`), not on the media item itself. The same series can have different progress in different lists (for example S1–2 in “Series watched” and S3 in “Series to watch”). Progress is only used when the media `type` is `SERIES`.
+Series progress fields (`currentSeason`, `currentEpisode`), **list status**, and **downloaded** live on **list membership** (`CustomListItem`), not only on the media item. The same series can have different progress, status, and downloaded state in different lists (for example S1–2 Watched in “Series watched” and S3 Watchlist in “Series to watch”). Progress is only used when the media `type` is `SERIES`.
 
 ---
 
 ## Status
 
-Each media item has a status instead of existing in separate tables.
+Each **library** title has a status and downloaded flag, and each **list membership** has its own status and downloaded flag. The same series can be Watchlist and not downloaded in one list, and Watched and downloaded in another.
 
 Possible statuses:
 
@@ -222,9 +222,9 @@ Possible statuses:
 - Watched
 - Future
 
-Downloaded should be a separate boolean flag.
+Downloaded is a separate boolean flag (not a status).
 
-Example:
+Example library title:
 
 ```json
 {
@@ -233,7 +233,7 @@ Example:
 }
 ```
 
-This allows a movie or series to be both downloaded and still waiting to be watched.
+This allows a movie or series to be both downloaded and still waiting to be watched in the library, while custom lists keep their own membership status and downloaded flags.
 
 ---
 
@@ -241,10 +241,12 @@ This allows a movie or series to be both downloaded and still waiting to be watc
 
 Track per custom list membership:
 
+- Status
+- Downloaded
 - Current season
 - Current episode
 
-The same title can appear in multiple lists with different progress in each.
+The same title can appear in multiple lists with different status, downloaded flag, and progress in each.
 
 Possible future additions:
 
@@ -310,7 +312,11 @@ Examples:
 
 Users should be able to create unlimited custom lists.
 
-Series progress is stored on each list membership, so one series can track different seasons/episodes across lists. Moving a title from one list to another copies that progress onto the destination membership.
+Each list can optionally configure a default **status** and **downloaded** flag. Adding or moving a title into that list immediately applies both to **that list membership**. For example, a “Downloaded movies” list can set every added title to Watchlist and Downloaded in that list, without changing the library title or other lists.
+
+On a configured list, titles can be the configured status or **Watching**, so a Watchlist list can still have items you are currently watching. Grouping lists (Favorites, Marvel) can leave status and downloaded unchanged; new memberships copy the library status and downloaded flag.
+
+Series progress, status, and downloaded are stored on each list membership, so one series can track different seasons/episodes, statuses, and download states across lists. Moving a title from one list to another copies that membership onto the destination and applies the destination list’s default state.
 
 ---
 
@@ -322,8 +328,9 @@ Import the same JSON with **merge** semantics:
 
 - TMDB titles match on `(tmdbId, type)` and are skipped if already present
 - Manual titles match on `(title, type)` and are skipped if already present
-- Missing lists are created by name; existing lists are reused
-- Missing list memberships are added; existing memberships (and series progress) are left unchanged
+- Missing lists are created by name (including default status / downloaded); existing lists are reused
+- Missing list memberships are added (including per-list status and downloaded); existing memberships (and series progress) are left unchanged
+- Import does not rewrite library status/downloaded from list defaults (media records and list memberships are stored separately)
 
 The backup stores resolved TMDB IDs, so ambiguous titles do not need to be re-matched on import.
 
@@ -574,7 +581,7 @@ Production hosting: Next.js and NestJS on Vercel; database on Supabase.
 - Redirect to Library when user is logged in ✓
 - Move Movies/Series between lists ✓
 - Pagination ✓
-- Lists sets states
+- Lists sets states ✓
 - Fix Go Back in lists ✓
 - English/Spanish toggle
 - Delete Open button in lists ✓

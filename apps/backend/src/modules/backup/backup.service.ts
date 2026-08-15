@@ -7,6 +7,7 @@ import type {
 } from '@mediashelf/shared-types';
 import {
   LIBRARY_BACKUP_VERSION,
+  MediaStatus,
   MediaType as MediaTypeEnum,
 } from '@mediashelf/shared-types';
 import { ListsService } from '../lists/lists.service';
@@ -15,6 +16,8 @@ import { MediaService } from '../media/media.service';
 type ResolvedMedia = {
   id: string;
   type: MediaType;
+  status: MediaStatus;
+  downloaded: boolean;
 };
 
 @Injectable()
@@ -54,8 +57,12 @@ export class BackupService {
       lists: lists.map((list) => ({
         name: list.name,
         description: list.description,
+        defaultStatus: list.defaultStatus,
+        defaultDownloaded: list.defaultDownloaded,
         items: list.items.map((entry) => ({
           mediaRef: entry.mediaItemId,
+          status: entry.status,
+          downloaded: entry.downloaded,
           currentSeason: entry.currentSeason,
           currentEpisode: entry.currentEpisode,
         })),
@@ -101,7 +108,12 @@ export class BackupService {
         }
 
         if (existing) {
-          refToMedia.set(item.ref, { id: existing.id, type: existing.type });
+          refToMedia.set(item.ref, {
+            id: existing.id,
+            type: existing.type,
+            status: item.status,
+            downloaded: item.downloaded,
+          });
           result.mediaSkipped += 1;
           continue;
         }
@@ -122,7 +134,12 @@ export class BackupService {
           dateWatched: item.dateWatched,
         });
 
-        refToMedia.set(item.ref, { id: created.id, type: created.type });
+        refToMedia.set(item.ref, {
+          id: created.id,
+          type: created.type,
+          status: item.status,
+          downloaded: item.downloaded,
+        });
         result.mediaImported += 1;
       } catch (error) {
         result.errorCount += 1;
@@ -146,11 +163,11 @@ export class BackupService {
         const name = list.name.trim();
         const existed = existingListNames.has(name);
 
-        const ensured = await this.listsService.ensureByName(
-          userId,
-          name,
-          list.description,
-        );
+        const ensured = await this.listsService.ensureByName(userId, name, {
+          description: list.description,
+          defaultStatus: list.defaultStatus,
+          defaultDownloaded: list.defaultDownloaded,
+        });
 
         if (existed) {
           result.listsReused += 1;
@@ -159,29 +176,32 @@ export class BackupService {
           existingListNames.add(name);
         }
 
-        for (const membership of list.items) {
-          const resolved = refToMedia.get(membership.mediaRef);
+        for (const entry of list.items) {
+          const resolved = refToMedia.get(entry.mediaRef);
           if (!resolved) {
             result.errorCount += 1;
             result.errors.push(
-              `List "${name}": unknown mediaRef "${membership.mediaRef}"`,
+              `List "${name}": unknown mediaRef "${entry.mediaRef}"`,
             );
             continue;
           }
 
-          const progress =
-            resolved.type === MediaTypeEnum.SERIES
+          const membership = {
+            status: entry.status ?? resolved.status,
+            downloaded: entry.downloaded ?? resolved.downloaded,
+            ...(resolved.type === MediaTypeEnum.SERIES
               ? {
-                  currentSeason: membership.currentSeason,
-                  currentEpisode: membership.currentEpisode,
+                  currentSeason: entry.currentSeason,
+                  currentEpisode: entry.currentEpisode,
                 }
-              : undefined;
+              : {}),
+          };
 
           const outcome = await this.listsService.addItemIfMissing(
             userId,
             ensured.id,
             resolved.id,
-            progress,
+            membership,
           );
 
           if (outcome === 'added') {
