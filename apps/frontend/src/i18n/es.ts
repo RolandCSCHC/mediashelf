@@ -52,7 +52,6 @@ export const es: Messages = {
     kicker: 'Tu biblioteca de medios privada',
     description:
       'Lleva el control de películas y series en un solo lugar. Inicia sesión con Google para abrir tu biblioteca privada.',
-    goToLibrary: 'Ir a la biblioteca',
   },
   login: {
     kicker: 'Cuenta',

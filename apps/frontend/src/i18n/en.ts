@@ -50,7 +50,6 @@ export const en = {
     kicker: 'Your private media library',
     description:
       'Track movies and TV series in one place. Sign in with Google to open your private library.',
-    goToLibrary: 'Go to library',
   },
   login: {
     kicker: 'Account',

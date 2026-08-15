@@ -2,7 +2,6 @@
 
 import { GoogleLoginButton } from '@/components/google-login-button';
 import { useI18n } from '@/components/locale-provider';
-import { ButtonLink } from '@/components/ui/button';
 
 export function HomeHero() {
   const { t } = useI18n();
@@ -19,11 +18,8 @@ export function HomeHero() {
         {t('home.description')}
       </p>
 
-      <div className="ms-animate-fade-up ms-animate-delay-3 mt-8 flex flex-wrap items-center gap-3">
+      <div className="ms-animate-fade-up ms-animate-delay-3 mt-8">
         <GoogleLoginButton />
-        <ButtonLink href="/library" variant="ghost" size="md">
-          {t('home.goToLibrary')}
-        </ButtonLink>
       </div>
     </>
   );
