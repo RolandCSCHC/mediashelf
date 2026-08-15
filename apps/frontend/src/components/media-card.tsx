@@ -8,7 +8,8 @@ import type {
   MediaType,
 } from '@mediashelf/shared-types';
 import { MediaItemControls } from '@/components/media-item-controls';
-import { formatMediaStatus } from '@/lib/media-status';
+import { useI18n } from '@/components/locale-provider';
+import { mediaStatusLabelKey } from '@/lib/media-status';
 import { formatSeriesProgress } from '@/lib/media-filters';
 import type { MediaViewMode } from '@/lib/media-view-mode';
 import { tmdbPosterUrl } from '@/lib/tmdb-images';
@@ -59,6 +60,7 @@ export function MediaCard({
   onDeleted,
   onError,
 }: MediaCardProps) {
+  const { t } = useI18n();
   const href = mediaDetailHref(item.id, fromListId);
   const poster = tmdbPosterUrl(
     item.posterPath,
@@ -77,9 +79,9 @@ export function MediaCard({
     <>
       <TypeLabel type={item.type} />
       {year ? ` · ${year}` : ''}
-      {` · ${formatMediaStatus(displayedStatus)}`}
+      {` · ${t(mediaStatusLabelKey(displayedStatus))}`}
       {progress ? ` · ${progress}` : ''}
-      {displayedDownloaded ? ' · Downloaded' : ''}
+      {displayedDownloaded ? ` · ${t('common.downloaded')}` : ''}
     </>
   );
 
@@ -102,7 +104,7 @@ export function MediaCard({
                 />
               ) : (
                 <div className="flex h-full items-center justify-center px-1 text-center text-[10px] leading-tight text-muted">
-                  No poster
+                  {t('common.noPoster')}
                 </div>
               )}
             </div>
@@ -153,7 +155,7 @@ export function MediaCard({
             />
           ) : (
             <div className="flex h-full items-center justify-center px-3 text-center text-sm text-muted">
-              No poster
+              {t('common.noPoster')}
             </div>
           )}
         </div>
@@ -185,5 +187,6 @@ export function MediaCard({
 }
 
 function TypeLabel({ type }: { type: MediaType }) {
-  return <>{type === 'MOVIE' ? 'Movie' : 'Series'}</>;
+  const { t } = useI18n();
+  return <>{type === 'MOVIE' ? t('common.movie') : t('common.series')}</>;
 }

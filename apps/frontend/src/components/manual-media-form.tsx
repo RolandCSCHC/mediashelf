@@ -8,6 +8,7 @@ import {
   type CreateManualMediaRequest,
 } from '@mediashelf/shared-types';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/components/locale-provider';
 import { createManualMedia } from '@/lib/api';
 import { MEDIA_STATUS_OPTIONS } from '@/lib/media-status';
 
@@ -22,6 +23,7 @@ export function ManualMediaForm({
   initialType = MediaType.MOVIE,
   onCancel,
 }: ManualMediaFormProps) {
+  const { t } = useI18n();
   const router = useRouter();
   const [title, setTitle] = useState(initialTitle);
   const [type, setType] = useState<MediaType>(initialType);
@@ -44,7 +46,7 @@ export function ManualMediaForm({
     event.preventDefault();
     const trimmedTitle = title.trim();
     if (!trimmedTitle) {
-      setError('Title is required');
+      setError(t('manual.titleRequired'));
       return;
     }
 
@@ -58,7 +60,7 @@ export function ManualMediaForm({
     if (yearText) {
       const year = Number(yearText);
       if (!Number.isInteger(year) || year < 1870 || year > 2100) {
-        setError('Release year must be between 1870 and 2100');
+        setError(t('manual.yearInvalid'));
         return;
       }
       payload.releaseYear = year;
@@ -81,7 +83,7 @@ export function ManualMediaForm({
       const created = await createManualMedia(payload);
       router.push(`/library/${created.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add title');
+      setError(err instanceof Error ? err.message : t('manual.addFailed'));
       setIsSaving(false);
     }
   }
@@ -96,15 +98,15 @@ export function ManualMediaForm({
     >
       <div>
         <h2 className="font-display text-xl font-semibold text-foreground">
-          Add manually
+          {t('manual.heading')}
         </h2>
-        <p className="mt-1 text-sm text-muted">
-          Use this when TMDB does not have the title you want.
-        </p>
+        <p className="mt-1 text-sm text-muted">{t('manual.description')}</p>
       </div>
 
       <label className="block space-y-1.5">
-        <span className="text-sm font-medium text-foreground">Title</span>
+        <span className="text-sm font-medium text-foreground">
+          {t('manual.title')}
+        </span>
         <input
           type="text"
           value={title}
@@ -112,27 +114,29 @@ export function ManualMediaForm({
           required
           maxLength={500}
           className={fieldClass}
-          aria-label="Title"
+          aria-label={t('manual.title')}
         />
       </label>
 
       <div className="grid gap-4 sm:grid-cols-3">
         <label className="block space-y-1.5">
-          <span className="text-sm font-medium text-foreground">Type</span>
+          <span className="text-sm font-medium text-foreground">
+            {t('manual.type')}
+          </span>
           <select
             value={type}
             onChange={(event) => setType(event.target.value as MediaType)}
             className={fieldClass}
-            aria-label="Type"
+            aria-label={t('manual.type')}
           >
-            <option value={MediaType.MOVIE}>Movie</option>
-            <option value={MediaType.SERIES}>Series</option>
+            <option value={MediaType.MOVIE}>{t('common.movie')}</option>
+            <option value={MediaType.SERIES}>{t('common.series')}</option>
           </select>
         </label>
 
         <label className="block space-y-1.5">
           <span className="text-sm font-medium text-foreground">
-            Year (optional)
+            {t('manual.yearOptional')}
           </span>
           <input
             type="number"
@@ -143,21 +147,23 @@ export function ManualMediaForm({
             max={2100}
             placeholder="2024"
             className={fieldClass}
-            aria-label="Release year"
+            aria-label={t('manual.yearAria')}
           />
         </label>
 
         <label className="block space-y-1.5">
-          <span className="text-sm font-medium text-foreground">Status</span>
+          <span className="text-sm font-medium text-foreground">
+            {t('manual.status')}
+          </span>
           <select
             value={status}
             onChange={(event) => setStatus(event.target.value as MediaStatus)}
             className={fieldClass}
-            aria-label="Status"
+            aria-label={t('manual.status')}
           >
             {MEDIA_STATUS_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
-                {option.label}
+                {t(option.labelKey)}
               </option>
             ))}
           </select>
@@ -166,7 +172,7 @@ export function ManualMediaForm({
 
       <label className="block space-y-1.5">
         <span className="text-sm font-medium text-foreground">
-          Description (optional)
+          {t('manual.descriptionOptional')}
         </span>
         <textarea
           value={description}
@@ -174,22 +180,22 @@ export function ManualMediaForm({
           rows={3}
           maxLength={4000}
           className={fieldClass}
-          aria-label="Description"
+          aria-label={t('manual.description')}
         />
       </label>
 
       <label className="block space-y-1.5">
         <span className="text-sm font-medium text-foreground">
-          Notes (optional)
+          {t('manual.notesOptional')}
         </span>
         <textarea
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           rows={2}
           maxLength={4000}
-          placeholder="Links, season ranges, or anything else"
+          placeholder={t('media.notesPlaceholder')}
           className={fieldClass}
-          aria-label="Notes"
+          aria-label={t('common.notes')}
         />
       </label>
 
@@ -201,7 +207,7 @@ export function ManualMediaForm({
 
       <div className="flex flex-wrap gap-3">
         <Button type="submit" disabled={isSaving || !title.trim()}>
-          {isSaving ? 'Adding…' : 'Add to library'}
+          {isSaving ? t('manual.adding') : t('manual.addToLibrary')}
         </Button>
         {onCancel ? (
           <Button
@@ -210,7 +216,7 @@ export function ManualMediaForm({
             disabled={isSaving}
             onClick={onCancel}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
         ) : null}
       </div>

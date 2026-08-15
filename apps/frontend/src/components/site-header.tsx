@@ -5,17 +5,21 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useAuth } from '@/components/auth-provider';
 import { GoogleLoginButton } from '@/components/google-login-button';
+import { LanguageToggle } from '@/components/language-toggle';
+import { useI18n } from '@/components/locale-provider';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
+import type { MessageKey } from '@/i18n';
 
-const NAV_LINKS = [
-  { href: '/library', label: 'Library' },
-  { href: '/lists', label: 'Lists' },
-  { href: '/search', label: 'Search TMDB' },
-] as const;
+const NAV_LINKS: { href: string; labelKey: MessageKey }[] = [
+  { href: '/library', labelKey: 'nav.library' },
+  { href: '/lists', labelKey: 'nav.lists' },
+  { href: '/search', labelKey: 'nav.search' },
+];
 
 export function SiteHeader() {
   const { user, isLoading, logout } = useAuth();
+  const { t } = useI18n();
   const router = useRouter();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -86,9 +90,10 @@ export function SiteHeader() {
         </Link>
 
         <nav
-          aria-label="Primary"
+          aria-label={t('nav.primary')}
           className="flex min-w-0 items-center gap-2 sm:gap-3"
         >
+          <LanguageToggle />
           <ThemeToggle />
 
           {isLoading ? (
@@ -104,7 +109,7 @@ export function SiteHeader() {
                     href={link.href}
                     className="text-sm text-muted transition hover:text-foreground"
                   >
-                    {link.label}
+                    {t(link.labelKey)}
                   </Link>
                 ))}
               </div>
@@ -131,7 +136,7 @@ export function SiteHeader() {
                 className="hidden sm:inline-flex"
                 onClick={() => void handleLogout()}
               >
-                Log out
+                {t('nav.logout')}
               </Button>
 
               <Button
@@ -142,7 +147,7 @@ export function SiteHeader() {
                 className="px-2.5 sm:hidden"
                 aria-expanded={menuOpen}
                 aria-controls={menuId}
-                aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+                aria-label={menuOpen ? t('nav.closeMenu') : t('nav.openMenu')}
                 onClick={() => setMenuOpen((open) => !open)}
               >
                 <span
@@ -171,7 +176,11 @@ export function SiteHeader() {
               </Button>
             </>
           ) : (
-            <GoogleLoginButton label="Log in" variant="secondary" size="sm" />
+            <GoogleLoginButton
+              label={t('nav.login')}
+              variant="secondary"
+              size="sm"
+            />
           )}
         </nav>
       </div>
@@ -190,7 +199,7 @@ export function SiteHeader() {
                 className="rounded-md px-3 py-2.5 text-sm text-foreground transition hover:bg-[var(--overlay)]"
                 onClick={() => setMenuOpen(false)}
               >
-                {link.label}
+                {t(link.labelKey)}
               </Link>
             ))}
             <button
@@ -198,7 +207,7 @@ export function SiteHeader() {
               className="rounded-md px-3 py-2.5 text-left text-sm text-muted transition hover:bg-[var(--overlay)] hover:text-foreground"
               onClick={() => void handleLogout()}
             >
-              Log out
+              {t('nav.logout')}
             </button>
           </div>
         </div>

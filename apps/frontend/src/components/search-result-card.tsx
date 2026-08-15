@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import type { MediaType, TmdbSearchResult } from '@mediashelf/shared-types';
 import { AddToLibraryButton } from '@/components/add-to-library-button';
+import { useI18n } from '@/components/locale-provider';
 import { tmdbPosterUrl } from '@/lib/tmdb-images';
 import { tmdbPreviewHref } from '@/lib/tmdb-preview';
 
@@ -21,6 +22,7 @@ export function SearchResultCard({
   libraryItemId = null,
   onImported,
 }: SearchResultCardProps) {
+  const { t } = useI18n();
   const poster = tmdbPosterUrl(result.posterPath, 'w185');
   const year = result.releaseDate
     ? new Date(result.releaseDate).getFullYear()
@@ -43,7 +45,7 @@ export function SearchResultCard({
           />
         ) : (
           <div className="flex h-full items-center justify-center px-2 text-center text-xs text-muted">
-            No poster
+            {t('common.noPoster')}
           </div>
         )}
       </Link>
@@ -59,7 +61,7 @@ export function SearchResultCard({
             </Link>
           </h3>
           <span className="text-xs uppercase tracking-wide text-muted">
-            {result.type === 'MOVIE' ? 'Movie' : 'Series'}
+            {result.type === 'MOVIE' ? t('common.movie') : t('common.series')}
             {year ? ` · ${year}` : ''}
           </span>
         </div>
@@ -81,7 +83,7 @@ export function SearchResultCard({
             href={href}
             className="text-sm text-muted transition hover:text-foreground"
           >
-            View info
+            {t('searchCard.viewInfo')}
           </Link>
         </div>
       </div>

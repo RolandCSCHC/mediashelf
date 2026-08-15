@@ -8,6 +8,7 @@ import { AuthGuard } from '@/components/auth-guard';
 import { ManualMediaForm } from '@/components/manual-media-form';
 import { SearchResultCard } from '@/components/search-result-card';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/components/locale-provider';
 import { listAllMedia, searchTmdb } from '@/lib/api';
 import {
   parseSearchTypeFilter,
@@ -16,6 +17,7 @@ import {
 } from '@/lib/tmdb-preview';
 
 function SearchContent() {
+  const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlQuery = searchParams.get('q')?.trim() ?? '';
@@ -32,10 +34,13 @@ function SearchContent() {
   const [manualTitle, setManualTitle] = useState('');
   const hydratedQuery = useRef<string | null>(null);
 
-  const filters: { value: SearchTypeFilter; label: string }[] = [
-    { value: 'ALL', label: 'All' },
-    { value: 'MOVIE', label: 'Movies' },
-    { value: 'SERIES', label: 'Series' },
+  const filters: {
+    value: SearchTypeFilter;
+    labelKey: 'search.filterAll' | 'common.movies' | 'common.series';
+  }[] = [
+    { value: 'ALL', labelKey: 'search.filterAll' },
+    { value: 'MOVIE', labelKey: 'common.movies' },
+    { value: 'SERIES', labelKey: 'common.series' },
   ];
 
   const initialManualType =
@@ -74,12 +79,12 @@ function SearchContent() {
         }
       } catch (err) {
         setResults([]);
-        setError(err instanceof Error ? err.message : 'Search failed');
+        setError(err instanceof Error ? err.message : t('search.failed'));
       } finally {
         setIsSearching(false);
       }
     },
-    [],
+    [t],
   );
 
   useEffect(() => {
@@ -131,14 +136,13 @@ function SearchContent() {
   return (
     <AppShell width="wide">
       <p className="ms-animate-fade-up mb-2 text-sm uppercase tracking-[0.2em] text-muted">
-        Discover
+        {t('search.kicker')}
       </p>
       <h1 className="ms-animate-fade-up ms-animate-delay-1 font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-        Search TMDB
+        {t('search.heading')}
       </h1>
       <p className="ms-animate-fade-up ms-animate-delay-2 mt-3 max-w-xl text-muted">
-        Find a movie or series, open it to see cast and crew, then add it to
-        your private library. If TMDB does not have it, add it manually.
+        {t('search.description')}
       </p>
 
       <form
@@ -150,12 +154,12 @@ function SearchContent() {
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="The Lord of the Rings"
+            placeholder={t('search.placeholder')}
             className="w-full flex-1 rounded-md border border-border bg-surface px-4 py-2.5 text-foreground outline-none ring-[var(--ring)] placeholder:text-muted focus:ring-2"
-            aria-label="Search query"
+            aria-label={t('search.queryAria')}
           />
           <Button type="submit" disabled={isSearching || !query.trim()}>
-            {isSearching ? 'Searching…' : 'Search'}
+            {isSearching ? t('search.searching') : t('search.search')}
           </Button>
         </div>
 
@@ -163,7 +167,7 @@ function SearchContent() {
           <div
             className="flex flex-wrap gap-2"
             role="group"
-            aria-label="Type filter"
+            aria-label={t('search.typeFilterAria')}
           >
             {filters.map((option) => (
               <button
@@ -177,7 +181,7 @@ function SearchContent() {
                     : 'border-border bg-surface text-muted hover:text-foreground',
                 ].join(' ')}
               >
-                {option.label}
+                {t(option.labelKey)}
               </button>
             ))}
           </div>
@@ -189,7 +193,7 @@ function SearchContent() {
               size="sm"
               onClick={() => openManualForm(query.trim())}
             >
-              Add manually
+              {t('search.addManually')}
             </Button>
           ) : null}
         </div>
@@ -213,9 +217,7 @@ function SearchContent() {
 
       <div className="mt-8 space-y-4">
         {!hasSearched && !showManualForm ? (
-          <p className="text-sm text-muted">
-            Enter a title to search The Movie Database.
-          </p>
+          <p className="text-sm text-muted">{t('search.prompt')}</p>
         ) : null}
 
         {hasSearched &&
@@ -224,13 +226,13 @@ function SearchContent() {
         !error &&
         !showManualForm ? (
           <p className="text-sm text-muted">
-            No results found.{' '}
+            {t('search.noResults')}{' '}
             <button
               type="button"
               className="text-accent hover:underline"
               onClick={() => openManualForm(query.trim())}
             >
-              Add manually
+              {t('search.addManually')}
             </button>
           </p>
         ) : null}
@@ -255,16 +257,20 @@ function SearchContent() {
   );
 }
 
+function SearchFallback() {
+  const { t } = useI18n();
+
+  return (
+    <AppShell width="wide">
+      <p className="mt-10 text-sm text-muted">{t('common.loading')}</p>
+    </AppShell>
+  );
+}
+
 export default function SearchPage() {
   return (
     <AuthGuard>
-      <Suspense
-        fallback={
-          <AppShell width="wide">
-            <p className="mt-10 text-sm text-muted">Loading…</p>
-          </AppShell>
-        }
-      >
+      <Suspense fallback={<SearchFallback />}>
         <SearchContent />
       </Suspense>
     </AuthGuard>

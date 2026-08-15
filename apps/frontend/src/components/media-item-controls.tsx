@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import type { MediaItem, MediaStatus } from '@mediashelf/shared-types';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/components/locale-provider';
+import { dateLocale } from '@/i18n';
 import { deleteMedia, updateMedia } from '@/lib/api';
 import { MEDIA_STATUS_OPTIONS } from '@/lib/media-status';
 
@@ -37,6 +39,7 @@ export function MediaItemControls({
   onDeleted,
   onError,
 }: MediaItemControlsProps) {
+  const { t, locale } = useI18n();
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [notesDraft, setNotesDraft] = useState(item.notes ?? '');
@@ -71,7 +74,9 @@ export function MediaItemControls({
         onUpdated(updated);
       }
     } catch (err) {
-      onError?.(err instanceof Error ? err.message : 'Failed to update status');
+      onError?.(
+        err instanceof Error ? err.message : t('media.updateStatusFailed'),
+      );
     } finally {
       setIsSaving(false);
     }
@@ -91,7 +96,7 @@ export function MediaItemControls({
       }
     } catch (err) {
       onError?.(
-        err instanceof Error ? err.message : 'Failed to update downloaded',
+        err instanceof Error ? err.message : t('media.updateDownloadedFailed'),
       );
     } finally {
       setIsSaving(false);
@@ -109,7 +114,9 @@ export function MediaItemControls({
       const updated = await updateMedia(item.id, { notes: nextNotes });
       onUpdated(updated);
     } catch (err) {
-      onError?.(err instanceof Error ? err.message : 'Failed to update notes');
+      onError?.(
+        err instanceof Error ? err.message : t('media.updateNotesFailed'),
+      );
     } finally {
       setIsSaving(false);
     }
@@ -117,7 +124,7 @@ export function MediaItemControls({
 
   async function handleDelete() {
     const confirmed = window.confirm(
-      `Remove “${item.title}” from your library?`,
+      t('media.removeConfirm', { title: item.title }),
     );
     if (!confirmed) {
       return;
@@ -128,7 +135,7 @@ export function MediaItemControls({
       await deleteMedia(item.id);
       onDeleted(item.id);
     } catch (err) {
-      onError?.(err instanceof Error ? err.message : 'Failed to delete');
+      onError?.(err instanceof Error ? err.message : t('media.deleteFailed'));
       setIsDeleting(false);
     }
   }
@@ -152,14 +159,16 @@ export function MediaItemControls({
       >
         <label className={inline ? 'block' : 'block space-y-1.5'}>
           {!compact ? (
-            <span className="text-sm font-medium text-foreground">Status</span>
+            <span className="text-sm font-medium text-foreground">
+              {t('filters.status')}
+            </span>
           ) : (
-            <span className="sr-only">Status</span>
+            <span className="sr-only">{t('filters.status')}</span>
           )}
           <select
             value={displayedStatus}
             disabled={busy}
-            aria-label="Status"
+            aria-label={t('filters.status')}
             onChange={(event) =>
               void handleStatusChange(event.target.value as MediaStatus)
             }
@@ -167,7 +176,7 @@ export function MediaItemControls({
           >
             {statusOptions.map((option) => (
               <option key={option.value} value={option.value}>
-                {option.label}
+                {t(option.labelKey)}
               </option>
             ))}
           </select>
@@ -192,7 +201,7 @@ export function MediaItemControls({
                 : 'text-sm font-medium text-foreground'
             }
           >
-            Downloaded
+            {t('common.downloaded')}
           </span>
         </label>
       </div>
@@ -200,13 +209,15 @@ export function MediaItemControls({
       {!compact ? (
         <div className="space-y-2">
           <label className="block space-y-1.5">
-            <span className="text-sm font-medium text-foreground">Notes</span>
+            <span className="text-sm font-medium text-foreground">
+              {t('common.notes')}
+            </span>
             <textarea
               value={notesDraft}
               disabled={busy}
               rows={3}
               onChange={(event) => setNotesDraft(event.target.value)}
-              placeholder="Links, season ranges, or anything else"
+              placeholder={t('media.notesPlaceholder')}
               className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none ring-[var(--ring)] focus:ring-2 disabled:opacity-60"
             />
           </label>
@@ -219,18 +230,22 @@ export function MediaItemControls({
             }
             onClick={() => void handleNotesSave()}
           >
-            Save notes
+            {t('media.saveNotes')}
           </Button>
         </div>
       ) : null}
 
       {!compact && displayedStatus === 'WATCHED' && item.dateWatched ? (
         <p className="text-sm text-muted">
-          Watched on{' '}
-          {new Date(item.dateWatched).toLocaleDateString(undefined, {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
+          {t('media.watchedOn', {
+            date: new Date(item.dateWatched).toLocaleDateString(
+              dateLocale(locale),
+              {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+              },
+            ),
           })}
         </p>
       ) : null}
@@ -245,7 +260,7 @@ export function MediaItemControls({
             onClick={() => void handleDelete()}
             className="border-danger/40 text-danger hover:bg-danger/10"
           >
-            {isDeleting ? 'Removing…' : 'Remove from library'}
+            {isDeleting ? t('media.removing') : t('media.removeFromLibrary')}
           </Button>
         </div>
       ) : null}

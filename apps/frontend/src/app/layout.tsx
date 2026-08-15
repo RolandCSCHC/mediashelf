@@ -1,8 +1,11 @@
 import type { Metadata, Viewport } from 'next';
+import { cookies } from 'next/headers';
 import { Fraunces, Source_Sans_3 } from 'next/font/google';
 import { AuthProvider } from '@/components/auth-provider';
+import { LocaleProvider } from '@/components/locale-provider';
 import { ServiceWorkerRegister } from '@/components/service-worker-register';
 import { ThemeProvider, themeInitScript } from '@/components/theme-provider';
+import { LOCALE_COOKIE, htmlLang, parseLocale } from '@/i18n';
 import './globals.css';
 
 const display = Fraunces({
@@ -54,14 +57,17 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const locale = parseLocale(cookieStore.get(LOCALE_COOKIE)?.value);
+
   return (
     <html
-      lang="en"
+      lang={htmlLang(locale)}
       className={`${display.variable} ${sans.variable}`}
       suppressHydrationWarning
     >
@@ -70,10 +76,12 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-background font-sans text-foreground antialiased">
         <ThemeProvider>
-          <AuthProvider>
-            <ServiceWorkerRegister />
-            {children}
-          </AuthProvider>
+          <LocaleProvider initialLocale={locale}>
+            <AuthProvider>
+              <ServiceWorkerRegister />
+              {children}
+            </AuthProvider>
+          </LocaleProvider>
         </ThemeProvider>
       </body>
     </html>

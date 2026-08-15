@@ -7,6 +7,7 @@ import type {
   MediaType,
 } from '@mediashelf/shared-types';
 import { MediaSortBy } from '@mediashelf/shared-types';
+import { useI18n } from '@/components/locale-provider';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
 import {
@@ -46,6 +47,7 @@ export function LibraryFilterSortControls({
   onChange,
   onResetFilters,
 }: LibraryFilterSortControlsProps) {
+  const { t } = useI18n();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
 
@@ -61,9 +63,10 @@ export function LibraryFilterSortControls({
     ...(showListFilter ? [value.listId] : []),
   ].filter(Boolean).length;
 
-  const sortLabel =
-    MEDIA_SORT_OPTIONS.find((option) => option.value === value.sortBy)?.label ??
-    'Sort';
+  const sortLabel = t(
+    MEDIA_SORT_OPTIONS.find((option) => option.value === value.sortBy)
+      ?.labelKey ?? 'filters.sort',
+  );
 
   return (
     <>
@@ -71,8 +74,8 @@ export function LibraryFilterSortControls({
         type="search"
         value={value.search}
         onChange={(event) => patch({ search: event.target.value })}
-        placeholder="Search titles…"
-        aria-label="Search titles"
+        placeholder={t('filters.searchPlaceholder')}
+        aria-label={t('filters.searchAria')}
         className="min-w-[10rem] flex-1 rounded-md border border-border bg-surface px-3 py-1.5 text-sm text-foreground outline-none ring-[var(--ring)] placeholder:text-muted focus:ring-2 sm:max-w-[14rem] sm:flex-none"
       />
       <Button
@@ -81,7 +84,9 @@ export function LibraryFilterSortControls({
         size="sm"
         onClick={() => setIsFilterOpen(true)}
       >
-        {activeFilterCount > 0 ? `Filters (${activeFilterCount})` : 'Filters'}
+        {activeFilterCount > 0
+          ? t('filters.filtersCount', { count: activeFilterCount })
+          : t('filters.filters')}
       </Button>
       <Button
         type="button"
@@ -89,18 +94,18 @@ export function LibraryFilterSortControls({
         size="sm"
         onClick={() => setIsSortOpen(true)}
       >
-        Sort
+        {t('filters.sort')}
       </Button>
 
       <Modal
         open={isFilterOpen}
-        title="Filters"
+        title={t('filters.filters')}
         onClose={() => setIsFilterOpen(false)}
       >
         <div className="space-y-4">
           <label className="block space-y-1.5">
             <span className="text-xs uppercase tracking-wide text-muted">
-              Status
+              {t('filters.status')}
             </span>
             <select
               value={value.status}
@@ -112,8 +117,8 @@ export function LibraryFilterSortControls({
               className={fieldClass}
             >
               {MEDIA_STATUS_FILTER_OPTIONS.map((option) => (
-                <option key={option.label} value={option.value}>
-                  {option.label}
+                <option key={option.labelKey} value={option.value}>
+                  {t(option.labelKey)}
                 </option>
               ))}
             </select>
@@ -121,7 +126,7 @@ export function LibraryFilterSortControls({
 
           <label className="block space-y-1.5">
             <span className="text-xs uppercase tracking-wide text-muted">
-              Type
+              {t('filters.type')}
             </span>
             <select
               value={value.type}
@@ -133,8 +138,8 @@ export function LibraryFilterSortControls({
               className={fieldClass}
             >
               {MEDIA_TYPE_FILTER_OPTIONS.map((option) => (
-                <option key={option.label} value={option.value}>
-                  {option.label}
+                <option key={option.labelKey} value={option.value}>
+                  {t(option.labelKey)}
                 </option>
               ))}
             </select>
@@ -142,14 +147,14 @@ export function LibraryFilterSortControls({
 
           <label className="block space-y-1.5">
             <span className="text-xs uppercase tracking-wide text-muted">
-              Genre
+              {t('filters.genre')}
             </span>
             <select
               value={value.genre}
               onChange={(event) => patch({ genre: event.target.value })}
               className={fieldClass}
             >
-              <option value="">All genres</option>
+              <option value="">{t('filters.allGenres')}</option>
               {genres.map((genre) => (
                 <option key={genre} value={genre}>
                   {genre}
@@ -160,7 +165,7 @@ export function LibraryFilterSortControls({
 
           <label className="block space-y-1.5">
             <span className="text-xs uppercase tracking-wide text-muted">
-              Downloaded
+              {t('filters.downloaded')}
             </span>
             <select
               value={value.downloaded}
@@ -173,8 +178,8 @@ export function LibraryFilterSortControls({
               className={fieldClass}
             >
               {DOWNLOADED_FILTER_OPTIONS.map((option) => (
-                <option key={option.label} value={option.value}>
-                  {option.label}
+                <option key={option.labelKey} value={option.value}>
+                  {t(option.labelKey)}
                 </option>
               ))}
             </select>
@@ -183,14 +188,14 @@ export function LibraryFilterSortControls({
           {showListFilter ? (
             <label className="block space-y-1.5">
               <span className="text-xs uppercase tracking-wide text-muted">
-                Custom list
+                {t('filters.customList')}
               </span>
               <select
                 value={value.listId}
                 onChange={(event) => patch({ listId: event.target.value })}
                 className={fieldClass}
               >
-                <option value="">All lists</option>
+                <option value="">{t('filters.allLists')}</option>
                 {lists.map((list) => (
                   <option key={list.id} value={list.id}>
                     {list.name}
@@ -210,14 +215,14 @@ export function LibraryFilterSortControls({
               }}
               disabled={activeFilterCount === 0}
             >
-              Reset
+              {t('filters.reset')}
             </Button>
             <Button
               type="button"
               size="sm"
               onClick={() => setIsFilterOpen(false)}
             >
-              Done
+              {t('common.done')}
             </Button>
           </div>
         </div>
@@ -225,13 +230,13 @@ export function LibraryFilterSortControls({
 
       <Modal
         open={isSortOpen}
-        title="Sort"
+        title={t('filters.sort')}
         onClose={() => setIsSortOpen(false)}
       >
         <div className="space-y-4">
           <label className="block space-y-1.5">
             <span className="text-xs uppercase tracking-wide text-muted">
-              Sort by
+              {t('filters.sortBy')}
             </span>
             <select
               value={value.sortBy}
@@ -242,14 +247,14 @@ export function LibraryFilterSortControls({
             >
               {MEDIA_SORT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
-                  {option.label}
+                  {t(option.labelKey)}
                 </option>
               ))}
             </select>
           </label>
 
           <p className="text-sm text-muted">
-            Currently sorting by {sortLabel.toLowerCase()}.
+            {t('filters.currentlySorting', { sort: sortLabel })}
           </p>
 
           <div className="flex justify-end pt-2">
@@ -258,7 +263,7 @@ export function LibraryFilterSortControls({
               size="sm"
               onClick={() => setIsSortOpen(false)}
             >
-              Done
+              {t('common.done')}
             </Button>
           </div>
         </div>

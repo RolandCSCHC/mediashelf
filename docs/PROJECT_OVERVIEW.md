@@ -373,6 +373,12 @@ Support:
 - Light Mode
 - Dark Mode
 
+## Language
+
+The UI can be switched between English and Spanish. The choice is stored in a
+cookie (and localStorage) and applied across the app without changing URLs.
+TMDB title metadata stays in the language returned by TMDB.
+
 ---
 
 # REST API
@@ -585,7 +591,7 @@ Production hosting: Next.js and NestJS on Vercel; database on Supabase.
 - Pagination ✓
 - Lists sets states ✓
 - Fix Go Back in lists ✓
-- English/Spanish toggle
+- English/Spanish button ✓
 - Delete Open button in lists ✓
 - Make the lists cells clickable ✓
 - Sort by name by default ✓

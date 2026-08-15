@@ -6,6 +6,7 @@ import type {
   MediaStatus,
 } from '@mediashelf/shared-types';
 import { MEDIA_STATUS_OPTIONS } from '@/lib/media-status';
+import { useI18n } from '@/components/locale-provider';
 
 export type ListEditorValues = {
   name: string;
@@ -65,6 +66,8 @@ export function ListEditorFields({
   disabled = false,
   onChange,
 }: ListEditorFieldsProps) {
+  const { t } = useI18n();
+
   function patch(partial: Partial<ListEditorValues>) {
     onChange({ ...values, ...partial });
   }
@@ -72,12 +75,14 @@ export function ListEditorFields({
   return (
     <>
       <label className="block space-y-1.5">
-        <span className="text-xs uppercase tracking-wide text-muted">Name</span>
+        <span className="text-xs uppercase tracking-wide text-muted">
+          {t('listEditor.name')}
+        </span>
         <input
           value={values.name}
           onChange={(event) => patch({ name: event.target.value })}
           className={fieldClass}
-          placeholder="Downloaded movies"
+          placeholder={t('listEditor.namePlaceholder')}
           maxLength={80}
           required
           disabled={disabled}
@@ -85,20 +90,20 @@ export function ListEditorFields({
       </label>
       <label className="block space-y-1.5">
         <span className="text-xs uppercase tracking-wide text-muted">
-          Description
+          {t('listEditor.description')}
         </span>
         <input
           value={values.description}
           onChange={(event) => patch({ description: event.target.value })}
           className={fieldClass}
-          placeholder="Optional"
+          placeholder={t('listEditor.descriptionPlaceholder')}
           maxLength={280}
           disabled={disabled}
         />
       </label>
       <label className="block space-y-1.5">
         <span className="text-xs uppercase tracking-wide text-muted">
-          Set status when adding
+          {t('listEditor.setStatus')}
         </span>
         <select
           value={values.defaultStatus}
@@ -111,17 +116,17 @@ export function ListEditorFields({
           className={fieldClass}
           disabled={disabled}
         >
-          <option value="">Leave unchanged</option>
+          <option value="">{t('listEditor.leaveUnchanged')}</option>
           {MEDIA_STATUS_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
-              {option.label}
+              {t(option.labelKey)}
             </option>
           ))}
         </select>
       </label>
       <label className="block space-y-1.5">
         <span className="text-xs uppercase tracking-wide text-muted">
-          Set downloaded when adding
+          {t('listEditor.setDownloaded')}
         </span>
         <select
           value={values.defaultDownloaded}
@@ -134,16 +139,12 @@ export function ListEditorFields({
           className={fieldClass}
           disabled={disabled}
         >
-          <option value="">Leave unchanged</option>
-          <option value="true">Downloaded</option>
-          <option value="false">Not downloaded</option>
+          <option value="">{t('listEditor.leaveUnchanged')}</option>
+          <option value="true">{t('common.downloaded')}</option>
+          <option value="false">{t('common.notDownloaded')}</option>
         </select>
       </label>
-      <p className="text-xs text-muted">
-        New titles get this list’s status and downloaded flag on this list only.
-        You can still switch a title to Watching in this list without changing
-        its status in other lists.
-      </p>
+      <p className="text-xs text-muted">{t('listEditor.help')}</p>
     </>
   );
 }

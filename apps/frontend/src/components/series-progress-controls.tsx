@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/components/locale-provider';
 
 type SeriesProgressControlsProps = {
   currentSeason: number | null;
@@ -35,6 +36,7 @@ export function SeriesProgressControls({
   onSave,
   onError,
 }: SeriesProgressControlsProps) {
+  const { t } = useI18n();
   const [seasonInput, setSeasonInput] = useState(
     currentSeason?.toString() ?? '',
   );
@@ -54,11 +56,11 @@ export function SeriesProgressControls({
     const nextEpisode = parseOptionalPositiveInt(episodeInput);
 
     if (seasonInput.trim() && nextSeason === null) {
-      onError?.('Season must be a positive whole number');
+      onError?.(t('progress.seasonInvalid'));
       return;
     }
     if (episodeInput.trim() && nextEpisode === null) {
-      onError?.('Episode must be a positive whole number');
+      onError?.(t('progress.episodeInvalid'));
       return;
     }
 
@@ -74,7 +76,7 @@ export function SeriesProgressControls({
       });
     } catch (err) {
       onError?.(
-        err instanceof Error ? err.message : 'Failed to update progress',
+        err instanceof Error ? err.message : t('progress.updateFailed'),
       );
     } finally {
       setIsSaving(false);
@@ -88,7 +90,9 @@ export function SeriesProgressControls({
   return (
     <div className={compact ? 'space-y-2' : 'space-y-3'}>
       {!compact ? (
-        <p className="text-sm font-medium text-foreground">Series progress</p>
+        <p className="text-sm font-medium text-foreground">
+          {t('progress.title')}
+        </p>
       ) : null}
       <div
         className={
@@ -97,7 +101,7 @@ export function SeriesProgressControls({
       >
         <label className="block space-y-1">
           <span className={compact ? 'sr-only' : 'text-sm text-muted'}>
-            Season
+            {t('progress.season')}
           </span>
           <input
             type="number"
@@ -107,13 +111,13 @@ export function SeriesProgressControls({
             disabled={busy}
             onChange={(event) => setSeasonInput(event.target.value)}
             className={inputClass}
-            placeholder="Season"
-            aria-label="Season"
+            placeholder={t('progress.season')}
+            aria-label={t('progress.season')}
           />
         </label>
         <label className="block space-y-1">
           <span className={compact ? 'sr-only' : 'text-sm text-muted'}>
-            Episode
+            {t('progress.episode')}
           </span>
           <input
             type="number"
@@ -123,8 +127,8 @@ export function SeriesProgressControls({
             disabled={busy}
             onChange={(event) => setEpisodeInput(event.target.value)}
             className={inputClass}
-            placeholder="Episode"
-            aria-label="Episode"
+            placeholder={t('progress.episode')}
+            aria-label={t('progress.episode')}
           />
         </label>
       </div>
@@ -136,7 +140,11 @@ export function SeriesProgressControls({
         onClick={() => void handleSave()}
         className={compact ? 'w-full text-xs' : undefined}
       >
-        {isSaving ? 'Saving…' : compact ? 'Save' : 'Save progress'}
+        {isSaving
+          ? t('common.saving')
+          : compact
+            ? t('common.save')
+            : t('progress.saveProgress')}
       </Button>
     </div>
   );

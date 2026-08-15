@@ -5,6 +5,7 @@ import Link from 'next/link';
 import type { MediaType } from '@mediashelf/shared-types';
 import { importMedia } from '@/lib/api';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/components/locale-provider';
 
 type AddToLibraryButtonProps = {
   tmdbId: number;
@@ -21,6 +22,7 @@ export function AddToLibraryButton({
   libraryItemId = null,
   onImported,
 }: AddToLibraryButtonProps) {
+  const { t } = useI18n();
   const [isImporting, setIsImporting] = useState(false);
   const [importedId, setImportedId] = useState<string | null>(libraryItemId);
   const [imported, setImported] = useState(alreadyInLibrary);
@@ -41,7 +43,9 @@ export function AddToLibraryButton({
       setImportedId(item.id);
       onImported?.(tmdbId, type, item.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Import failed');
+      setError(
+        err instanceof Error ? err.message : t('addToLibrary.importFailed'),
+      );
     } finally {
       setIsImporting(false);
     }
@@ -51,13 +55,15 @@ export function AddToLibraryButton({
     <div className="flex flex-wrap items-center gap-3">
       {imported ? (
         <>
-          <span className="text-sm font-medium text-accent">In library</span>
+          <span className="text-sm font-medium text-accent">
+            {t('addToLibrary.inLibrary')}
+          </span>
           {openHref ? (
             <Link
               href={openHref}
               className="text-sm text-muted transition hover:text-foreground"
             >
-              Open
+              {t('addToLibrary.open')}
             </Link>
           ) : null}
         </>
@@ -68,7 +74,7 @@ export function AddToLibraryButton({
           disabled={isImporting}
           onClick={() => void handleImport()}
         >
-          {isImporting ? 'Importing…' : 'Add to library'}
+          {isImporting ? t('addToLibrary.importing') : t('addToLibrary.add')}
         </Button>
       )}
       {error ? <p className="text-sm text-danger">{error}</p> : null}

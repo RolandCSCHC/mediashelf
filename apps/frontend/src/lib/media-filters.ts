@@ -4,44 +4,45 @@ import {
   MediaType,
   type MediaItem,
 } from '@mediashelf/shared-types';
+import type { MessageKey } from '@/i18n';
 
 export const MEDIA_SORT_OPTIONS: {
   value: MediaSortBy;
-  label: string;
+  labelKey: MessageKey;
 }[] = [
-  { value: MediaSortBy.TITLE, label: 'Title' },
-  { value: MediaSortBy.DATE_ADDED, label: 'Date added' },
-  { value: MediaSortBy.RELEASE_DATE, label: 'Release date' },
-  { value: MediaSortBy.DATE_WATCHED, label: 'Date watched' },
+  { value: MediaSortBy.TITLE, labelKey: 'filters.sortTitle' },
+  { value: MediaSortBy.DATE_ADDED, labelKey: 'filters.sortDateAdded' },
+  { value: MediaSortBy.RELEASE_DATE, labelKey: 'filters.sortReleaseDate' },
+  { value: MediaSortBy.DATE_WATCHED, labelKey: 'filters.sortDateWatched' },
 ];
 
 export const MEDIA_TYPE_FILTER_OPTIONS: {
   value: '' | MediaType;
-  label: string;
+  labelKey: MessageKey;
 }[] = [
-  { value: '', label: 'All types' },
-  { value: MediaType.MOVIE, label: 'Movies' },
-  { value: MediaType.SERIES, label: 'Series' },
+  { value: '', labelKey: 'filters.allTypes' },
+  { value: MediaType.MOVIE, labelKey: 'common.movies' },
+  { value: MediaType.SERIES, labelKey: 'common.series' },
 ];
 
 export const MEDIA_STATUS_FILTER_OPTIONS: {
   value: '' | MediaStatus;
-  label: string;
+  labelKey: MessageKey;
 }[] = [
-  { value: '', label: 'All statuses' },
-  { value: MediaStatus.WATCHLIST, label: 'Watchlist' },
-  { value: MediaStatus.WATCHING, label: 'Watching' },
-  { value: MediaStatus.WATCHED, label: 'Watched' },
-  { value: MediaStatus.FUTURE, label: 'Future' },
+  { value: '', labelKey: 'filters.allStatuses' },
+  { value: MediaStatus.WATCHLIST, labelKey: 'status.watchlist' },
+  { value: MediaStatus.WATCHING, labelKey: 'status.watching' },
+  { value: MediaStatus.WATCHED, labelKey: 'status.watched' },
+  { value: MediaStatus.FUTURE, labelKey: 'status.future' },
 ];
 
 export const DOWNLOADED_FILTER_OPTIONS: {
   value: '' | 'true' | 'false';
-  label: string;
+  labelKey: MessageKey;
 }[] = [
-  { value: '', label: 'Any download state' },
-  { value: 'true', label: 'Downloaded' },
-  { value: 'false', label: 'Not downloaded' },
+  { value: '', labelKey: 'filters.anyDownload' },
+  { value: 'true', labelKey: 'common.downloaded' },
+  { value: 'false', labelKey: 'common.notDownloaded' },
 ];
 
 export type MediaFilterSortInput = {

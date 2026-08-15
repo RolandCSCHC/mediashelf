@@ -11,10 +11,12 @@ import { LibraryTmdbCredits } from '@/components/library-tmdb-credits';
 import { MediaItemControls } from '@/components/media-item-controls';
 import { getMedia } from '@/lib/api';
 import { tmdbPosterUrl } from '@/lib/tmdb-images';
+import { useI18n } from '@/components/locale-provider';
 
 const LIST_ID_PATTERN = /^[a-z0-9]+$/i;
 
 function MediaDetailContent() {
+  const { t } = useI18n();
   const params = useParams<{ id: string }>();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -23,7 +25,9 @@ function MediaDetailContent() {
   const fromListId =
     rawFromList && LIST_ID_PATTERN.test(rawFromList) ? rawFromList : null;
   const backHref = fromListId ? `/lists/${fromListId}` : '/library';
-  const backLabel = fromListId ? '← Back to list' : '← Back to library';
+  const backLabel = fromListId
+    ? t('media.backToList')
+    : t('media.backToLibrary');
 
   const [item, setItem] = useState<MediaItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,12 +40,12 @@ function MediaDetailContent() {
       const media = await getMedia(id);
       setItem(media);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load item');
+      setError(err instanceof Error ? err.message : t('media.loadFailed'));
       setItem(null);
     } finally {
       setIsLoading(false);
     }
-  }, [id]);
+  }, [id, t]);
 
   useEffect(() => {
     void load();
@@ -61,7 +65,9 @@ function MediaDetailContent() {
         {backLabel}
       </Link>
 
-      {isLoading ? <p className="mt-10 text-sm text-muted">Loading…</p> : null}
+      {isLoading ? (
+        <p className="mt-10 text-sm text-muted">{t('common.loading')}</p>
+      ) : null}
 
       {error && !item ? (
         <p className="mt-10 text-sm text-danger" role="alert">
@@ -82,14 +88,14 @@ function MediaDetailContent() {
                 />
               ) : (
                 <div className="flex aspect-[2/3] items-center justify-center text-sm text-muted">
-                  No poster
+                  {t('common.noPoster')}
                 </div>
               )}
             </div>
 
             <div>
               <p className="text-sm uppercase tracking-[0.2em] text-muted">
-                {item.type === 'MOVIE' ? 'Movie' : 'Series'}
+                {item.type === 'MOVIE' ? t('common.movie') : t('common.series')}
                 {year ? ` · ${year}` : ''}
               </p>
               <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
@@ -109,7 +115,7 @@ function MediaDetailContent() {
               {item.notes ? (
                 <div className="mt-4 max-w-2xl rounded-md border border-border bg-[var(--overlay)] px-3 py-2">
                   <p className="text-xs uppercase tracking-[0.16em] text-muted">
-                    Notes
+                    {t('common.notes')}
                   </p>
                   <div className="mt-1 space-y-1 text-sm text-foreground">
                     {item.notes.split('\n').map((line, index) =>
@@ -172,16 +178,20 @@ function MediaDetailContent() {
   );
 }
 
+function MediaDetailFallback() {
+  const { t } = useI18n();
+
+  return (
+    <AppShell width="wide">
+      <p className="mt-10 text-sm text-muted">{t('common.loading')}</p>
+    </AppShell>
+  );
+}
+
 export default function MediaDetailPage() {
   return (
     <AuthGuard>
-      <Suspense
-        fallback={
-          <AppShell width="wide">
-            <p className="mt-10 text-sm text-muted">Loading…</p>
-          </AppShell>
-        }
-      >
+      <Suspense fallback={<MediaDetailFallback />}>
         <MediaDetailContent />
       </Suspense>
     </AuthGuard>

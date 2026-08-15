@@ -25,7 +25,9 @@ Database: [Supabase](https://supabase.com/) managed PostgreSQL (Prisma uses a po
 - **Panels / list view toggle** on library and list pages (persisted in `localStorage`)
 - **Pagination** on library and lists (server-side; default 2 panel rows or 10 list rows; 25 / 50 / 100 / all)
 - **JSON export / merge import** for library + lists (`/backup`)
-- **Dark / light mode**, responsive shell, mobile nav
+- **Dark / light mode**
+- **English / Spanish UI**
+- **Responsive shell, mobile nav**
 - **PWA** (manifest, icons, service worker) — installable on phone over HTTPS
 - **Swagger / OpenAPI** at `/docs`
 - **CI** on GitHub Actions (lint, typecheck, Prettier, unit tests, build)

@@ -96,18 +96,15 @@ export function paginationItems(
   return items;
 }
 
-export function pageRangeLabel(
+export function pageRange(
   page: number,
   pageSize: number,
   total: number,
-): string {
+): { start: number; end: number; total: number } {
   if (total === 0) {
-    return '0 titles';
+    return { start: 0, end: 0, total: 0 };
   }
   const start = (page - 1) * pageSize + 1;
   const end = Math.min(page * pageSize, total);
-  if (start === 1 && end === total) {
-    return `${total} ${total === 1 ? 'title' : 'titles'}`;
-  }
-  return `${start}–${end} of ${total}`;
+  return { start, end, total };
 }

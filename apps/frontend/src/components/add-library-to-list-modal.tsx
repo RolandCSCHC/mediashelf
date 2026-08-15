@@ -5,6 +5,7 @@ import type { CustomListDetail, MediaItem } from '@mediashelf/shared-types';
 import { MediaType } from '@mediashelf/shared-types';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
+import { useI18n } from '@/components/locale-provider';
 import { addMediaItemsToList, listAllMedia } from '@/lib/api';
 import { tmdbPosterUrl } from '@/lib/tmdb-images';
 
@@ -27,6 +28,7 @@ export function AddLibraryToListModal({
   onAdded,
   onError,
 }: AddLibraryToListModalProps) {
+  const { t } = useI18n();
   const [library, setLibrary] = useState<MediaItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -52,14 +54,14 @@ export function AddLibraryToListModal({
       })
       .catch((err) => {
         const message =
-          err instanceof Error ? err.message : 'Failed to load library';
+          err instanceof Error ? err.message : t('library.loadFailed');
         setLoadError(message);
         onError?.(message);
       })
       .finally(() => {
         setIsLoading(false);
       });
-  }, [open, onError]);
+  }, [open, onError, t]);
 
   const availableItems = useMemo(
     () => library.filter((item) => !existingMediaItemIds.has(item.id)),
@@ -132,7 +134,7 @@ export function AddLibraryToListModal({
       onClose();
     } catch (err) {
       onError?.(
-        err instanceof Error ? err.message : 'Failed to add titles to list',
+        err instanceof Error ? err.message : t('addToListModal.addFailed'),
       );
     } finally {
       setIsSaving(false);
@@ -143,14 +145,19 @@ export function AddLibraryToListModal({
     'w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none ring-[var(--ring)] focus:ring-2';
 
   return (
-    <Modal open={open} title="Add from library" size="lg" onClose={handleClose}>
+    <Modal
+      open={open}
+      title={t('addToListModal.title')}
+      size="lg"
+      onClose={handleClose}
+    >
       <div className="space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row">
           <input
             type="search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search titles…"
+            placeholder={t('filters.searchPlaceholder')}
             className={fieldClass}
             disabled={isLoading || isSaving}
             data-autofocus
@@ -162,21 +169,26 @@ export function AddLibraryToListModal({
             }
             className={`${fieldClass} sm:w-40`}
             disabled={isLoading || isSaving}
-            aria-label="Filter by type"
+            aria-label={t('addToListModal.filterByType')}
           >
-            <option value="">All types</option>
-            <option value={MediaType.MOVIE}>Movies</option>
-            <option value={MediaType.SERIES}>Series</option>
+            <option value="">{t('filters.allTypes')}</option>
+            <option value={MediaType.MOVIE}>{t('common.movies')}</option>
+            <option value={MediaType.SERIES}>{t('common.series')}</option>
           </select>
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-muted">
             {isLoading
-              ? 'Loading library…'
-              : `${visibleItems.length} available${
-                  selectedCount > 0 ? ` · ${selectedCount} selected` : ''
-                }`}
+              ? t('addToListModal.loadingLibrary')
+              : selectedCount > 0
+                ? t('addToListModal.availableSelected', {
+                    count: visibleItems.length,
+                    selected: selectedCount,
+                  })
+                : t('addToListModal.available', {
+                    count: visibleItems.length,
+                  })}
           </p>
           <div className="flex gap-2">
             <Button
@@ -191,7 +203,7 @@ export function AddLibraryToListModal({
               }
               onClick={selectAllVisible}
             >
-              Select all
+              {t('addToListModal.selectAll')}
             </Button>
             <Button
               type="button"
@@ -200,7 +212,7 @@ export function AddLibraryToListModal({
               disabled={isLoading || isSaving || selectedCount === 0}
               onClick={clearSelection}
             >
-              Clear
+              {t('addToListModal.clear')}
             </Button>
           </div>
         </div>
@@ -213,14 +225,16 @@ export function AddLibraryToListModal({
 
         <div className="max-h-[min(24rem,50vh)] overflow-y-auto rounded-md border border-border">
           {isLoading ? (
-            <p className="px-4 py-8 text-center text-sm text-muted">Loading…</p>
+            <p className="px-4 py-8 text-center text-sm text-muted">
+              {t('common.loading')}
+            </p>
           ) : availableItems.length === 0 ? (
             <p className="px-4 py-8 text-center text-sm text-muted">
-              Everything in your library is already on this list.
+              {t('addToListModal.everythingOnList')}
             </p>
           ) : visibleItems.length === 0 ? (
             <p className="px-4 py-8 text-center text-sm text-muted">
-              No titles match your search.
+              {t('addToListModal.noMatch')}
             </p>
           ) : (
             <ul className="divide-y divide-border">
@@ -257,7 +271,9 @@ export function AddLibraryToListModal({
                           {item.title}
                         </p>
                         <p className="text-xs text-muted">
-                          {item.type === MediaType.MOVIE ? 'Movie' : 'Series'}
+                          {item.type === MediaType.MOVIE
+                            ? t('common.movie')
+                            : t('common.series')}
                           {year ? ` · ${year}` : ''}
                         </p>
                       </div>
@@ -277,7 +293,7 @@ export function AddLibraryToListModal({
             disabled={isSaving}
             onClick={handleClose}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             type="button"
@@ -286,12 +302,12 @@ export function AddLibraryToListModal({
             onClick={() => void handleAdd()}
           >
             {isSaving
-              ? 'Adding…'
+              ? t('addToListModal.adding')
               : selectedCount === 0
-                ? 'Add titles'
+                ? t('addToListModal.addTitles')
                 : selectedCount === 1
-                  ? 'Add 1 title'
-                  : `Add ${selectedCount} titles`}
+                  ? t('addToListModal.addOne')
+                  : t('addToListModal.addCount', { count: selectedCount })}
           </Button>
         </div>
       </div>

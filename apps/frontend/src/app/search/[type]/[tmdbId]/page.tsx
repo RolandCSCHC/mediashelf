@@ -11,18 +11,24 @@ import { TmdbTitleCredits } from '@/components/tmdb-title-credits';
 import { getTmdbTitle, listAllMedia } from '@/lib/api';
 import { tmdbBackdropUrl, tmdbPosterUrl } from '@/lib/tmdb-images';
 import { mediaTypeFromPreviewKind, searchHref } from '@/lib/tmdb-preview';
+import { useI18n } from '@/components/locale-provider';
+import type { TranslateFn } from '@/i18n';
 
 function formatRuntime(
   minutes: number | null,
   type: TmdbTitleDetails['type'],
+  t: TranslateFn,
 ): string | null {
   if (!minutes) {
     return null;
   }
-  return type === 'SERIES' ? `${minutes} min/ep` : `${minutes} min`;
+  return type === 'SERIES'
+    ? t('preview.runtimeSeries', { minutes })
+    : t('preview.runtimeMovie', { minutes });
 }
 
 function TmdbPreviewContent() {
+  const { t } = useI18n();
   const params = useParams<{ type: string; tmdbId: string }>();
   const searchParams = useSearchParams();
   const mediaType = mediaTypeFromPreviewKind(params.type);
@@ -37,7 +43,7 @@ function TmdbPreviewContent() {
 
   const load = useCallback(async () => {
     if (!mediaType || !Number.isInteger(tmdbId) || tmdbId < 1) {
-      setError('This TMDB title could not be found.');
+      setError(t('preview.notFound'));
       setDetails(null);
       setIsLoading(false);
       return;
@@ -59,11 +65,11 @@ function TmdbPreviewContent() {
       setLibraryItemId(existing?.id ?? null);
     } catch (err) {
       setDetails(null);
-      setError(err instanceof Error ? err.message : 'Failed to load title');
+      setError(err instanceof Error ? err.message : t('preview.loadFailed'));
     } finally {
       setIsLoading(false);
     }
-  }, [mediaType, tmdbId]);
+  }, [mediaType, tmdbId, t]);
 
   useEffect(() => {
     void load();
@@ -76,19 +82,23 @@ function TmdbPreviewContent() {
   const year = details?.releaseDate
     ? new Date(details.releaseDate).getFullYear()
     : null;
-  const runtime = details ? formatRuntime(details.runtime, details.type) : null;
+  const runtime = details
+    ? formatRuntime(details.runtime, details.type, t)
+    : null;
   const rating =
     details?.voteAverage != null ? details.voteAverage.toFixed(1) : null;
   const seasons =
     details?.seasonCount != null
-      ? `${details.seasonCount} season${details.seasonCount === 1 ? '' : 's'}`
+      ? details.seasonCount === 1
+        ? t('preview.seasonsOne', { count: details.seasonCount })
+        : t('preview.seasonsMany', { count: details.seasonCount })
       : null;
   const meta = [
-    details?.type === 'MOVIE' ? 'Movie' : 'Series',
+    details?.type === 'MOVIE' ? t('common.movie') : t('common.series'),
     year ? String(year) : null,
     runtime,
     seasons,
-    rating ? `TMDB ${rating}` : null,
+    rating ? t('preview.tmdbRating', { rating }) : null,
   ].filter((value): value is string => Boolean(value));
 
   return (
@@ -97,10 +107,12 @@ function TmdbPreviewContent() {
         href={backHref}
         className="text-sm text-muted transition hover:text-foreground"
       >
-        ← Back to search
+        {t('preview.back')}
       </Link>
 
-      {isLoading ? <p className="mt-10 text-sm text-muted">Loading…</p> : null}
+      {isLoading ? (
+        <p className="mt-10 text-sm text-muted">{t('common.loading')}</p>
+      ) : null}
 
       {error && !details ? (
         <p className="mt-10 text-sm text-danger" role="alert">
@@ -133,7 +145,7 @@ function TmdbPreviewContent() {
                 />
               ) : (
                 <div className="flex aspect-[2/3] items-center justify-center text-sm text-muted">
-                  No poster
+                  {t('common.noPoster')}
                 </div>
               )}
             </div>
@@ -177,16 +189,20 @@ function TmdbPreviewContent() {
   );
 }
 
+function TmdbPreviewFallback() {
+  const { t } = useI18n();
+
+  return (
+    <AppShell width="wide">
+      <p className="mt-10 text-sm text-muted">{t('common.loading')}</p>
+    </AppShell>
+  );
+}
+
 export default function TmdbPreviewPage() {
   return (
     <AuthGuard>
-      <Suspense
-        fallback={
-          <AppShell width="wide">
-            <p className="mt-10 text-sm text-muted">Loading…</p>
-          </AppShell>
-        }
-      >
+      <Suspense fallback={<TmdbPreviewFallback />}>
         <TmdbPreviewContent />
       </Suspense>
     </AuthGuard>

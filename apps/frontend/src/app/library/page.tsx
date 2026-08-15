@@ -26,6 +26,7 @@ import {
   useMediaViewMode,
 } from '@/components/media-view-toggle';
 import { useAuth } from '@/components/auth-provider';
+import { useI18n } from '@/components/locale-provider';
 import { Button } from '@/components/ui/button';
 import { listCustomLists, listMedia } from '@/lib/api';
 import { resolvePageSize } from '@/lib/media-pagination';
@@ -54,6 +55,7 @@ const EMPTY_PAGINATION: PaginationMeta = {
 };
 
 function LibraryContent() {
+  const { t } = useI18n();
   const { user } = useAuth();
   const firstName = user?.name?.split(' ')[0];
   const [items, setItems] = useState<MediaItem[]>([]);
@@ -143,19 +145,19 @@ function LibraryContent() {
         setPage(media.page);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load library');
+      setError(err instanceof Error ? err.message : t('library.loadFailed'));
     } finally {
       setIsLoading(false);
     }
-  }, [page, pageSizeReady, query, resolvedPageSize]);
+  }, [page, pageSizeReady, query, resolvedPageSize, t]);
 
   useEffect(() => {
     void loadOptions().catch((err) => {
       setError(
-        err instanceof Error ? err.message : 'Failed to load filter options',
+        err instanceof Error ? err.message : t('library.loadFiltersFailed'),
       );
     });
-  }, [loadOptions]);
+  }, [loadOptions, t]);
 
   useEffect(() => {
     void load();
@@ -196,16 +198,17 @@ function LibraryContent() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="ms-animate-fade-up mb-2 text-sm uppercase tracking-[0.2em] text-muted">
-            Private library
+            {t('library.kicker')}
           </p>
           <h1 className="ms-animate-fade-up ms-animate-delay-1 font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-            {firstName ? `${firstName}'s shelf` : 'Your shelf'}
+            {firstName
+              ? t('library.headingNamed', { name: firstName })
+              : t('library.headingYours')}
           </h1>
           <p className="ms-animate-fade-up ms-animate-delay-2 mt-3 max-w-xl text-muted">
-            Filter and sort your shelf, organize titles into custom lists, and
-            track series progress per list.{' '}
+            {t('library.description')}{' '}
             <Link href="/backup" className="text-accent hover:underline">
-              Export or import JSON
+              {t('library.exportImportLink')}
             </Link>
           </p>
         </div>
@@ -223,14 +226,14 @@ function LibraryContent() {
 
       {hasActiveFilters ? (
         <div className="mt-6 flex flex-wrap items-center gap-3">
-          <p className="text-sm text-muted">Filters are active</p>
+          <p className="text-sm text-muted">{t('library.filtersActive')}</p>
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={resetFiltersOnly}
           >
-            Clear filters
+            {t('library.clearFilters')}
           </Button>
         </div>
       ) : null}
@@ -248,24 +251,26 @@ function LibraryContent() {
       ) : null}
 
       {isLoading && items.length === 0 ? (
-        <p className="mt-10 text-sm text-muted">Loading library…</p>
+        <p className="mt-10 text-sm text-muted">{t('library.loading')}</p>
       ) : null}
 
       {showCollection && items.length === 0 && !error ? (
         <div className="mt-12 rounded-lg border border-dashed border-border bg-surface/60 px-6 py-10 text-center">
           <p className="font-display text-xl text-foreground">
-            {hasActiveFilters ? 'No titles match' : 'Your shelf is empty'}
+            {hasActiveFilters
+              ? t('library.noMatchTitle')
+              : t('library.emptyTitle')}
           </p>
           <p className="mx-auto mt-2 max-w-sm text-sm text-muted">
             {hasActiveFilters
-              ? 'Try clearing filters, or search TMDB to add something new.'
-              : 'Search TMDB and add movies or series to start building your library.'}
+              ? t('library.noMatchBody')
+              : t('library.emptyBody')}
           </p>
           <Link
             href="/search"
             className="mt-4 inline-block text-sm font-medium text-accent underline-offset-4 hover:underline"
           >
-            Go to search
+            {t('library.goToSearch')}
           </Link>
         </div>
       ) : null}

@@ -1,4 +1,7 @@
+'use client';
+
 import type { TmdbPerson } from '@mediashelf/shared-types';
+import { useI18n } from '@/components/locale-provider';
 import { tmdbProfileUrl } from '@/lib/tmdb-images';
 
 type TmdbPersonListProps = {
@@ -7,6 +10,8 @@ type TmdbPersonListProps = {
 };
 
 export function TmdbPersonList({ title, people }: TmdbPersonListProps) {
+  const { t } = useI18n();
+
   if (people.length === 0) {
     return null;
   }
@@ -37,7 +42,7 @@ export function TmdbPersonList({ title, people }: TmdbPersonListProps) {
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center px-2 text-center text-xs text-muted">
-                      No photo
+                      {t('common.noPhoto')}
                     </div>
                   )}
                 </div>

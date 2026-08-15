@@ -106,6 +106,16 @@ Separate:
 
 Avoid large components responsible for multiple concerns.
 
+## Internationalization
+
+UI copy lives in typed English/Spanish catalogs (`apps/frontend/src/i18n`).
+Use `useI18n().t('nav.library')` in client components. Do not hardcode
+user-facing strings. Spanish catalogs must match the English key tree
+(`Messages`), so missing translations fail typecheck.
+
+Persist locale with the `mediashelf-locale` cookie so the server can set
+`<html lang>` on first paint. Keep URLs locale-free.
+
 ------------------------------------------------------------------------
 
 # TypeScript

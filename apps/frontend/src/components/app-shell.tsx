@@ -30,7 +30,7 @@ export function AppShell({
         className="pointer-events-none absolute inset-0 ms-animate-fade-in bg-[radial-gradient(ellipse_at_top,var(--gradient-top),transparent_55%),radial-gradient(ellipse_at_bottom_right,var(--gradient-bottom),transparent_50%)]"
       />
 
-      <div className="ms-animate-fade-in relative z-10">
+      <div className="ms-animate-fade-in relative z-20">
         <SiteHeader />
       </div>
 

@@ -1,17 +1,21 @@
 'use client';
 
+import { useI18n } from '@/components/locale-provider';
 import { useTheme } from '@/components/theme-provider';
 
 export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
+  const { t } = useI18n();
   const isDark = theme === 'dark';
+  const label = isDark ? t('theme.switchToLight') : t('theme.switchToDark');
+  const title = isDark ? t('theme.lightMode') : t('theme.darkMode');
 
   return (
     <button
       type="button"
       onClick={toggleTheme}
-      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      title={isDark ? 'Light mode' : 'Dark mode'}
+      aria-label={label}
+      title={title}
       className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-surface text-foreground transition hover:bg-[var(--overlay)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
     >
       {isDark ? (

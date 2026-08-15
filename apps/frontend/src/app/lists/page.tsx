@@ -14,6 +14,7 @@ import {
 } from '@/components/list-editor-fields';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
+import { useI18n } from '@/components/locale-provider';
 import {
   createCustomList,
   deleteCustomList,
@@ -23,6 +24,7 @@ import {
 import { formatListStateSummary } from '@/lib/list-state';
 
 function ListsContent() {
+  const { t } = useI18n();
   const [lists, setLists] = useState<CustomList[]>([]);
   const [values, setValues] = useState<ListEditorValues>(emptyListEditorValues);
   const [editingList, setEditingList] = useState<CustomList | null>(null);
@@ -39,11 +41,11 @@ function ListsContent() {
       const customLists = await listCustomLists();
       setLists(customLists);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load lists');
+      setError(err instanceof Error ? err.message : t('lists.loadFailed'));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void load();
@@ -76,7 +78,7 @@ function ListsContent() {
     event.preventDefault();
     const payload = listEditorPayload(values);
     if (!payload.name) {
-      setFormError('List name is required');
+      setFormError(t('lists.nameRequired'));
       return;
     }
 
@@ -104,8 +106,8 @@ function ListsContent() {
         err instanceof Error
           ? err.message
           : editingList
-            ? 'Failed to update list'
-            : 'Failed to create list',
+            ? t('lists.updateFailed')
+            : t('lists.createFailed'),
       );
     } finally {
       setIsSaving(false);
@@ -113,7 +115,9 @@ function ListsContent() {
   }
 
   async function handleDelete(list: CustomList) {
-    const confirmed = window.confirm(`Delete list “${list.name}”?`);
+    const confirmed = window.confirm(
+      t('lists.deleteConfirm', { name: list.name }),
+    );
     if (!confirmed) {
       return;
     }
@@ -122,7 +126,7 @@ function ListsContent() {
       await deleteCustomList(list.id);
       setLists((prev) => prev.filter((entry) => entry.id !== list.id));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete list');
+      setError(err instanceof Error ? err.message : t('lists.deleteFailed'));
     }
   }
 
@@ -131,19 +135,16 @@ function ListsContent() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="mb-2 text-sm uppercase tracking-[0.2em] text-muted">
-            Organization
+            {t('lists.kicker')}
           </p>
           <h1 className="font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-            Custom lists
+            {t('lists.heading')}
           </h1>
-          <p className="mt-3 max-w-xl text-muted">
-            Group titles however you like — Favorites, Marvel, Christmas, and
-            more.
-          </p>
+          <p className="mt-3 max-w-xl text-muted">{t('lists.description')}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <Button type="button" size="sm" onClick={openCreateModal}>
-            Create a list
+            {t('lists.create')}
           </Button>
         </div>
       </div>
@@ -155,14 +156,16 @@ function ListsContent() {
       ) : null}
 
       {isLoading ? (
-        <p className="mt-10 text-sm text-muted">Loading lists…</p>
+        <p className="mt-10 text-sm text-muted">{t('lists.loading')}</p>
       ) : null}
 
       {!isLoading && lists.length === 0 ? (
         <div className="mt-12 rounded-lg border border-dashed border-border bg-surface/60 px-6 py-10 text-center">
-          <p className="font-display text-xl text-foreground">No lists yet</p>
+          <p className="font-display text-xl text-foreground">
+            {t('lists.emptyTitle')}
+          </p>
           <p className="mx-auto mt-2 max-w-sm text-sm text-muted">
-            Create a list to start grouping titles.
+            {t('lists.emptyBody')}
           </p>
           <Button
             type="button"
@@ -170,7 +173,7 @@ function ListsContent() {
             className="mt-4"
             onClick={openCreateModal}
           >
-            Create a list
+            {t('lists.create')}
           </Button>
         </div>
       ) : null}
@@ -178,7 +181,7 @@ function ListsContent() {
       {!isLoading && lists.length > 0 ? (
         <ul className="mt-10 divide-y divide-border border-y border-border">
           {lists.map((list) => {
-            const stateSummary = formatListStateSummary(list);
+            const stateSummary = formatListStateSummary(list, t);
 
             return (
               <li
@@ -188,14 +191,16 @@ function ListsContent() {
                 <Link
                   href={`/lists/${list.id}`}
                   className="absolute inset-0 z-[1] rounded-sm transition hover:bg-[var(--overlay)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
-                  aria-label={`Open ${list.name}`}
+                  aria-label={t('lists.openAria', { name: list.name })}
                 />
                 <div>
                   <p className="font-display text-xl text-foreground transition group-hover:text-accent">
                     {list.name}
                   </p>
                   <p className="mt-1 text-sm text-muted">
-                    {list.itemCount} {list.itemCount === 1 ? 'title' : 'titles'}
+                    {list.itemCount === 1
+                      ? t('lists.titleCountOne', { count: list.itemCount })
+                      : t('lists.titleCountMany', { count: list.itemCount })}
                     {list.description ? ` · ${list.description}` : ''}
                     {stateSummary ? ` · ${stateSummary}` : ''}
                   </p>
@@ -211,7 +216,7 @@ function ListsContent() {
                       openEditModal(list);
                     }}
                   >
-                    Edit
+                    {t('common.edit')}
                   </Button>
                   <Button
                     type="button"
@@ -224,7 +229,7 @@ function ListsContent() {
                       void handleDelete(list);
                     }}
                   >
-                    Delete
+                    {t('common.delete')}
                   </Button>
                 </div>
               </li>
@@ -235,7 +240,7 @@ function ListsContent() {
 
       <Modal
         open={isEditorOpen}
-        title={editingList ? 'Edit list' : 'Create a list'}
+        title={editingList ? t('lists.editList') : t('lists.createList')}
         onClose={closeEditorModal}
       >
         <form
@@ -262,16 +267,16 @@ function ListsContent() {
               disabled={isSaving}
               onClick={closeEditorModal}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" size="sm" disabled={isSaving}>
               {isSaving
                 ? editingList
-                  ? 'Saving…'
-                  : 'Creating…'
+                  ? t('common.saving')
+                  : t('lists.creating')
                 : editingList
-                  ? 'Save changes'
-                  : 'Create list'}
+                  ? t('lists.saveChanges')
+                  : t('lists.createList')}
             </Button>
           </div>
         </form>

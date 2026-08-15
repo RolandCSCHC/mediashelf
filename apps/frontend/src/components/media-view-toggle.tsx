@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, type ReactNode } from 'react';
+import { useI18n } from '@/components/locale-provider';
 import {
   DEFAULT_MEDIA_VIEW_MODE,
   MEDIA_VIEW_MODE_STORAGE_KEY,
@@ -43,21 +44,23 @@ export function useMediaViewMode(): [
 }
 
 export function MediaViewToggle({ value, onChange }: MediaViewToggleProps) {
+  const { t } = useI18n();
+
   return (
     <div
       role="group"
-      aria-label="Library layout"
+      aria-label={t('view.layoutAria')}
       className="inline-flex rounded-md border border-border bg-surface p-0.5"
     >
       <ToggleButton
-        label="Panels"
+        label={t('view.panels')}
         active={value === 'grid'}
         onClick={() => onChange('grid')}
       >
         <GridIcon className="h-4 w-4" />
       </ToggleButton>
       <ToggleButton
-        label="List"
+        label={t('view.list')}
         active={value === 'list'}
         onClick={() => onChange('list')}
       >

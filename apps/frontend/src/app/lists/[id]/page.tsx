@@ -44,6 +44,7 @@ import {
 import { SeriesProgressControls } from '@/components/series-progress-controls';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
+import { useI18n } from '@/components/locale-provider';
 import {
   deleteCustomList,
   getCustomList,
@@ -70,6 +71,7 @@ function toListQuery(filters: LibraryFiltersState): ListMediaQuery {
 }
 
 function ListDetailContent() {
+  const { t } = useI18n();
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const id = params.id;
@@ -153,12 +155,12 @@ function ListDetailContent() {
         setPage(detail.page);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load list');
+      setError(err instanceof Error ? err.message : t('listDetail.loadFailed'));
       setList(null);
     } finally {
       setIsLoading(false);
     }
-  }, [id, page, pageSizeReady, query, resolvedPageSize]);
+  }, [id, page, pageSizeReady, query, resolvedPageSize, t]);
 
   useEffect(() => {
     void load();
@@ -189,7 +191,7 @@ function ListDetailContent() {
 
     const payload = listEditorPayload(editorValues);
     if (!payload.name) {
-      setFormError('List name is required');
+      setFormError(t('lists.nameRequired'));
       return;
     }
 
@@ -213,7 +215,7 @@ function ListDetailContent() {
       setIsEditOpen(false);
     } catch (err) {
       setFormError(
-        err instanceof Error ? err.message : 'Failed to update list',
+        err instanceof Error ? err.message : t('lists.updateFailed'),
       );
     } finally {
       setIsSaving(false);
@@ -224,7 +226,9 @@ function ListDetailContent() {
     if (!list) {
       return;
     }
-    const confirmed = window.confirm(`Delete list “${list.name}”?`);
+    const confirmed = window.confirm(
+      t('lists.deleteConfirm', { name: list.name }),
+    );
     if (!confirmed) {
       return;
     }
@@ -234,7 +238,7 @@ function ListDetailContent() {
       router.push('/lists');
     } catch (err) {
       setActionError(
-        err instanceof Error ? err.message : 'Failed to delete list',
+        err instanceof Error ? err.message : t('lists.deleteFailed'),
       );
     }
   }
@@ -269,7 +273,7 @@ function ListDetailContent() {
       await load();
     } catch (err) {
       setActionError(
-        err instanceof Error ? err.message : 'Failed to remove from list',
+        err instanceof Error ? err.message : t('listDetail.removeFailed'),
       );
     }
   }
@@ -312,7 +316,7 @@ function ListDetailContent() {
     filters.downloaded !== '' ||
     filters.search.trim() !== '';
 
-  const stateSummary = list ? formatListStateSummary(list) : null;
+  const stateSummary = list ? formatListStateSummary(list, t) : null;
   const allowedStatuses = list
     ? allowedStatusesForList(list.defaultStatus)
     : null;
@@ -323,11 +327,11 @@ function ListDetailContent() {
         href="/lists"
         className="text-sm text-muted transition hover:text-foreground"
       >
-        ← Back to lists
+        {t('listDetail.back')}
       </Link>
 
       {isLoading && !list ? (
-        <p className="mt-10 text-sm text-muted">Loading…</p>
+        <p className="mt-10 text-sm text-muted">{t('common.loading')}</p>
       ) : null}
 
       {error && !list ? (
@@ -350,9 +354,15 @@ function ListDetailContent() {
                 <p className="mt-2 text-sm text-muted">{stateSummary}</p>
               ) : null}
               <p className="mt-2 text-sm text-muted">
-                {list.itemCount} {list.itemCount === 1 ? 'title' : 'titles'}
+                {list.itemCount === 1
+                  ? t('lists.titleCountOne', { count: list.itemCount })
+                  : t('lists.titleCountMany', { count: list.itemCount })}
                 {hasActiveFilters
-                  ? ` · ${list.total} ${list.total === 1 ? 'match' : 'matches'}`
+                  ? ` · ${
+                      list.total === 1
+                        ? t('listDetail.matchCountOne', { count: list.total })
+                        : t('listDetail.matchCountMany', { count: list.total })
+                    }`
                   : ''}
               </p>
             </div>
@@ -374,7 +384,7 @@ function ListDetailContent() {
                   setIsAddOpen(true);
                 }}
               >
-                Add from library
+                {t('listDetail.addFromLibrary')}
               </Button>
               <Button
                 type="button"
@@ -382,7 +392,7 @@ function ListDetailContent() {
                 size="sm"
                 onClick={openEditModal}
               >
-                Edit list
+                {t('listDetail.editList')}
               </Button>
               <Button
                 type="button"
@@ -391,21 +401,21 @@ function ListDetailContent() {
                 className="text-danger hover:bg-danger/10"
                 onClick={() => void handleDeleteList()}
               >
-                Delete list
+                {t('listDetail.deleteList')}
               </Button>
             </div>
           </div>
 
           {hasActiveFilters ? (
             <div className="mt-6 flex flex-wrap items-center gap-3">
-              <p className="text-sm text-muted">Filters are active</p>
+              <p className="text-sm text-muted">{t('library.filtersActive')}</p>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={resetFiltersOnly}
               >
-                Clear filters
+                {t('library.clearFilters')}
               </Button>
             </div>
           ) : null}
@@ -419,10 +429,10 @@ function ListDetailContent() {
           {list.itemCount === 0 ? (
             <div className="mt-12 rounded-lg border border-dashed border-border bg-surface/60 px-6 py-10 text-center">
               <p className="font-display text-xl text-foreground">
-                This list is empty
+                {t('listDetail.emptyTitle')}
               </p>
               <p className="mx-auto mt-2 max-w-sm text-sm text-muted">
-                Add titles from your library to get started.
+                {t('listDetail.emptyBody')}
               </p>
               <Button
                 type="button"
@@ -433,16 +443,16 @@ function ListDetailContent() {
                   setIsAddOpen(true);
                 }}
               >
-                Add from library
+                {t('listDetail.addFromLibrary')}
               </Button>
             </div>
           ) : list.total === 0 ? (
             <div className="mt-12 rounded-lg border border-dashed border-border bg-surface/60 px-6 py-10 text-center">
               <p className="font-display text-xl text-foreground">
-                No titles match
+                {t('listDetail.noMatchTitle')}
               </p>
               <p className="mx-auto mt-2 max-w-sm text-sm text-muted">
-                Try clearing filters to see everything in this list.
+                {t('listDetail.noMatchBody')}
               </p>
               <Button
                 type="button"
@@ -450,7 +460,7 @@ function ListDetailContent() {
                 className="mt-4"
                 onClick={resetFiltersOnly}
               >
-                Clear filters
+                {t('library.clearFilters')}
               </Button>
             </div>
           ) : (
@@ -531,7 +541,7 @@ function ListDetailContent() {
                             void handleRemoveFromList(entry.mediaItemId)
                           }
                         >
-                          Remove from list
+                          {t('listDetail.removeFromList')}
                         </Button>
                       </>
                     }
@@ -541,7 +551,11 @@ function ListDetailContent() {
             </>
           )}
 
-          <Modal open={isEditOpen} title="Edit list" onClose={closeEditModal}>
+          <Modal
+            open={isEditOpen}
+            title={t('listDetail.editList')}
+            onClose={closeEditModal}
+          >
             <form
               onSubmit={(event) => void handleSave(event)}
               className="space-y-4"
@@ -566,10 +580,10 @@ function ListDetailContent() {
                   disabled={isSaving}
                   onClick={closeEditModal}
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </Button>
                 <Button type="submit" size="sm" disabled={isSaving}>
-                  {isSaving ? 'Saving…' : 'Save changes'}
+                  {isSaving ? t('common.saving') : t('lists.saveChanges')}
                 </Button>
               </div>
             </form>

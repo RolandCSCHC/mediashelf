@@ -2,6 +2,7 @@
 
 import { getGoogleLoginUrl } from '@/lib/api';
 import { useApiReady } from '@/hooks/use-api-ready';
+import { useI18n } from '@/components/locale-provider';
 import { Button, ButtonLink } from '@/components/ui/button';
 
 type GoogleLoginButtonProps = {
@@ -13,11 +14,13 @@ type GoogleLoginButtonProps = {
 
 export function GoogleLoginButton({
   className,
-  label = 'Continue with Google',
+  label,
   variant = 'primary',
   size = 'md',
 }: GoogleLoginButtonProps) {
+  const { t } = useI18n();
   const { state, retry } = useApiReady();
+  const text = label ?? t('google.continue');
 
   if (state === 'ready') {
     return (
@@ -28,7 +31,7 @@ export function GoogleLoginButton({
         className={className}
       >
         <GoogleGlyph className="h-4 w-4" />
-        {label}
+        {text}
       </ButtonLink>
     );
   }
@@ -43,7 +46,7 @@ export function GoogleLoginButton({
         onClick={retry}
       >
         <GoogleGlyph className="h-4 w-4" />
-        {size === 'sm' ? 'Retry' : 'Server unavailable — Retry'}
+        {size === 'sm' ? t('google.retryShort') : t('google.retry')}
       </Button>
     );
   }
@@ -59,7 +62,7 @@ export function GoogleLoginButton({
       aria-live="polite"
     >
       <Spinner className="h-4 w-4" />
-      {size === 'sm' ? 'Connecting…' : 'Waking server…'}
+      {size === 'sm' ? t('google.connectingShort') : t('google.connecting')}
     </Button>
   );
 }

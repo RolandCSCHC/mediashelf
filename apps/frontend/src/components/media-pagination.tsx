@@ -7,7 +7,7 @@ import {
   PAGE_SIZE_CHOICES,
   MEDIA_PAGE_SIZE_STORAGE_KEY,
   isPageSizeChoice,
-  pageRangeLabel,
+  pageRange,
   paginationItems,
   parseStoredPageSizeChoice,
   panelColumnCount,
@@ -15,6 +15,7 @@ import {
   type PageSizeChoice,
 } from '@/lib/media-pagination';
 import type { MediaViewMode } from '@/lib/media-view-mode';
+import { useI18n } from '@/components/locale-provider';
 
 export function usePanelColumnCount(): number | null {
   const [columns, setColumns] = useState<number | null>(null);
@@ -78,27 +79,39 @@ export function MediaPagination({
   onPageChange,
   onPageSizeChange,
 }: MediaPaginationProps) {
+  const { t } = useI18n();
   const pages = paginationItems(meta.page, meta.totalPages);
   const resolvedDefault = resolvePageSize('default', viewMode, columns);
   const defaultLabel =
     viewMode === 'list'
-      ? `Default (${resolvedDefault})`
-      : `Default (${resolvedDefault}, 2 rows)`;
+      ? t('pagination.defaultList', { count: resolvedDefault })
+      : t('pagination.defaultPanels', { count: resolvedDefault });
+  const range = pageRange(meta.page, meta.pageSize || meta.total, meta.total);
+  const rangeLabel =
+    range.total === 0
+      ? t('pagination.empty')
+      : range.start === 1 && range.end === range.total
+        ? range.total === 1
+          ? t('pagination.totalOne', { count: range.total })
+          : t('pagination.totalMany', { count: range.total })
+        : t('pagination.range', {
+            start: range.start,
+            end: range.end,
+            total: range.total,
+          });
 
   return (
     <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <p className="text-sm text-muted">
-        {pageRangeLabel(meta.page, meta.pageSize || meta.total, meta.total)}
-      </p>
+      <p className="text-sm text-muted">{rangeLabel}</p>
 
       <div className="flex flex-wrap items-center gap-3">
         {meta.totalPages > 1 ? (
           <nav
-            aria-label="Pagination"
+            aria-label={t('pagination.aria')}
             className="flex flex-wrap items-center gap-1"
           >
             <PageButton
-              label="Previous"
+              label={t('pagination.previous')}
               disabled={meta.page <= 1}
               onClick={() => onPageChange(meta.page - 1)}
             />
@@ -120,7 +133,7 @@ export function MediaPagination({
               ),
             )}
             <PageButton
-              label="Next"
+              label={t('pagination.next')}
               disabled={meta.page >= meta.totalPages}
               onClick={() => onPageChange(meta.page + 1)}
             />
@@ -128,10 +141,10 @@ export function MediaPagination({
         ) : null}
 
         <label className="flex items-center gap-2 text-sm text-muted">
-          <span className="whitespace-nowrap">Per page</span>
+          <span className="whitespace-nowrap">{t('pagination.perPage')}</span>
           <select
             value={String(pageSizeChoice)}
-            aria-label="Titles per page"
+            aria-label={t('pagination.perPageAria')}
             onChange={(event) => {
               const value = event.target.value;
               const next =
@@ -149,7 +162,7 @@ export function MediaPagination({
                 {choice === 'default'
                   ? defaultLabel
                   : choice === PAGE_SIZE_ALL
-                    ? 'All'
+                    ? t('common.all')
                     : String(choice)}
               </option>
             ))}

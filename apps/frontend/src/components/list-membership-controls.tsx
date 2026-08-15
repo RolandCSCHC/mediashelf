@@ -13,6 +13,7 @@ import { allowedStatusesForList, MediaType } from '@mediashelf/shared-types';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
 import { SeriesProgressControls } from '@/components/series-progress-controls';
+import { useI18n } from '@/components/locale-provider';
 import {
   addMediaToList,
   getMedia,
@@ -35,6 +36,7 @@ export function ListMembershipControls({
   onMediaUpdated,
   onError,
 }: ListMembershipControlsProps) {
+  const { t } = useI18n();
   const [lists, setLists] = useState<CustomList[]>([]);
   const [memberships, setMemberships] = useState<MediaListMembership[]>([]);
   const [listId, setListId] = useState('');
@@ -65,14 +67,14 @@ export function ListMembershipControls({
         const available = customLists.find((list) => !memberIds.has(list.id));
         setListId(available?.id ?? '');
       } catch (err) {
-        onError?.(err instanceof Error ? err.message : 'Failed to load lists');
+        onError?.(err instanceof Error ? err.message : t('lists.loadFailed'));
       } finally {
         if (!options?.silent) {
           setIsLoading(false);
         }
       }
     },
-    [mediaItem.id, onError],
+    [mediaItem.id, onError, t],
   );
 
   useEffect(() => {
@@ -81,7 +83,7 @@ export function ListMembershipControls({
 
   async function handleAdd() {
     if (!listId) {
-      onError?.('Create a list first');
+      onError?.(t('membership.createFirst'));
       return;
     }
 
@@ -89,14 +91,14 @@ export function ListMembershipControls({
     setMessage(null);
     try {
       await addMediaToList(listId, { mediaItemId: mediaItem.id });
-      setMessage('Added to list');
+      setMessage(t('membership.added'));
       await load({ silent: true });
       if (onMediaUpdated) {
         const updated = await getMedia(mediaItem.id);
         onMediaUpdated(updated);
       }
     } catch (err) {
-      onError?.(err instanceof Error ? err.message : 'Failed to add to list');
+      onError?.(err instanceof Error ? err.message : t('membership.addFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -125,7 +127,7 @@ export function ListMembershipControls({
 
   async function handleMove() {
     if (!moveFrom || !moveTargetListId) {
-      onError?.('Choose a list to move to');
+      onError?.(t('membership.chooseDestination'));
       return;
     }
 
@@ -137,14 +139,16 @@ export function ListMembershipControls({
       });
       setMoveFrom(null);
       setMoveTargetListId('');
-      setMessage('Moved to list');
+      setMessage(t('membership.moved'));
       await load({ silent: true });
       if (onMediaUpdated) {
         const updated = await getMedia(mediaItem.id);
         onMediaUpdated(updated);
       }
     } catch (err) {
-      onError?.(err instanceof Error ? err.message : 'Failed to move to list');
+      onError?.(
+        err instanceof Error ? err.message : t('membership.moveFailed'),
+      );
     } finally {
       setIsMoving(false);
     }
@@ -161,7 +165,7 @@ export function ListMembershipControls({
       setMemberships((prev) => applyListItemUpdate(prev, listId, updated));
     } catch (err) {
       onError?.(
-        err instanceof Error ? err.message : 'Failed to update list status',
+        err instanceof Error ? err.message : t('membership.updateStatusFailed'),
       );
     }
   }
@@ -177,13 +181,15 @@ export function ListMembershipControls({
       setMemberships((prev) => applyListItemUpdate(prev, listId, updated));
     } catch (err) {
       onError?.(
-        err instanceof Error ? err.message : 'Failed to update list downloaded',
+        err instanceof Error
+          ? err.message
+          : t('membership.updateDownloadedFailed'),
       );
     }
   }
 
   if (isLoading) {
-    return <p className="text-sm text-muted">Loading lists…</p>;
+    return <p className="text-sm text-muted">{t('lists.loading')}</p>;
   }
 
   const memberIds = new Set(memberships.map((entry) => entry.listId));
@@ -194,10 +200,12 @@ export function ListMembershipControls({
   return (
     <div className="space-y-6">
       <div className="space-y-3">
-        <p className="text-sm font-medium text-foreground">Lists</p>
+        <p className="text-sm font-medium text-foreground">
+          {t('membership.lists')}
+        </p>
 
         {memberships.length === 0 ? (
-          <p className="text-sm text-muted">Not in any custom lists yet.</p>
+          <p className="text-sm text-muted">{t('membership.notInLists')}</p>
         ) : (
           <ul className="space-y-4">
             {memberships.map((membership) => {
@@ -247,13 +255,17 @@ export function ListMembershipControls({
                         className="sr-only"
                         htmlFor={`list-status-${membership.listId}`}
                       >
-                        Status in {membership.listName}
+                        {t('membership.statusIn', {
+                          name: membership.listName,
+                        })}
                       </label>
                       <select
                         id={`list-status-${membership.listId}`}
                         value={membership.status}
                         disabled={isSaving || isMoving}
-                        aria-label={`Status in ${membership.listName}`}
+                        aria-label={t('membership.statusIn', {
+                          name: membership.listName,
+                        })}
                         onChange={(event) =>
                           void handleMembershipStatusChange(
                             membership.listId,
@@ -264,7 +276,7 @@ export function ListMembershipControls({
                       >
                         {statusOptions.map((option) => (
                           <option key={option.value} value={option.value}>
-                            {option.label}
+                            {t(option.labelKey)}
                           </option>
                         ))}
                       </select>
@@ -277,7 +289,9 @@ export function ListMembershipControls({
                           type="checkbox"
                           checked={membership.downloaded}
                           disabled={isSaving || isMoving}
-                          aria-label={`Downloaded in ${membership.listName}`}
+                          aria-label={t('membership.downloadedIn', {
+                            name: membership.listName,
+                          })}
                           onChange={() =>
                             void handleMembershipDownloadedChange(
                               membership.listId,
@@ -287,7 +301,7 @@ export function ListMembershipControls({
                           className="h-4 w-4 rounded border-border accent-[var(--accent)]"
                         />
                         <span className="text-xs font-medium text-foreground">
-                          Downloaded
+                          {t('common.downloaded')}
                         </span>
                       </label>
                       {availableLists.length > 0 ? (
@@ -296,11 +310,13 @@ export function ListMembershipControls({
                           variant="secondary"
                           size="sm"
                           className="shrink-0"
-                          aria-label={`Move from ${membership.listName}`}
+                          aria-label={t('membership.moveFromAria', {
+                            name: membership.listName,
+                          })}
                           disabled={isSaving || isMoving}
                           onClick={() => openMove(membership)}
                         >
-                          Move
+                          {t('membership.move')}
                         </Button>
                       ) : null}
                     </div>
@@ -333,28 +349,28 @@ export function ListMembershipControls({
 
       {lists.length === 0 ? (
         <p className="text-sm text-muted">
-          No custom lists yet.{' '}
+          {t('membership.noListsYet')}{' '}
           <Link
             href="/lists"
             className="font-medium text-accent underline-offset-4 hover:underline"
           >
-            Create one
+            {t('membership.createOne')}
           </Link>
         </p>
       ) : availableLists.length === 0 ? (
-        <p className="text-sm text-muted">
-          This title is already in every list.
-        </p>
+        <p className="text-sm text-muted">{t('membership.alreadyInEvery')}</p>
       ) : (
         <div className="space-y-3">
-          <p className="text-sm font-medium text-foreground">Add to list</p>
+          <p className="text-sm font-medium text-foreground">
+            {t('membership.addToList')}
+          </p>
           <div className="flex flex-col gap-2 sm:flex-row">
             <select
               value={listId}
               disabled={isSaving}
               onChange={(event) => setListId(event.target.value)}
               className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none ring-[var(--ring)] focus:ring-2 disabled:opacity-60 sm:min-w-[12rem]"
-              aria-label="Custom list"
+              aria-label={t('membership.customListAria')}
             >
               {availableLists.map((list) => (
                 <option key={list.id} value={list.id}>
@@ -369,7 +385,7 @@ export function ListMembershipControls({
               disabled={isSaving || !listId}
               onClick={() => void handleAdd()}
             >
-              {isSaving ? 'Adding…' : 'Add'}
+              {isSaving ? t('membership.adding') : t('membership.add')}
             </Button>
           </div>
         </div>
@@ -379,12 +395,12 @@ export function ListMembershipControls({
 
       <Modal
         open={moveFrom !== null}
-        title="Move to another list"
+        title={t('membership.moveTitle')}
         onClose={closeMove}
       >
         <div className="space-y-4">
           <p className="text-sm text-muted">
-            Move from{' '}
+            {t('membership.moveFrom')}{' '}
             <span className="font-medium text-foreground">
               {moveFrom?.listName}
             </span>
@@ -394,7 +410,7 @@ export function ListMembershipControls({
               htmlFor="move-target-list"
               className="text-sm font-medium text-foreground"
             >
-              Destination
+              {t('membership.destination')}
             </label>
             <select
               id="move-target-list"
@@ -418,7 +434,7 @@ export function ListMembershipControls({
               disabled={isMoving}
               onClick={closeMove}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               type="button"
@@ -427,7 +443,7 @@ export function ListMembershipControls({
               disabled={isMoving || !moveTargetListId}
               onClick={() => void handleMove()}
             >
-              {isMoving ? 'Moving…' : 'Move'}
+              {isMoving ? t('membership.moving') : t('membership.move')}
             </Button>
           </div>
         </div>

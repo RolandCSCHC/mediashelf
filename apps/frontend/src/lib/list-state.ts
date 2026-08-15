@@ -1,23 +1,25 @@
 import type { CustomList } from '@mediashelf/shared-types';
-import { formatMediaStatus } from '@/lib/media-status';
+import type { TranslateFn } from '@/i18n';
+import { mediaStatusLabelKey } from '@/lib/media-status';
 
 export function formatListStateSummary(
   list: Pick<CustomList, 'defaultStatus' | 'defaultDownloaded'>,
+  t: TranslateFn,
 ): string | null {
   const parts: string[] = [];
 
   if (list.defaultStatus) {
-    parts.push(formatMediaStatus(list.defaultStatus));
+    parts.push(t(mediaStatusLabelKey(list.defaultStatus)));
   }
   if (list.defaultDownloaded === true) {
-    parts.push('Downloaded');
+    parts.push(t('common.downloaded'));
   } else if (list.defaultDownloaded === false) {
-    parts.push('Not downloaded');
+    parts.push(t('common.notDownloaded'));
   }
 
   if (parts.length === 0) {
     return null;
   }
 
-  return `Sets ${parts.join(' · ')}`;
+  return t('lists.setsState', { parts: parts.join(' · ') });
 }
