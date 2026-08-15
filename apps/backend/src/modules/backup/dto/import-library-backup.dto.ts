@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
@@ -19,6 +19,7 @@ import {
   MediaStatus,
   MediaType,
 } from '@mediashelf/shared-types';
+import { coerceLegacyMediaStatus } from '../legacy-media-status';
 
 export class LibraryBackupMediaItemDto {
   @IsString()
@@ -70,6 +71,7 @@ export class LibraryBackupMediaItemDto {
   @Min(0)
   runtime!: number | null;
 
+  @Transform(({ value }) => coerceLegacyMediaStatus(value))
   @IsEnum(MediaStatus)
   status!: MediaStatus;
 
@@ -94,6 +96,7 @@ export class LibraryBackupListItemDto {
   mediaRef!: string;
 
   @IsOptional()
+  @Transform(({ value }) => coerceLegacyMediaStatus(value))
   @IsEnum(MediaStatus)
   status?: MediaStatus;
 
@@ -124,6 +127,7 @@ export class LibraryBackupListDto {
   description!: string | null;
 
   @IsOptional()
+  @Transform(({ value }) => coerceLegacyMediaStatus(value))
   @IsEnum(MediaStatus)
   defaultStatus?: MediaStatus | null;
 

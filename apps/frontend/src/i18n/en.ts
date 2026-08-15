@@ -24,7 +24,7 @@ export const en = {
     watchlist: 'Watchlist',
     watching: 'Watching',
     watched: 'Watched',
-    future: 'Future',
+    upcoming: 'Upcoming',
   },
   common: {
     loading: 'Loading…',

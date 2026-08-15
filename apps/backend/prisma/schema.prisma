@@ -17,7 +17,7 @@ enum MediaStatus {
   WATCHLIST
   WATCHING
   WATCHED
-  FUTURE
+  UPCOMING
 }
 
 model User {

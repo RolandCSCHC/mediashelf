@@ -26,7 +26,7 @@ export const es: Messages = {
     watchlist: 'Por ver',
     watching: 'Viendo',
     watched: 'Visto',
-    future: 'Futuro',
+    upcoming: 'Próximamente',
   },
   common: {
     loading: 'Cargando…',

@@ -220,7 +220,7 @@ Possible statuses:
 - Watchlist
 - Watching
 - Watched
-- Future
+- Upcoming
 
 Downloaded is a separate boolean flag (not a status).
 
@@ -537,7 +537,7 @@ Production hosting: Next.js and NestJS on Vercel; database on Supabase.
 - Watchlist ✓
 - Watching ✓
 - Watched ✓
-- Future ✓
+- Upcoming ✓
 - Downloaded flag ✓
 
 ---
@@ -600,7 +600,7 @@ Production hosting: Next.js and NestJS on Vercel; database on Supabase.
 - Make the lists cells clickable ✓
 - Sort by name by default ✓
 - Watch movie/series info before adding ✓
-- Change "Future" state to "Upcoming"
+- Change "Future" state to "Upcoming" ✓
 
 # Portfolio Goals
 

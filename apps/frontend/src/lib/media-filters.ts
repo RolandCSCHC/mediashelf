@@ -33,7 +33,7 @@ export const MEDIA_STATUS_FILTER_OPTIONS: {
   { value: MediaStatus.WATCHLIST, labelKey: 'status.watchlist' },
   { value: MediaStatus.WATCHING, labelKey: 'status.watching' },
   { value: MediaStatus.WATCHED, labelKey: 'status.watched' },
-  { value: MediaStatus.FUTURE, labelKey: 'status.future' },
+  { value: MediaStatus.UPCOMING, labelKey: 'status.upcoming' },
 ];
 
 export const DOWNLOADED_FILTER_OPTIONS: {

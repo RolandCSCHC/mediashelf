@@ -8,7 +8,7 @@ export const MEDIA_STATUS_OPTIONS: {
   { value: MediaStatus.WATCHLIST, labelKey: 'status.watchlist' },
   { value: MediaStatus.WATCHING, labelKey: 'status.watching' },
   { value: MediaStatus.WATCHED, labelKey: 'status.watched' },
-  { value: MediaStatus.FUTURE, labelKey: 'status.future' },
+  { value: MediaStatus.UPCOMING, labelKey: 'status.upcoming' },
 ];
 
 export function mediaStatusLabelKey(status: MediaStatus): MessageKey {

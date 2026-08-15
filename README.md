@@ -18,7 +18,7 @@ Database: [Supabase](https://supabase.com/) managed PostgreSQL (Prisma uses a po
 - **Google OAuth** with JWT in an httpOnly cookie (private per-user libraries)
 - **TMDB search**, title preview (cast, directors / creators), and one-click import of movies / series (posters, genres, metadata)
 - **Manual entries** when a title is missing from TMDB
-- **Library CRUD** with status (Watchlist / Watching / Watched / Future) and downloaded flag
+- **Library CRUD** with status (Watchlist / Watching / Watched / Upcoming) and downloaded flag
 - **Filters & sort** by status, type, genre, downloaded, list; sort by title (default), date added, release date, or date watched; title search
 - **Custom lists** with optional default status / downloaded (both are per list membership), bulk add from the library, and per-list edit
 - **Series progress per list** (season / episode, status, and downloaded on membership, not only on the media item)

@@ -1,0 +1,2 @@
+-- RenameEnumValue
+ALTER TYPE "MediaStatus" RENAME VALUE 'FUTURE' TO 'UPCOMING';

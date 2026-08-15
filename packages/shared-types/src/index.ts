@@ -7,7 +7,7 @@ export enum MediaStatus {
   WATCHLIST = 'WATCHLIST',
   WATCHING = 'WATCHING',
   WATCHED = 'WATCHED',
-  FUTURE = 'FUTURE',
+  UPCOMING = 'UPCOMING',
 }
 
 export enum MediaSortBy {
