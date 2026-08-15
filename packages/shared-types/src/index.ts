@@ -171,6 +171,10 @@ export interface UpdateListItemRequest {
   currentEpisode?: number | null;
 }
 
+export interface MoveListItemRequest {
+  targetListId: string;
+}
+
 /** Portable library backup format (export / merge-import). */
 export const LIBRARY_BACKUP_VERSION = 1 as const;
 

@@ -34,6 +34,7 @@ import { UpdateCustomListDto } from './dto/update-custom-list.dto';
 import { AddListItemDto } from './dto/add-list-item.dto';
 import { AddListItemsDto } from './dto/add-list-items.dto';
 import { UpdateListItemDto } from './dto/update-list-item.dto';
+import { MoveListItemDto } from './dto/move-list-item.dto';
 import {
   CustomListDetailSchema,
   CustomListEntrySchema,
@@ -148,6 +149,22 @@ export class ListsController {
     @Body() body: UpdateListItemDto,
   ): Promise<CustomListEntry> {
     return this.listsService.updateItemForUser(user.id, id, mediaItemId, body);
+  }
+
+  @Post(':id/items/:mediaItemId/move')
+  @ApiOperation({
+    summary: 'Move a media item to another list, preserving series progress',
+  })
+  @ApiParam({ name: 'id', description: 'Source list id' })
+  @ApiParam({ name: 'mediaItemId', description: 'Media item id' })
+  @ApiOkResponse({ type: [MediaListMembershipSchema] })
+  moveItem(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Param('mediaItemId') mediaItemId: string,
+    @Body() body: MoveListItemDto,
+  ): Promise<MediaListMembership[]> {
+    return this.listsService.moveItemForUser(user.id, id, mediaItemId, body);
   }
 
   @Delete(':id/items/:mediaItemId')

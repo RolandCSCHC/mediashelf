@@ -25,6 +25,7 @@ import type { UpdateCustomListDto } from './dto/update-custom-list.dto';
 import type { AddListItemDto } from './dto/add-list-item.dto';
 import type { AddListItemsDto } from './dto/add-list-items.dto';
 import type { UpdateListItemDto } from './dto/update-list-item.dto';
+import type { MoveListItemDto } from './dto/move-list-item.dto';
 
 @Injectable()
 export class ListsService {
@@ -327,6 +328,73 @@ export class ListsService {
     }
 
     return toCustomListEntry(updated);
+  }
+
+  async moveItemForUser(
+    userId: string,
+    sourceListId: string,
+    mediaItemId: string,
+    dto: MoveListItemDto,
+  ): Promise<MediaListMembership[]> {
+    if (dto.targetListId === sourceListId) {
+      throw new BadRequestException('Cannot move a title to the same list');
+    }
+
+    const sourceList = await this.listsRepository.findByIdForUser(
+      sourceListId,
+      userId,
+    );
+    if (!sourceList) {
+      throw new NotFoundException('List not found');
+    }
+
+    const targetList = await this.listsRepository.findByIdForUser(
+      dto.targetListId,
+      userId,
+    );
+    if (!targetList) {
+      throw new NotFoundException('Target list not found');
+    }
+
+    await this.mediaService.getForUser(userId, mediaItemId);
+
+    const sourceItem = await this.listsRepository.findListItem(
+      sourceListId,
+      mediaItemId,
+    );
+    if (!sourceItem) {
+      throw new NotFoundException('List item not found');
+    }
+
+    const alreadyInTarget = await this.listsRepository.findListItem(
+      dto.targetListId,
+      mediaItemId,
+    );
+    if (alreadyInTarget) {
+      throw new ConflictException('This title is already in the target list');
+    }
+
+    try {
+      await this.listsRepository.moveItem(
+        sourceListId,
+        dto.targetListId,
+        mediaItemId,
+        {
+          currentSeason: sourceItem.currentSeason,
+          currentEpisode: sourceItem.currentEpisode,
+        },
+      );
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException('This title is already in the target list');
+      }
+      throw error;
+    }
+
+    return this.membershipsForMedia(userId, mediaItemId);
   }
 
   async removeItemForUser(

@@ -309,7 +309,7 @@ Examples:
 
 Users should be able to create unlimited custom lists.
 
-Series progress is stored on each list membership, so one series can track different seasons/episodes across lists.
+Series progress is stored on each list membership, so one series can track different seasons/episodes across lists. Moving a title from one list to another copies that progress onto the destination membership.
 
 ---
 
@@ -568,7 +568,13 @@ Production hosting: Next.js and NestJS on Vercel; database on Supabase.
 ## Phase 12
 
 - Redirect to Library when user is logged in ✓
-- Move Movies/Series between lists?
+- Move Movies/Series between lists ✓
+- Pagination
+- Lists sets states
+- Fix Go Back in lists
+- English/Spanish toggle
+- Delete Open button in lists
+- Make the lists cells clickable
 
 # Portfolio Goals
 

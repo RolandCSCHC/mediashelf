@@ -161,6 +161,8 @@ POST /lists/:id/items
 
 PATCH /lists/:id/items/:mediaItemId
 
+POST /lists/:id/items/:mediaItemId/move
+
 DELETE /lists/:id/items/:mediaItemId
 
 GET /lists/for-media/:mediaItemId

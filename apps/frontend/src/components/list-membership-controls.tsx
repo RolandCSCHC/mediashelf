@@ -9,11 +9,13 @@ import type {
 } from '@mediashelf/shared-types';
 import { MediaType } from '@mediashelf/shared-types';
 import { Button } from '@/components/ui/button';
+import { Modal } from '@/components/ui/modal';
 import { SeriesProgressControls } from '@/components/series-progress-controls';
 import {
   addMediaToList,
   listCustomLists,
   listMediaMemberships,
+  moveMediaBetweenLists,
   updateListItem,
 } from '@/lib/api';
 import { formatSeriesProgress } from '@/lib/media-filters';
@@ -33,27 +35,39 @@ export function ListMembershipControls({
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [moveFrom, setMoveFrom] = useState<MediaListMembership | null>(null);
+  const [moveTargetListId, setMoveTargetListId] = useState('');
+  const [isMoving, setIsMoving] = useState(false);
   const isSeries = mediaItem.type === MediaType.SERIES;
 
-  const load = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const [customLists, mediaMemberships] = await Promise.all([
-        listCustomLists(),
-        listMediaMemberships(mediaItem.id),
-      ]);
-      setLists(customLists);
-      setMemberships(mediaMemberships);
+  const load = useCallback(
+    async (options?: { silent?: boolean }) => {
+      if (!options?.silent) {
+        setIsLoading(true);
+      }
+      try {
+        const [customLists, mediaMemberships] = await Promise.all([
+          listCustomLists(),
+          listMediaMemberships(mediaItem.id),
+        ]);
+        setLists(customLists);
+        setMemberships(mediaMemberships);
 
-      const memberIds = new Set(mediaMemberships.map((entry) => entry.listId));
-      const available = customLists.find((list) => !memberIds.has(list.id));
-      setListId(available?.id ?? '');
-    } catch (err) {
-      onError?.(err instanceof Error ? err.message : 'Failed to load lists');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [mediaItem.id, onError]);
+        const memberIds = new Set(
+          mediaMemberships.map((entry) => entry.listId),
+        );
+        const available = customLists.find((list) => !memberIds.has(list.id));
+        setListId(available?.id ?? '');
+      } catch (err) {
+        onError?.(err instanceof Error ? err.message : 'Failed to load lists');
+      } finally {
+        if (!options?.silent) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [mediaItem.id, onError],
+  );
 
   useEffect(() => {
     void load();
@@ -70,11 +84,55 @@ export function ListMembershipControls({
     try {
       await addMediaToList(listId, { mediaItemId: mediaItem.id });
       setMessage('Added to list');
-      await load();
+      await load({ silent: true });
     } catch (err) {
       onError?.(err instanceof Error ? err.message : 'Failed to add to list');
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  function openMove(membership: MediaListMembership) {
+    const destinations = lists.filter(
+      (list) => !memberships.some((entry) => entry.listId === list.id),
+    );
+    if (destinations.length === 0) {
+      return;
+    }
+
+    setMoveFrom(membership);
+    setMoveTargetListId(destinations[0]?.id ?? '');
+    setMessage(null);
+  }
+
+  function closeMove() {
+    if (isMoving) {
+      return;
+    }
+    setMoveFrom(null);
+    setMoveTargetListId('');
+  }
+
+  async function handleMove() {
+    if (!moveFrom || !moveTargetListId) {
+      onError?.('Choose a list to move to');
+      return;
+    }
+
+    setIsMoving(true);
+    setMessage(null);
+    try {
+      await moveMediaBetweenLists(moveFrom.listId, mediaItem.id, {
+        targetListId: moveTargetListId,
+      });
+      setMoveFrom(null);
+      setMoveTargetListId('');
+      setMessage('Moved to list');
+      await load({ silent: true });
+    } catch (err) {
+      onError?.(err instanceof Error ? err.message : 'Failed to move to list');
+    } finally {
+      setIsMoving(false);
     }
   }
 
@@ -107,15 +165,32 @@ export function ListMembershipControls({
                   key={membership.listId}
                   className="space-y-3 border-t border-border/70 pt-4 first:border-t-0 first:pt-0"
                 >
-                  <div className="flex items-baseline justify-between gap-3">
-                    <Link
-                      href={`/lists/${membership.listId}`}
-                      className="font-medium text-foreground transition hover:text-accent"
-                    >
-                      {membership.listName}
-                    </Link>
-                    {progress ? (
-                      <span className="text-xs text-muted">{progress}</span>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <Link
+                        href={`/lists/${membership.listId}`}
+                        className="font-medium text-foreground transition hover:text-accent"
+                      >
+                        {membership.listName}
+                      </Link>
+                      {progress ? (
+                        <span className="ml-2 text-xs text-muted">
+                          {progress}
+                        </span>
+                      ) : null}
+                    </div>
+                    {availableLists.length > 0 ? (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        className="shrink-0"
+                        aria-label={`Move from ${membership.listName}`}
+                        disabled={isSaving || isMoving}
+                        onClick={() => openMove(membership)}
+                      >
+                        Move
+                      </Button>
                     ) : null}
                   </div>
 
@@ -193,9 +268,66 @@ export function ListMembershipControls({
               {isSaving ? 'Adding…' : 'Add'}
             </Button>
           </div>
-          {message ? <p className="text-sm text-muted">{message}</p> : null}
         </div>
       )}
+
+      {message ? <p className="text-sm text-muted">{message}</p> : null}
+
+      <Modal
+        open={moveFrom !== null}
+        title="Move to another list"
+        onClose={closeMove}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-muted">
+            Move from{' '}
+            <span className="font-medium text-foreground">
+              {moveFrom?.listName}
+            </span>
+          </p>
+          <div className="space-y-2">
+            <label
+              htmlFor="move-target-list"
+              className="text-sm font-medium text-foreground"
+            >
+              Destination
+            </label>
+            <select
+              id="move-target-list"
+              value={moveTargetListId}
+              disabled={isMoving}
+              onChange={(event) => setMoveTargetListId(event.target.value)}
+              className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none ring-[var(--ring)] focus:ring-2 disabled:opacity-60"
+            >
+              {availableLists.map((list) => (
+                <option key={list.id} value={list.id}>
+                  {list.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={isMoving}
+              onClick={closeMove}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={isMoving || !moveTargetListId}
+              onClick={() => void handleMove()}
+            >
+              {isMoving ? 'Moving…' : 'Move'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

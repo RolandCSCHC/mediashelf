@@ -19,6 +19,7 @@ import type {
   TmdbSearchResponse,
   UpdateCustomListRequest,
   UpdateListItemRequest,
+  MoveListItemRequest,
   UpdateMediaItemRequest,
 } from '@mediashelf/shared-types';
 
@@ -256,6 +257,20 @@ export async function updateListItem(
     method: 'PATCH',
     body: JSON.stringify(payload),
   });
+}
+
+export async function moveMediaBetweenLists(
+  sourceListId: string,
+  mediaItemId: string,
+  payload: MoveListItemRequest,
+): Promise<MediaListMembership[]> {
+  return apiFetch<MediaListMembership[]>(
+    `/lists/${sourceListId}/items/${mediaItemId}/move`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+  );
 }
 
 export async function removeMediaFromList(

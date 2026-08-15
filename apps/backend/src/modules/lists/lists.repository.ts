@@ -194,6 +194,32 @@ export class ListsRepository {
     return result.count > 0;
   }
 
+  async moveItem(
+    sourceListId: string,
+    targetListId: string,
+    mediaItemId: string,
+    progress: {
+      currentSeason: number | null;
+      currentEpisode: number | null;
+    },
+  ): Promise<void> {
+    await this.prisma.$transaction([
+      this.prisma.customListItem.create({
+        data: {
+          listId: targetListId,
+          mediaItemId,
+          currentSeason: progress.currentSeason,
+          currentEpisode: progress.currentEpisode,
+        },
+      }),
+      this.prisma.customListItem.delete({
+        where: {
+          listId_mediaItemId: { listId: sourceListId, mediaItemId },
+        },
+      }),
+    ]);
+  }
+
   findListItem(
     listId: string,
     mediaItemId: string,
