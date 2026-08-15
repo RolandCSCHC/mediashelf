@@ -105,7 +105,7 @@ This same-origin proxy is required in production: separate `*.vercel.app` fronte
 2. **Backend** project env: `DATABASE_URL` (Supabase transaction pooler, port `6543`, `?pgbouncer=true`), `DIRECT_URL` (Supabase direct host `db.<project-ref>.supabase.co:5432`), plus `GOOGLE_*`, `JWT_SECRET`, `FRONTEND_URL`, `CORS_ORIGIN`.
 3. Backend: `GOOGLE_CALLBACK_URL=https://mediashelf-frontend.vercel.app/api/auth/google/callback` (and matching `FRONTEND_URL` / `CORS_ORIGIN`).
 4. Google Cloud Console → authorized JavaScript origin: `https://mediashelf-frontend.vercel.app`; redirect URI: `https://mediashelf-frontend.vercel.app/api/auth/google/callback`.
-5. Apply schema: from a machine with `DIRECT_URL` set, run `pnpm --filter @mediashelf/backend exec prisma migrate deploy`.
+5. GitHub Actions secrets (same values as the backend Vercel env): `DATABASE_URL` (pooler) and `DIRECT_URL` (direct host, port `5432`). Pushes to `main` apply Prisma migrations after CI passes.
 
 ## Local development (apps outside Docker)
 
@@ -173,6 +173,7 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on every pull request and every
 1. **Lint and typecheck** — ESLint, `tsc`, Prettier
 2. **Unit tests** — Jest (mappers, cookies, etc.)
 3. **Build** — full monorepo build (Prisma client generated in CI)
+4. **Migrate** (`main` only) — `prisma migrate deploy` against Supabase after CI succeeds
 
 ## Documentation
 

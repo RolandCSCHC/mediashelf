@@ -434,13 +434,17 @@ Examples:
 
 Use GitHub Actions.
 
-Run automatically on every Pull Request:
+Run automatically on every Pull Request and every push to `main`:
 
 - Install dependencies
 - Lint
 - Run tests
 - Build frontend
 - Build backend
+
+On every successful push to `main`, also run `prisma migrate deploy` against
+Supabase (GitHub Actions secrets `DATABASE_URL` + `DIRECT_URL`). Vercel still
+deploys the apps; this job is what applies schema changes.
 
 Possible future additions:
 
@@ -596,6 +600,7 @@ Production hosting: Next.js and NestJS on Vercel; database on Supabase.
 - Make the lists cells clickable ✓
 - Sort by name by default ✓
 - Watch movie/series info before adding ✓
+- Change "Future" state to "Upcoming"
 
 # Portfolio Goals
 
