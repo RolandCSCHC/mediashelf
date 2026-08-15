@@ -211,3 +211,76 @@ describe('ListsService.moveItemForUser', () => {
     ).rejects.toBeInstanceOf(ConflictException);
   });
 });
+
+describe('ListsService.getForUser', () => {
+  const userId = 'user_1';
+  const listId = 'list_1';
+  let listsRepository: { findDetailPageForUser: jest.Mock };
+  let service: ListsService;
+
+  beforeEach(() => {
+    listsRepository = {
+      findDetailPageForUser: jest.fn(),
+    };
+    service = new ListsService(
+      listsRepository as unknown as ListsRepository,
+      {} as MediaService,
+    );
+  });
+
+  it('returns a paginated list detail', async () => {
+    listsRepository.findDetailPageForUser.mockResolvedValue({
+      list: buildList(listId, 'Favorites'),
+      items: [
+        {
+          ...buildListItem(listId),
+          mediaItem: {
+            id: 'media_1',
+            userId,
+            tmdbId: 10,
+            type: MediaType.SERIES,
+            title: 'Show',
+            description: null,
+            posterPath: null,
+            backdropPath: null,
+            releaseDate: null,
+            genres: ['Drama'],
+            runtime: null,
+            status: MediaStatus.WATCHING,
+            downloaded: false,
+            notes: null,
+            dateWatched: null,
+            createdAt: new Date('2024-02-01T00:00:00.000Z'),
+            updatedAt: new Date('2024-02-02T00:00:00.000Z'),
+          },
+        },
+      ],
+      total: 25,
+      page: 2,
+      pageSize: 10,
+      totalPages: 3,
+      genres: ['Drama'],
+      itemIds: ['media_1', 'media_2'],
+    });
+
+    const result = await service.getForUser(userId, listId, {
+      page: 2,
+      pageSize: 10,
+    });
+
+    expect(result.page).toBe(2);
+    expect(result.total).toBe(25);
+    expect(result.itemCount).toBe(1);
+    expect(result.items).toHaveLength(1);
+    expect(result.itemIds).toEqual(['media_1', 'media_2']);
+    expect(result.genres).toEqual(['Drama']);
+  });
+
+  it('throws when the list is missing', async () => {
+    listsRepository.findDetailPageForUser.mockResolvedValue(null);
+
+    await expect(service.getForUser(userId, listId)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+});

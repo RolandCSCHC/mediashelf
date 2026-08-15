@@ -20,7 +20,11 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import type { AuthUser, MediaItem } from '@mediashelf/shared-types';
+import type {
+  AuthUser,
+  MediaItem,
+  PaginatedMediaResponse,
+} from '@mediashelf/shared-types';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { MediaService } from './media.service';
@@ -28,7 +32,10 @@ import { CreateManualMediaDto } from './dto/create-manual-media.dto';
 import { ImportMediaDto } from './dto/import-media.dto';
 import { UpdateMediaItemDto } from './dto/update-media-item.dto';
 import { ListMediaQueryDto } from './dto/list-media-query.dto';
-import { MediaItemSchema } from '../../swagger/api-schemas';
+import {
+  MediaItemSchema,
+  PaginatedMediaResponseSchema,
+} from '../../swagger/api-schemas';
 
 @ApiTags('Media')
 @ApiCookieAuth()
@@ -39,13 +46,15 @@ export class MediaController {
   constructor(private readonly mediaService: MediaService) {}
 
   @Get()
-  @ApiOperation({ summary: 'List library items (filter, search, sort)' })
-  @ApiOkResponse({ type: [MediaItemSchema] })
+  @ApiOperation({
+    summary: 'List library items (filter, search, sort, paginate)',
+  })
+  @ApiOkResponse({ type: PaginatedMediaResponseSchema })
   list(
     @CurrentUser() user: AuthUser,
     @Query() query: ListMediaQueryDto,
-  ): Promise<MediaItem[]> {
-    return this.mediaService.listForUser(user.id, query);
+  ): Promise<PaginatedMediaResponse> {
+    return this.mediaService.listPageForUser(user.id, query);
   }
 
   @Get(':id')

@@ -3,7 +3,14 @@ import type {
   CustomList as PrismaCustomList,
   CustomListItem as PrismaCustomListItem,
   MediaItem as PrismaMediaItem,
+  Prisma,
 } from '@prisma/client';
+import type { ListMediaQuery } from '@mediashelf/shared-types';
+import { resolvePagination, uniqueSortedGenres } from '../../common/pagination';
+import {
+  buildMediaItemOrderBy,
+  buildMediaItemWhere,
+} from '../media/media-query';
 import { PrismaService } from '../prisma/prisma.service';
 
 type ListWithCount = PrismaCustomList & { _count: { items: number } };
@@ -40,17 +47,62 @@ export class ListsRepository {
     });
   }
 
-  findDetailForUser(id: string, userId: string): Promise<ListWithItems | null> {
-    return this.prisma.customList.findFirst({
-      where: { id, userId },
-      include: {
-        _count: { select: { items: true } },
-        items: {
-          include: { mediaItem: true },
-          orderBy: { addedAt: 'desc' },
+  async findDetailPageForUser(
+    id: string,
+    userId: string,
+    filters: ListMediaQuery = {},
+  ): Promise<{
+    list: ListWithCount;
+    items: ListItemWithMedia[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+    genres: string[];
+    itemIds: string[];
+  } | null> {
+    const list = await this.findByIdForUser(id, userId);
+    if (!list) {
+      return null;
+    }
+
+    const itemWhere: Prisma.CustomListItemWhereInput = {
+      listId: id,
+      mediaItem: buildMediaItemWhere(filters),
+    };
+
+    const [total, metaRows] = await Promise.all([
+      this.prisma.customListItem.count({ where: itemWhere }),
+      this.prisma.customListItem.findMany({
+        where: { listId: id },
+        select: {
+          mediaItemId: true,
+          mediaItem: { select: { genres: true } },
         },
-      },
+      }),
+    ]);
+
+    const pagination = resolvePagination(filters.page, filters.pageSize, total);
+    const items = await this.prisma.customListItem.findMany({
+      where: itemWhere,
+      include: { mediaItem: true },
+      orderBy: buildMediaItemOrderBy(filters.sortBy).map((order) => ({
+        mediaItem: order,
+      })),
+      ...(pagination.skip !== undefined ? { skip: pagination.skip } : {}),
+      ...(pagination.take !== undefined ? { take: pagination.take } : {}),
     });
+
+    return {
+      list,
+      items,
+      total,
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+      totalPages: pagination.totalPages,
+      genres: uniqueSortedGenres(metaRows.map((row) => row.mediaItem.genres)),
+      itemIds: metaRows.map((row) => row.mediaItemId),
+    };
   }
 
   findAllDetailsForUser(userId: string): Promise<ListWithItems[]> {

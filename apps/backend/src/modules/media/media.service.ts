@@ -4,7 +4,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { ListMediaQuery, MediaItem } from '@mediashelf/shared-types';
+import type {
+  ListMediaQuery,
+  MediaItem,
+  PaginatedMediaResponse,
+} from '@mediashelf/shared-types';
 import { MediaStatus, MediaType } from '@mediashelf/shared-types';
 import { TmdbService } from '../tmdb/tmdb.service';
 import { MediaRepository } from './media.repository';
@@ -25,6 +29,21 @@ export class MediaService {
   ): Promise<MediaItem[]> {
     const items = await this.mediaRepository.findByUser(userId, filters);
     return items.map(toMediaItem);
+  }
+
+  async listPageForUser(
+    userId: string,
+    filters: ListMediaQuery = {},
+  ): Promise<PaginatedMediaResponse> {
+    const page = await this.mediaRepository.findPageByUser(userId, filters);
+    return {
+      items: page.items.map(toMediaItem),
+      page: page.page,
+      pageSize: page.pageSize,
+      total: page.total,
+      totalPages: page.totalPages,
+      genres: page.genres,
+    };
   }
 
   async getForUser(userId: string, id: string): Promise<MediaItem> {

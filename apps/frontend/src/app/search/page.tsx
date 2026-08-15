@@ -7,7 +7,7 @@ import { AuthGuard } from '@/components/auth-guard';
 import { ManualMediaForm } from '@/components/manual-media-form';
 import { SearchResultCard } from '@/components/search-result-card';
 import { Button } from '@/components/ui/button';
-import { listMedia, searchTmdb } from '@/lib/api';
+import { listAllMedia, searchTmdb } from '@/lib/api';
 
 type SearchFilter = 'ALL' | 'MOVIE' | 'SERIES';
 
@@ -51,7 +51,7 @@ function SearchContent() {
     try {
       const [searchResponse, media] = await Promise.all([
         searchTmdb(trimmed, filter),
-        listMedia(),
+        listAllMedia(),
       ]);
 
       setResults(searchResponse.results);

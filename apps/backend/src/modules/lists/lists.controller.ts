@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -35,6 +36,7 @@ import { AddListItemDto } from './dto/add-list-item.dto';
 import { AddListItemsDto } from './dto/add-list-items.dto';
 import { UpdateListItemDto } from './dto/update-list-item.dto';
 import { MoveListItemDto } from './dto/move-list-item.dto';
+import { ListMediaQueryDto } from '../media/dto/list-media-query.dto';
 import {
   CustomListDetailSchema,
   CustomListEntrySchema,
@@ -75,8 +77,9 @@ export class ListsController {
   getOne(
     @CurrentUser() user: AuthUser,
     @Param('id') id: string,
+    @Query() query: ListMediaQueryDto,
   ): Promise<CustomListDetail> {
-    return this.listsService.getForUser(user.id, id);
+    return this.listsService.getForUser(user.id, id, query);
   }
 
   @Post()

@@ -8,6 +8,7 @@ import type {
   CustomList,
   CustomListDetail,
   CustomListEntry,
+  ListMediaQuery,
   MediaListMembership,
 } from '@mediashelf/shared-types';
 import { MediaType } from '@mediashelf/shared-types';
@@ -39,17 +40,39 @@ export class ListsService {
     return lists.map(toCustomList);
   }
 
-  async getForUser(userId: string, id: string): Promise<CustomListDetail> {
-    const list = await this.listsRepository.findDetailForUser(id, userId);
-    if (!list) {
+  async getForUser(
+    userId: string,
+    id: string,
+    filters: ListMediaQuery = {},
+  ): Promise<CustomListDetail> {
+    const page = await this.listsRepository.findDetailPageForUser(
+      id,
+      userId,
+      filters,
+    );
+    if (!page) {
       throw new NotFoundException('List not found');
     }
-    return toCustomListDetail(list);
+
+    return toCustomListDetail(
+      {
+        ...page.list,
+        items: page.items,
+      },
+      {
+        page: page.page,
+        pageSize: page.pageSize,
+        total: page.total,
+        totalPages: page.totalPages,
+        genres: page.genres,
+        itemIds: page.itemIds,
+      },
+    );
   }
 
   async listDetailsForUser(userId: string): Promise<CustomListDetail[]> {
     const lists = await this.listsRepository.findAllDetailsForUser(userId);
-    return lists.map(toCustomListDetail);
+    return lists.map((list) => toCustomListDetail(list));
   }
 
   async createForUser(

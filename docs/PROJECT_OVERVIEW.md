@@ -372,10 +372,13 @@ The frontend communicates with the backend through a REST API.
 Primary library resource:
 
 - `GET /media`
+- `GET /media?status=WATCHING&type=SERIES&sortBy=TITLE&page=1&pageSize=25`
 - `POST /media`
 - `GET /media/:id`
 - `PATCH /media/:id`
 - `DELETE /media/:id`
+
+`GET /media` and `GET /lists/:id` return a page of titles (`items`, `page`, `pageSize`, `total`, `totalPages`). Use `pageSize=all` to request every matching item.
 
 Document every endpoint using Swagger (OpenAPI).
 
@@ -569,12 +572,14 @@ Production hosting: Next.js and NestJS on Vercel; database on Supabase.
 
 - Redirect to Library when user is logged in ✓
 - Move Movies/Series between lists ✓
-- Pagination
+- Pagination ✓
 - Lists sets states
 - Fix Go Back in lists ✓
 - English/Spanish toggle
 - Delete Open button in lists ✓
 - Make the lists cells clickable ✓
+- Sort by name by default
+- Watch movie/series info before adding
 
 # Portfolio Goals
 

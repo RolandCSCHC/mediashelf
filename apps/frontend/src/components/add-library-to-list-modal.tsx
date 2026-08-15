@@ -5,7 +5,7 @@ import type { CustomListDetail, MediaItem } from '@mediashelf/shared-types';
 import { MediaType } from '@mediashelf/shared-types';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
-import { addMediaItemsToList, listMedia } from '@/lib/api';
+import { addMediaItemsToList, listAllMedia } from '@/lib/api';
 import { tmdbPosterUrl } from '@/lib/tmdb-images';
 
 type TypeFilter = '' | MediaType;
@@ -46,7 +46,7 @@ export function AddLibraryToListModal({
     setLoadError(null);
     setIsLoading(true);
 
-    void listMedia()
+    void listAllMedia()
       .then((items) => {
         setLibrary(items);
       })

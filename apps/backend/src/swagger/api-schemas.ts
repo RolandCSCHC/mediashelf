@@ -165,6 +165,44 @@ export class CustomListEntrySchema {
 export class CustomListDetailSchema extends CustomListSchema {
   @ApiProperty({ type: [CustomListEntrySchema] })
   items!: CustomListEntrySchema[];
+
+  @ApiProperty()
+  page!: number;
+
+  @ApiProperty()
+  pageSize!: number;
+
+  @ApiProperty()
+  total!: number;
+
+  @ApiProperty()
+  totalPages!: number;
+
+  @ApiProperty({ type: [String] })
+  genres!: string[];
+
+  @ApiProperty({ type: [String] })
+  itemIds!: string[];
+}
+
+export class PaginatedMediaResponseSchema {
+  @ApiProperty({ type: [MediaItemSchema] })
+  items!: MediaItemSchema[];
+
+  @ApiProperty()
+  page!: number;
+
+  @ApiProperty()
+  pageSize!: number;
+
+  @ApiProperty()
+  total!: number;
+
+  @ApiProperty()
+  totalPages!: number;
+
+  @ApiProperty({ type: [String] })
+  genres!: string[];
 }
 
 export class MediaListMembershipSchema {

@@ -142,6 +142,11 @@ describe('lists.mapper', () => {
       expect(result.items).toHaveLength(1);
       expect(result.items[0]?.mediaItemId).toBe('media_1');
       expect(result.name).toBe('Favorites');
+      expect(result.page).toBe(1);
+      expect(result.pageSize).toBe(1);
+      expect(result.total).toBe(1);
+      expect(result.totalPages).toBe(1);
+      expect(result.itemIds).toEqual(['media_1']);
     });
   });
 

@@ -16,12 +16,14 @@ import type {
   LogoutResponse,
   MediaItem,
   MediaListMembership,
+  PaginatedMediaResponse,
   TmdbSearchResponse,
   UpdateCustomListRequest,
   UpdateListItemRequest,
   MoveListItemRequest,
   UpdateMediaItemRequest,
 } from '@mediashelf/shared-types';
+import { PAGE_SIZE_ALL } from '@mediashelf/shared-types';
 
 // Prefer same-origin `/api` (Next.js BFF proxy) so the auth cookie is first-party
 // on Safari. Absolute API URLs break login on iOS when frontend/API are cross-site.
@@ -85,6 +87,12 @@ function toQueryString(query: ListMediaQuery): string {
   }
   if (query.sortBy) {
     params.set('sortBy', query.sortBy);
+  }
+  if (query.page) {
+    params.set('page', String(query.page));
+  }
+  if (query.pageSize !== undefined) {
+    params.set('pageSize', String(query.pageSize));
   }
 
   const serialized = params.toString();
@@ -157,8 +165,15 @@ export async function searchTmdb(
 
 export async function listMedia(
   query: ListMediaQuery = {},
+): Promise<PaginatedMediaResponse> {
+  return apiFetch<PaginatedMediaResponse>(`/media${toQueryString(query)}`);
+}
+
+export async function listAllMedia(
+  query: Omit<ListMediaQuery, 'page' | 'pageSize'> = {},
 ): Promise<MediaItem[]> {
-  return apiFetch<MediaItem[]>(`/media${toQueryString(query)}`);
+  const response = await listMedia({ ...query, pageSize: PAGE_SIZE_ALL });
+  return response.items;
 }
 
 export async function getMedia(id: string): Promise<MediaItem> {
@@ -201,8 +216,11 @@ export async function listCustomLists(): Promise<CustomList[]> {
   return apiFetch<CustomList[]>('/lists');
 }
 
-export async function getCustomList(id: string): Promise<CustomListDetail> {
-  return apiFetch<CustomListDetail>(`/lists/${id}`);
+export async function getCustomList(
+  id: string,
+  query: ListMediaQuery = {},
+): Promise<CustomListDetail> {
+  return apiFetch<CustomListDetail>(`/lists/${id}${toQueryString(query)}`);
 }
 
 export async function createCustomList(

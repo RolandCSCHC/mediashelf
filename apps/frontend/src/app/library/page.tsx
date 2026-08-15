@@ -6,6 +6,7 @@ import type {
   CustomList,
   ListMediaQuery,
   MediaItem,
+  PaginationMeta,
 } from '@mediashelf/shared-types';
 import { AppShell } from '@/components/app-shell';
 import { AuthGuard } from '@/components/auth-guard';
@@ -16,12 +17,18 @@ import {
 } from '@/components/library-filters';
 import { MediaCard } from '@/components/media-card';
 import {
+  MediaPagination,
+  useMediaPageSize,
+  usePanelColumnCount,
+} from '@/components/media-pagination';
+import {
   MediaViewToggle,
   useMediaViewMode,
 } from '@/components/media-view-toggle';
 import { useAuth } from '@/components/auth-provider';
 import { Button } from '@/components/ui/button';
 import { listCustomLists, listMedia } from '@/lib/api';
+import { resolvePageSize } from '@/lib/media-pagination';
 import { mediaCollectionClassName } from '@/lib/media-view-mode';
 
 function toListQuery(filters: LibraryFiltersState): ListMediaQuery {
@@ -39,20 +46,39 @@ function toListQuery(filters: LibraryFiltersState): ListMediaQuery {
   };
 }
 
+const EMPTY_PAGINATION: PaginationMeta = {
+  page: 1,
+  pageSize: 0,
+  total: 0,
+  totalPages: 0,
+};
+
 function LibraryContent() {
   const { user } = useAuth();
   const firstName = user?.name?.split(' ')[0];
   const [items, setItems] = useState<MediaItem[]>([]);
   const [lists, setLists] = useState<CustomList[]>([]);
   const [genres, setGenres] = useState<string[]>([]);
+  const [pagination, setPagination] =
+    useState<PaginationMeta>(EMPTY_PAGINATION);
   const [filters, setFilters] = useState<LibraryFiltersState>(
     DEFAULT_LIBRARY_FILTERS,
   );
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useMediaViewMode();
+  const [pageSizeChoice, setPageSizeChoice] = useMediaPageSize();
+  const columns = usePanelColumnCount();
+  const resolvedPageSize = resolvePageSize(
+    pageSizeChoice,
+    viewMode,
+    columns ?? 2,
+  );
+  const pageSizeReady =
+    pageSizeChoice !== 'default' || viewMode === 'list' || columns !== null;
 
   useEffect(() => {
     const handle = window.setTimeout(() => {
@@ -83,32 +109,45 @@ function LibraryContent() {
     ],
   );
 
+  useEffect(() => {
+    setPage(1);
+  }, [query, resolvedPageSize]);
+
   const loadOptions = useCallback(async () => {
-    const [allItems, customLists] = await Promise.all([
-      listMedia(),
-      listCustomLists(),
-    ]);
-
-    const nextGenres = Array.from(
-      new Set(allItems.flatMap((item) => item.genres)),
-    ).sort((a, b) => a.localeCompare(b));
-
-    setGenres(nextGenres);
+    const customLists = await listCustomLists();
     setLists(customLists);
   }, []);
 
   const load = useCallback(async () => {
+    if (!pageSizeReady) {
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     try {
-      const media = await listMedia(query);
-      setItems(media);
+      const media = await listMedia({
+        ...query,
+        page,
+        pageSize: resolvedPageSize,
+      });
+      setItems(media.items);
+      setGenres(media.genres);
+      setPagination({
+        page: media.page,
+        pageSize: media.pageSize,
+        total: media.total,
+        totalPages: media.totalPages,
+      });
+      if (media.page !== page) {
+        setPage(media.page);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load library');
     } finally {
       setIsLoading(false);
     }
-  }, [query]);
+  }, [page, pageSizeReady, query, resolvedPageSize]);
 
   useEffect(() => {
     void loadOptions().catch((err) => {
@@ -132,6 +171,7 @@ function LibraryContent() {
   function handleDeleted(id: string) {
     setActionError(null);
     setItems((prev) => prev.filter((item) => item.id !== id));
+    void load();
   }
 
   function resetFiltersOnly() {
@@ -148,6 +188,8 @@ function LibraryContent() {
     filters.downloaded !== '' ||
     filters.listId !== '' ||
     filters.search.trim() !== '';
+
+  const showCollection = !isLoading || items.length > 0;
 
   return (
     <AppShell width="wide">
@@ -205,11 +247,11 @@ function LibraryContent() {
         </p>
       ) : null}
 
-      {isLoading ? (
+      {isLoading && items.length === 0 ? (
         <p className="mt-10 text-sm text-muted">Loading library…</p>
       ) : null}
 
-      {!isLoading && items.length === 0 && !error ? (
+      {showCollection && items.length === 0 && !error ? (
         <div className="mt-12 rounded-lg border border-dashed border-border bg-surface/60 px-6 py-10 text-center">
           <p className="font-display text-xl text-foreground">
             {hasActiveFilters ? 'No titles match' : 'Your shelf is empty'}
@@ -228,19 +270,32 @@ function LibraryContent() {
         </div>
       ) : null}
 
-      {!isLoading && items.length > 0 ? (
-        <div className={mediaCollectionClassName(viewMode)}>
-          {items.map((item) => (
-            <MediaCard
-              key={item.id}
-              item={item}
-              variant={viewMode}
-              onUpdated={handleUpdated}
-              onDeleted={handleDeleted}
-              onError={setActionError}
-            />
-          ))}
-        </div>
+      {showCollection && pagination.total > 0 ? (
+        <>
+          <MediaPagination
+            meta={pagination}
+            pageSizeChoice={pageSizeChoice}
+            viewMode={viewMode}
+            columns={columns ?? 2}
+            onPageChange={setPage}
+            onPageSizeChange={(choice) => {
+              setPage(1);
+              setPageSizeChoice(choice);
+            }}
+          />
+          <div className={mediaCollectionClassName(viewMode)}>
+            {items.map((item) => (
+              <MediaCard
+                key={item.id}
+                item={item}
+                variant={viewMode}
+                onUpdated={handleUpdated}
+                onDeleted={handleDeleted}
+                onError={setActionError}
+              />
+            ))}
+          </div>
+        </>
       ) : null}
     </AppShell>
   );

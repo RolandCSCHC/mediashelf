@@ -137,7 +137,7 @@ Examples:
 
 GET /media
 
-GET /media?status=WATCHING&type=SERIES&sortBy=TITLE
+GET /media?status=WATCHING&type=SERIES&sortBy=TITLE&page=1&pageSize=25
 
 POST /media
 
@@ -152,6 +152,8 @@ GET /lists
 POST /lists
 
 GET /lists/:id
+
+GET /lists/:id?search=dune&sortBy=TITLE&page=1&pageSize=25
 
 PATCH /lists/:id
 

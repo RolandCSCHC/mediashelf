@@ -103,6 +103,24 @@ export interface UpdateMediaItemRequest {
   dateWatched?: string | null;
 }
 
+/** Request every matching item in one page. */
+export const PAGE_SIZE_ALL = 'all' as const;
+
+export type PageSizeParam = number | typeof PAGE_SIZE_ALL;
+
+export interface PaginationMeta {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface PaginatedMediaResponse extends PaginationMeta {
+  items: MediaItem[];
+  /** Distinct genres across the user's full library (for filter options). */
+  genres: string[];
+}
+
 export interface ListMediaQuery {
   status?: MediaStatus;
   type?: MediaType;
@@ -111,6 +129,8 @@ export interface ListMediaQuery {
   listId?: string;
   search?: string;
   sortBy?: MediaSortBy;
+  page?: number;
+  pageSize?: PageSizeParam;
 }
 
 export interface CustomList {
@@ -133,8 +153,12 @@ export interface CustomListEntry {
   mediaItem: MediaItem;
 }
 
-export interface CustomListDetail extends CustomList {
+export interface CustomListDetail extends CustomList, PaginationMeta {
   items: CustomListEntry[];
+  /** Distinct genres across every title in this list (for filter options). */
+  genres: string[];
+  /** Every media item id in the list, including titles outside the current page. */
+  itemIds: string[];
 }
 
 /** Compact membership view for a media detail page. */

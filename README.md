@@ -23,6 +23,7 @@ Database: [Supabase](https://supabase.com/) managed PostgreSQL (Prisma uses a po
 - **Custom lists** with bulk add from the library
 - **Series progress per list** (season / episode on membership, not on the media item)
 - **Panels / list view toggle** on library and list pages (persisted in `localStorage`)
+- **Pagination** on library and lists (server-side; default 2 panel rows or 10 list rows; 25 / 50 / 100 / all)
 - **JSON export / merge import** for library + lists (`/backup`)
 - **Dark / light mode**, responsive shell, mobile nav
 - **PWA** (manifest, icons, service worker) — installable on phone over HTTPS
@@ -131,16 +132,16 @@ This same-origin proxy is required in production: separate `*.vercel.app` fronte
 
 ## Using the app
 
-| Route           | Purpose                                                     |
-| --------------- | ----------------------------------------------------------- |
-| `/search`       | TMDB search and import into the library                     |
-| `/library`      | Full library with filters, sort, search, panels/list toggle |
-| `/library/[id]` | Title detail, status, lists, notes                          |
-| `/lists`        | Custom lists CRUD                                           |
-| `/lists/[id]`   | List detail, bulk add, per-list series progress             |
-| `/backup`       | Export library JSON / merge-import a backup                 |
+| Route           | Purpose                                                                 |
+| --------------- | ----------------------------------------------------------------------- |
+| `/search`       | TMDB search and import into the library                                 |
+| `/library`      | Full library with filters, sort, search, pagination, panels/list toggle |
+| `/library/[id]` | Title detail, status, lists, notes                                      |
+| `/lists`        | Custom lists CRUD                                                       |
+| `/lists/[id]`   | List detail, pagination, bulk add, per-list series progress             |
+| `/backup`       | Export library JSON / merge-import a backup                             |
 
-`GET /media` accepts filter and sort query params (including `search`). `PATCH /media/:id` updates status and downloaded. `PATCH /lists/:id/items/:mediaItemId` updates per-list series progress. `GET /backup` / `POST /backup/import` handle JSON backup.
+`GET /media` accepts filter, sort, and pagination query params (`page`, `pageSize`, including `search`). `PATCH /media/:id` updates status and downloaded. `PATCH /lists/:id/items/:mediaItemId` updates per-list series progress. `GET /backup` / `POST /backup/import` handle JSON backup.
 
 ## Workspace layout
 

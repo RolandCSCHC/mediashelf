@@ -8,8 +8,10 @@ import type {
   CustomListDetail,
   CustomListEntry,
   MediaListMembership,
+  PaginationMeta,
 } from '@mediashelf/shared-types';
 import { toMediaItem } from '../media/media.mapper';
+import { uniqueSortedGenres } from '../../common/pagination';
 
 type ListWithCount = PrismaCustomList & { _count: { items: number } };
 
@@ -49,10 +51,29 @@ export function toCustomListEntry(entry: ListItemWithMedia): CustomListEntry {
   };
 }
 
-export function toCustomListDetail(list: ListWithItems): CustomListDetail {
+export function toCustomListDetail(
+  list: ListWithItems,
+  pagination?: PaginationMeta & { genres?: string[]; itemIds?: string[] },
+): CustomListDetail {
+  const items = list.items.map(toCustomListEntry);
+  const itemIds = pagination?.itemIds ?? items.map((item) => item.mediaItemId);
+  const genres =
+    pagination?.genres ??
+    uniqueSortedGenres(items.map((item) => item.mediaItem.genres));
+  const total = pagination?.total ?? items.length;
+  const pageSize = pagination?.pageSize ?? total;
+  const page = pagination?.page ?? 1;
+  const totalPages = pagination?.totalPages ?? (total === 0 ? 0 : 1);
+
   return {
     ...toCustomList(list),
-    items: list.items.map(toCustomListEntry),
+    items,
+    page,
+    pageSize,
+    total,
+    totalPages,
+    genres,
+    itemIds,
   };
 }
 

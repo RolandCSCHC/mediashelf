@@ -12,6 +12,7 @@ import { useParams, useRouter } from 'next/navigation';
 import type {
   CustomListDetail,
   CustomListEntry,
+  ListMediaQuery,
   MediaItem,
 } from '@mediashelf/shared-types';
 import { MediaType } from '@mediashelf/shared-types';
@@ -24,6 +25,11 @@ import {
   type LibraryFiltersState,
 } from '@/components/library-filters';
 import { MediaCard } from '@/components/media-card';
+import {
+  MediaPagination,
+  useMediaPageSize,
+  usePanelColumnCount,
+} from '@/components/media-pagination';
 import {
   MediaViewToggle,
   useMediaViewMode,
@@ -38,8 +44,22 @@ import {
   updateCustomList,
   updateListItem,
 } from '@/lib/api';
-import { compareMediaItems, matchesMediaFilters } from '@/lib/media-filters';
+import { resolvePageSize } from '@/lib/media-pagination';
 import { mediaCollectionClassName } from '@/lib/media-view-mode';
+
+function toListQuery(filters: LibraryFiltersState): ListMediaQuery {
+  const search = filters.search.trim();
+  return {
+    ...(filters.status ? { status: filters.status } : {}),
+    ...(filters.type ? { type: filters.type } : {}),
+    ...(filters.genre ? { genre: filters.genre } : {}),
+    ...(filters.downloaded
+      ? { downloaded: filters.downloaded === 'true' }
+      : {}),
+    ...(search ? { search } : {}),
+    sortBy: filters.sortBy,
+  };
+}
 
 function ListDetailContent() {
   const params = useParams<{ id: string }>();
@@ -52,6 +72,8 @@ function ListDetailContent() {
   const [filters, setFilters] = useState<LibraryFiltersState>(
     DEFAULT_LIBRARY_FILTERS,
   );
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -60,22 +82,75 @@ function ListDetailContent() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useMediaViewMode();
+  const [pageSizeChoice, setPageSizeChoice] = useMediaPageSize();
+  const columns = usePanelColumnCount();
+  const resolvedPageSize = resolvePageSize(
+    pageSizeChoice,
+    viewMode,
+    columns ?? 2,
+  );
+  const pageSizeReady =
+    pageSizeChoice !== 'default' || viewMode === 'list' || columns !== null;
+
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      setDebouncedSearch(filters.search.trim());
+    }, 300);
+    return () => window.clearTimeout(handle);
+  }, [filters.search]);
+
+  const query = useMemo(
+    () =>
+      toListQuery({
+        status: filters.status,
+        type: filters.type,
+        genre: filters.genre,
+        downloaded: filters.downloaded,
+        listId: filters.listId,
+        search: debouncedSearch,
+        sortBy: filters.sortBy,
+      }),
+    [
+      filters.status,
+      filters.type,
+      filters.genre,
+      filters.downloaded,
+      filters.listId,
+      filters.sortBy,
+      debouncedSearch,
+    ],
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [query, resolvedPageSize, id]);
 
   const load = useCallback(async () => {
+    if (!pageSizeReady) {
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     try {
-      const detail = await getCustomList(id);
+      const detail = await getCustomList(id, {
+        ...query,
+        page,
+        pageSize: resolvedPageSize,
+      });
       setList(detail);
       setName(detail.name);
       setDescription(detail.description ?? '');
+      if (detail.page !== page) {
+        setPage(detail.page);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load list');
       setList(null);
     } finally {
       setIsLoading(false);
     }
-  }, [id]);
+  }, [id, page, pageSizeReady, query, resolvedPageSize]);
 
   useEffect(() => {
     void load();
@@ -173,19 +248,9 @@ function ListDetailContent() {
     );
   }
 
-  async function handleDeleted(mediaItemId: string) {
+  async function handleDeleted() {
     setActionError(null);
-    setList((prev) =>
-      prev
-        ? {
-            ...prev,
-            items: prev.items.filter(
-              (entry) => entry.mediaItemId !== mediaItemId,
-            ),
-            itemCount: Math.max(0, prev.itemCount - 1),
-          }
-        : prev,
-    );
+    await load();
   }
 
   async function handleRemoveFromList(mediaItemId: string) {
@@ -194,17 +259,7 @@ function ListDetailContent() {
     }
     try {
       await removeMediaFromList(list.id, mediaItemId);
-      setList((prev) =>
-        prev
-          ? {
-              ...prev,
-              items: prev.items.filter(
-                (entry) => entry.mediaItemId !== mediaItemId,
-              ),
-              itemCount: Math.max(0, prev.itemCount - 1),
-            }
-          : prev,
-      );
+      await load();
     } catch (err) {
       setActionError(
         err instanceof Error ? err.message : 'Failed to remove from list',
@@ -232,33 +287,16 @@ function ListDetailContent() {
     }));
   }
 
-  const genres = useMemo(() => {
-    if (!list) {
-      return [];
-    }
-    return Array.from(
-      new Set(list.items.flatMap((entry) => entry.mediaItem.genres)),
-    ).sort((a, b) => a.localeCompare(b));
-  }, [list]);
+  const genres = list?.genres ?? [];
 
   const existingMediaItemIds = useMemo(() => {
     if (!list) {
       return new Set<string>();
     }
-    return new Set(list.items.map((entry) => entry.mediaItemId));
+    return new Set(list.itemIds);
   }, [list]);
 
-  const visibleItems = useMemo(() => {
-    if (!list) {
-      return [];
-    }
-
-    return list.items
-      .filter((entry) => matchesMediaFilters(entry.mediaItem, filters))
-      .sort((a, b) =>
-        compareMediaItems(a.mediaItem, b.mediaItem, filters.sortBy),
-      );
-  }, [list, filters]);
+  const visibleItems = list?.items ?? [];
 
   const hasActiveFilters =
     filters.status !== '' ||
@@ -279,7 +317,9 @@ function ListDetailContent() {
         ← Back to lists
       </Link>
 
-      {isLoading ? <p className="mt-10 text-sm text-muted">Loading…</p> : null}
+      {isLoading && !list ? (
+        <p className="mt-10 text-sm text-muted">Loading…</p>
+      ) : null}
 
       {error && !list ? (
         <p className="mt-10 text-sm text-danger" role="alert">
@@ -299,7 +339,9 @@ function ListDetailContent() {
               ) : null}
               <p className="mt-2 text-sm text-muted">
                 {list.itemCount} {list.itemCount === 1 ? 'title' : 'titles'}
-                {hasActiveFilters ? ` · showing ${visibleItems.length}` : ''}
+                {hasActiveFilters
+                  ? ` · ${list.total} ${list.total === 1 ? 'match' : 'matches'}`
+                  : ''}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -362,7 +404,7 @@ function ListDetailContent() {
             </p>
           ) : null}
 
-          {list.items.length === 0 ? (
+          {list.itemCount === 0 ? (
             <div className="mt-12 rounded-lg border border-dashed border-border bg-surface/60 px-6 py-10 text-center">
               <p className="font-display text-xl text-foreground">
                 This list is empty
@@ -382,7 +424,7 @@ function ListDetailContent() {
                 Add from library
               </Button>
             </div>
-          ) : visibleItems.length === 0 ? (
+          ) : list.total === 0 ? (
             <div className="mt-12 rounded-lg border border-dashed border-border bg-surface/60 px-6 py-10 text-center">
               <p className="font-display text-xl text-foreground">
                 No titles match
@@ -400,54 +442,72 @@ function ListDetailContent() {
               </Button>
             </div>
           ) : (
-            <div className={mediaCollectionClassName(viewMode)}>
-              {visibleItems.map((entry) => (
-                <MediaCard
-                  key={entry.mediaItemId}
-                  item={entry.mediaItem}
-                  variant={viewMode}
-                  fromListId={list.id}
-                  progressSeason={entry.currentSeason}
-                  progressEpisode={entry.currentEpisode}
-                  onUpdated={handleUpdated}
-                  onDeleted={(mediaId) => void handleDeleted(mediaId)}
-                  onError={setActionError}
-                  actions={
-                    <>
-                      {entry.mediaItem.type === MediaType.SERIES ? (
-                        <SeriesProgressControls
-                          currentSeason={entry.currentSeason}
-                          currentEpisode={entry.currentEpisode}
-                          compact
-                          onSave={async (progress) => {
-                            const updated = await updateListItem(
-                              list.id,
-                              entry.mediaItemId,
-                              progress,
-                            );
-                            handleProgressUpdated(updated);
-                          }}
-                          onError={setActionError}
-                        />
-                      ) : null}
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className={
-                          viewMode === 'grid' ? 'w-full text-xs' : 'text-xs'
-                        }
-                        onClick={() =>
-                          void handleRemoveFromList(entry.mediaItemId)
-                        }
-                      >
-                        Remove from list
-                      </Button>
-                    </>
-                  }
-                />
-              ))}
-            </div>
+            <>
+              <MediaPagination
+                meta={{
+                  page: list.page,
+                  pageSize: list.pageSize,
+                  total: list.total,
+                  totalPages: list.totalPages,
+                }}
+                pageSizeChoice={pageSizeChoice}
+                viewMode={viewMode}
+                columns={columns ?? 2}
+                onPageChange={setPage}
+                onPageSizeChange={(choice) => {
+                  setPage(1);
+                  setPageSizeChoice(choice);
+                }}
+              />
+              <div className={mediaCollectionClassName(viewMode)}>
+                {visibleItems.map((entry) => (
+                  <MediaCard
+                    key={entry.mediaItemId}
+                    item={entry.mediaItem}
+                    variant={viewMode}
+                    fromListId={list.id}
+                    progressSeason={entry.currentSeason}
+                    progressEpisode={entry.currentEpisode}
+                    onUpdated={handleUpdated}
+                    onDeleted={() => void handleDeleted()}
+                    onError={setActionError}
+                    actions={
+                      <>
+                        {entry.mediaItem.type === MediaType.SERIES ? (
+                          <SeriesProgressControls
+                            currentSeason={entry.currentSeason}
+                            currentEpisode={entry.currentEpisode}
+                            compact
+                            onSave={async (progress) => {
+                              const updated = await updateListItem(
+                                list.id,
+                                entry.mediaItemId,
+                                progress,
+                              );
+                              handleProgressUpdated(updated);
+                            }}
+                            onError={setActionError}
+                          />
+                        ) : null}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className={
+                            viewMode === 'grid' ? 'w-full text-xs' : 'text-xs'
+                          }
+                          onClick={() =>
+                            void handleRemoveFromList(entry.mediaItemId)
+                          }
+                        >
+                          Remove from list
+                        </Button>
+                      </>
+                    }
+                  />
+                ))}
+              </div>
+            </>
           )}
 
           <Modal open={isEditOpen} title="Edit list" onClose={closeEditModal}>
@@ -508,9 +568,9 @@ function ListDetailContent() {
             listId={list.id}
             existingMediaItemIds={existingMediaItemIds}
             onClose={() => setIsAddOpen(false)}
-            onAdded={(detail) => {
+            onAdded={() => {
               setActionError(null);
-              setList(detail);
+              void load();
             }}
             onError={setActionError}
           />

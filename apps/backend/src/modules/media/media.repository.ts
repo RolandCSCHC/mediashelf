@@ -5,9 +5,11 @@ import type {
   MediaType,
   Prisma,
 } from '@prisma/client';
-import { MediaSortBy, type ListMediaQuery } from '@mediashelf/shared-types';
+import type { ListMediaQuery } from '@mediashelf/shared-types';
+import { resolvePagination, uniqueSortedGenres } from '../../common/pagination';
 import { PrismaService } from '../prisma/prisma.service';
 import type { TmdbMediaDetails } from '../tmdb/tmdb.service';
+import { buildMediaItemOrderBy, buildMediaItemWhere } from './media-query';
 
 export type MediaListFilters = ListMediaQuery;
 
@@ -23,6 +25,45 @@ export class MediaRepository {
       where: this.buildWhere(userId, filters),
       orderBy: this.buildOrderBy(filters),
     });
+  }
+
+  async findPageByUser(
+    userId: string,
+    filters: MediaListFilters = {},
+  ): Promise<{
+    items: PrismaMediaItem[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+    genres: string[];
+  }> {
+    const where = this.buildWhere(userId, filters);
+
+    const [total, genreRows] = await Promise.all([
+      this.prisma.mediaItem.count({ where }),
+      this.prisma.mediaItem.findMany({
+        where: { userId },
+        select: { genres: true },
+      }),
+    ]);
+
+    const pagination = resolvePagination(filters.page, filters.pageSize, total);
+    const items = await this.prisma.mediaItem.findMany({
+      where,
+      orderBy: this.buildOrderBy(filters),
+      ...(pagination.skip !== undefined ? { skip: pagination.skip } : {}),
+      ...(pagination.take !== undefined ? { take: pagination.take } : {}),
+    });
+
+    return {
+      items,
+      total,
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+      totalPages: pagination.totalPages,
+      genres: uniqueSortedGenres(genreRows.map((row) => row.genres)),
+    };
   }
 
   findByIdForUser(id: string, userId: string): Promise<PrismaMediaItem | null> {
@@ -199,23 +240,10 @@ export class MediaRepository {
     userId: string,
     filters: MediaListFilters,
   ): Prisma.MediaItemWhereInput {
-    const where: Prisma.MediaItemWhereInput = { userId };
-
-    if (filters.status) {
-      where.status = filters.status;
-    }
-
-    if (filters.type) {
-      where.type = filters.type;
-    }
-
-    if (filters.downloaded !== undefined) {
-      where.downloaded = filters.downloaded;
-    }
-
-    if (filters.genre) {
-      where.genres = { has: filters.genre };
-    }
+    const where: Prisma.MediaItemWhereInput = {
+      userId,
+      ...buildMediaItemWhere(filters),
+    };
 
     if (filters.listId) {
       where.listItems = {
@@ -226,28 +254,12 @@ export class MediaRepository {
       };
     }
 
-    if (filters.search) {
-      where.title = { contains: filters.search, mode: 'insensitive' };
-    }
-
     return where;
   }
 
   private buildOrderBy(
     filters: MediaListFilters,
-  ): Prisma.MediaItemOrderByWithRelationInput {
-    const sortBy = filters.sortBy ?? MediaSortBy.DATE_ADDED;
-
-    switch (sortBy) {
-      case MediaSortBy.TITLE:
-        return { title: 'asc' };
-      case MediaSortBy.RELEASE_DATE:
-        return { releaseDate: 'desc' };
-      case MediaSortBy.DATE_WATCHED:
-        return { dateWatched: 'desc' };
-      case MediaSortBy.DATE_ADDED:
-      default:
-        return { createdAt: 'desc' };
-    }
+  ): Prisma.MediaItemOrderByWithRelationInput[] {
+    return buildMediaItemOrderBy(filters.sortBy);
   }
 }
