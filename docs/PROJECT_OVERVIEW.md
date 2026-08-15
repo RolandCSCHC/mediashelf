@@ -573,8 +573,8 @@ Production hosting: Next.js and NestJS on Vercel; database on Supabase.
 - Lists sets states
 - Fix Go Back in lists ✓
 - English/Spanish toggle
-- Delete Open button in lists
-- Make the lists cells clickable
+- Delete Open button in lists ✓
+- Make the lists cells clickable ✓
 
 # Portfolio Goals
 

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import type { CustomList } from '@mediashelf/shared-types';
 import { AppShell } from '@/components/app-shell';
 import { AuthGuard } from '@/components/auth-guard';
-import { Button, ButtonLink } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
 import { createCustomList, deleteCustomList, listCustomLists } from '@/lib/api';
 
@@ -152,34 +152,33 @@ function ListsContent() {
           {lists.map((list) => (
             <li
               key={list.id}
-              className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
+              className="group relative flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
             >
+              <Link
+                href={`/lists/${list.id}`}
+                className="absolute inset-0 z-[1] rounded-sm transition hover:bg-[var(--overlay)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
+                aria-label={`Open ${list.name}`}
+              />
               <div>
-                <Link
-                  href={`/lists/${list.id}`}
-                  className="font-display text-xl text-foreground transition hover:text-accent"
-                >
+                <p className="font-display text-xl text-foreground transition group-hover:text-accent">
                   {list.name}
-                </Link>
+                </p>
                 <p className="mt-1 text-sm text-muted">
                   {list.itemCount} {list.itemCount === 1 ? 'title' : 'titles'}
                   {list.description ? ` · ${list.description}` : ''}
                 </p>
               </div>
-              <div className="flex gap-2">
-                <ButtonLink
-                  href={`/lists/${list.id}`}
-                  variant="secondary"
-                  size="sm"
-                >
-                  Open
-                </ButtonLink>
+              <div className="relative z-[2]">
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   className="text-danger hover:bg-danger/10"
-                  onClick={() => void handleDelete(list)}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    void handleDelete(list);
+                  }}
                 >
                   Delete
                 </Button>
