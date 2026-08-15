@@ -117,12 +117,6 @@ function ListsContent() {
           <Button type="button" size="sm" onClick={openCreateModal}>
             Create a list
           </Button>
-          <Link
-            href="/library"
-            className="text-sm text-muted transition hover:text-foreground"
-          >
-            ← Back to library
-          </Link>
         </div>
       </div>
 

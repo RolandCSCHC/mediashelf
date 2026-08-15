@@ -12,6 +12,8 @@ import { tmdbPosterUrl } from '@/lib/tmdb-images';
 type MediaCardProps = {
   item: MediaItem;
   variant?: MediaViewMode;
+  /** When set, the details page back link returns to this list. */
+  fromListId?: string;
   progressSeason?: number | null;
   progressEpisode?: number | null;
   actions?: ReactNode;
@@ -20,9 +22,19 @@ type MediaCardProps = {
   onError?: (message: string) => void;
 };
 
+function mediaDetailHref(itemId: string, fromListId?: string): string {
+  if (!fromListId) {
+    return `/library/${itemId}`;
+  }
+
+  const params = new URLSearchParams({ fromList: fromListId });
+  return `/library/${itemId}?${params.toString()}`;
+}
+
 export function MediaCard({
   item,
   variant = 'grid',
+  fromListId,
   progressSeason = null,
   progressEpisode = null,
   actions,
@@ -30,6 +42,7 @@ export function MediaCard({
   onDeleted,
   onError,
 }: MediaCardProps) {
+  const href = mediaDetailHref(item.id, fromListId);
   const poster = tmdbPosterUrl(
     item.posterPath,
     variant === 'list' ? 'w185' : 'w500',
@@ -56,7 +69,7 @@ export function MediaCard({
       <article className="overflow-hidden rounded-lg border border-border bg-surface transition hover:border-accent/40">
         <div className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:gap-4">
           <Link
-            href={`/library/${item.id}`}
+            href={href}
             className="group flex min-w-0 flex-1 items-center gap-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
           >
             <div className="h-20 w-14 shrink-0 overflow-hidden rounded bg-[var(--overlay)]">
@@ -102,7 +115,7 @@ export function MediaCard({
   return (
     <article className="overflow-hidden rounded-lg border border-border bg-surface transition hover:border-accent/40">
       <Link
-        href={`/library/${item.id}`}
+        href={href}
         className="group block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
       >
         <div className="aspect-[2/3] bg-[var(--overlay)]">

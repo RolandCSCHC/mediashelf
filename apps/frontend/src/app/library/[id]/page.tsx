@@ -1,8 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import type { MediaItem } from '@mediashelf/shared-types';
 import { AppShell } from '@/components/app-shell';
 import { AuthGuard } from '@/components/auth-guard';
@@ -11,10 +11,18 @@ import { MediaItemControls } from '@/components/media-item-controls';
 import { getMedia } from '@/lib/api';
 import { tmdbPosterUrl } from '@/lib/tmdb-images';
 
+const LIST_ID_PATTERN = /^[a-z0-9]+$/i;
+
 function MediaDetailContent() {
   const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const id = params.id;
+  const rawFromList = searchParams.get('fromList');
+  const fromListId =
+    rawFromList && LIST_ID_PATTERN.test(rawFromList) ? rawFromList : null;
+  const backHref = fromListId ? `/lists/${fromListId}` : '/library';
+  const backLabel = fromListId ? '← Back to list' : '← Back to library';
 
   const [item, setItem] = useState<MediaItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,10 +54,10 @@ function MediaDetailContent() {
   return (
     <AppShell width="wide">
       <Link
-        href="/library"
+        href={backHref}
         className="text-sm text-muted transition hover:text-foreground"
       >
-        ← Back to library
+        {backLabel}
       </Link>
 
       {isLoading ? <p className="mt-10 text-sm text-muted">Loading…</p> : null}
@@ -130,7 +138,7 @@ function MediaDetailContent() {
                   setItem(updated);
                 }}
                 onDeleted={() => {
-                  router.push('/library');
+                  router.push(backHref);
                 }}
                 onError={setError}
               />
@@ -153,7 +161,15 @@ function MediaDetailContent() {
 export default function MediaDetailPage() {
   return (
     <AuthGuard>
-      <MediaDetailContent />
+      <Suspense
+        fallback={
+          <AppShell width="wide">
+            <p className="mt-10 text-sm text-muted">Loading…</p>
+          </AppShell>
+        }
+      >
+        <MediaDetailContent />
+      </Suspense>
     </AuthGuard>
   );
 }

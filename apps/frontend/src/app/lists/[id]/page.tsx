@@ -406,6 +406,7 @@ function ListDetailContent() {
                   key={entry.mediaItemId}
                   item={entry.mediaItem}
                   variant={viewMode}
+                  fromListId={list.id}
                   progressSeason={entry.currentSeason}
                   progressEpisode={entry.currentEpisode}
                   onUpdated={handleUpdated}

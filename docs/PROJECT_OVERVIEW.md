@@ -571,7 +571,7 @@ Production hosting: Next.js and NestJS on Vercel; database on Supabase.
 - Move Movies/Series between lists ✓
 - Pagination
 - Lists sets states
-- Fix Go Back in lists
+- Fix Go Back in lists ✓
 - English/Spanish toggle
 - Delete Open button in lists
 - Make the lists cells clickable
