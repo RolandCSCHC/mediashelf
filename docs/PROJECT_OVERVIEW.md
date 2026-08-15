@@ -271,6 +271,8 @@ Results appear with posters.
 
 The user selects one.
 
+A details page shows extra TMDB info (cast, directors / creators, genres, runtime) so they can decide before importing.
+
 MediaShelf automatically imports all relevant information.
 
 When a title cannot be found on TMDB, the user can add it manually (title and type required; year, description, notes, and status optional). Manual items have no TMDB ID or poster.
@@ -587,7 +589,7 @@ Production hosting: Next.js and NestJS on Vercel; database on Supabase.
 - Delete Open button in lists ✓
 - Make the lists cells clickable ✓
 - Sort by name by default ✓
-- Watch movie/series info before adding
+- Watch movie/series info before adding ✓
 
 # Portfolio Goals
 

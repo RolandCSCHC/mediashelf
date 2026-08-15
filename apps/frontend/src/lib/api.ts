@@ -18,6 +18,7 @@ import type {
   MediaListMembership,
   PaginatedMediaResponse,
   TmdbSearchResponse,
+  TmdbTitleDetails,
   UpdateCustomListRequest,
   UpdateListItemRequest,
   MoveListItemRequest,
@@ -161,6 +162,13 @@ export async function searchTmdb(
     type,
   });
   return apiFetch<TmdbSearchResponse>(`/tmdb/search?${params.toString()}`);
+}
+
+export async function getTmdbTitle(
+  type: 'MOVIE' | 'SERIES',
+  tmdbId: number,
+): Promise<TmdbTitleDetails> {
+  return apiFetch<TmdbTitleDetails>(`/tmdb/${type}/${tmdbId}`);
 }
 
 export async function listMedia(

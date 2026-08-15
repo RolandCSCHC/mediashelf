@@ -91,6 +91,32 @@ export interface TmdbSearchResponse {
   results: TmdbSearchResult[];
 }
 
+/** Person credit shown on a TMDB title preview (cast or crew). */
+export interface TmdbPerson {
+  tmdbId: number;
+  name: string;
+  role: string | null;
+  profilePath: string | null;
+}
+
+/** Full TMDB title preview (details + credits) before adding to the library. */
+export interface TmdbTitleDetails {
+  tmdbId: number;
+  type: MediaType;
+  title: string;
+  overview: string | null;
+  posterPath: string | null;
+  backdropPath: string | null;
+  releaseDate: string | null;
+  genres: string[];
+  runtime: number | null;
+  voteAverage: number | null;
+  seasonCount: number | null;
+  directors: TmdbPerson[];
+  creators: TmdbPerson[];
+  cast: TmdbPerson[];
+}
+
 export interface ImportMediaRequest {
   tmdbId: number;
   type: MediaType;

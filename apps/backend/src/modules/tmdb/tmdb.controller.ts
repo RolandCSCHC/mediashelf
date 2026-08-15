@@ -1,16 +1,26 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import {
   ApiCookieAuth,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiParam,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import type { TmdbSearchResponse } from '@mediashelf/shared-types';
+import type {
+  TmdbSearchResponse,
+  TmdbTitleDetails,
+} from '@mediashelf/shared-types';
+import { MediaType } from '@mediashelf/shared-types';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TmdbService } from './tmdb.service';
 import { SearchTmdbDto, TmdbSearchTypeDto } from './dto/search-tmdb.dto';
-import { TmdbSearchResponseSchema } from '../../swagger/api-schemas';
+import { TmdbTitleParamsDto } from './dto/tmdb-title-params.dto';
+import {
+  TmdbSearchResponseSchema,
+  TmdbTitleDetailsSchema,
+} from '../../swagger/api-schemas';
 
 @ApiTags('TMDB')
 @ApiCookieAuth()
@@ -30,5 +40,17 @@ export class TmdbController {
     );
 
     return { results };
+  }
+
+  @Get(':type/:tmdbId')
+  @ApiOperation({
+    summary: 'Get TMDB title details and credits before importing',
+  })
+  @ApiParam({ name: 'type', enum: MediaType })
+  @ApiParam({ name: 'tmdbId', type: Number })
+  @ApiOkResponse({ type: TmdbTitleDetailsSchema })
+  @ApiNotFoundResponse({ description: 'TMDB title not found' })
+  getTitle(@Param() params: TmdbTitleParamsDto): Promise<TmdbTitleDetails> {
+    return this.tmdbService.getTitleDetails(params.tmdbId, params.type);
   }
 }

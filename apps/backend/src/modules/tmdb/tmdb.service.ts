@@ -5,11 +5,17 @@ import {
   Logger,
 } from '@nestjs/common';
 import { MediaType } from '@mediashelf/shared-types';
-import type { TmdbSearchResult } from '@mediashelf/shared-types';
+import type {
+  TmdbSearchResult,
+  TmdbTitleDetails,
+} from '@mediashelf/shared-types';
+import { mapMovieTitleDetails, mapSeriesTitleDetails } from './tmdb.mapper';
+import type {
+  TmdbMovieDetailsResponse,
+  TmdbTvDetailsResponse,
+} from './tmdb.types';
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
-
-type TmdbGenre = { id: number; name: string };
 
 type TmdbMovieSearchItem = {
   id: number;
@@ -27,28 +33,6 @@ type TmdbTvSearchItem = {
   poster_path?: string | null;
   first_air_date?: string;
   popularity?: number;
-};
-
-type TmdbMovieDetails = {
-  id: number;
-  title: string;
-  overview?: string;
-  poster_path?: string | null;
-  backdrop_path?: string | null;
-  release_date?: string;
-  genres?: TmdbGenre[];
-  runtime?: number | null;
-};
-
-type TmdbTvDetails = {
-  id: number;
-  name: string;
-  overview?: string;
-  poster_path?: string | null;
-  backdrop_path?: string | null;
-  first_air_date?: string;
-  genres?: TmdbGenre[];
-  episode_run_time?: number[];
 };
 
 export type TmdbMediaDetails = {
@@ -108,6 +92,25 @@ export class TmdbService {
     return this.getSeriesDetails(tmdbId);
   }
 
+  async getTitleDetails(
+    tmdbId: number,
+    type: MediaType,
+  ): Promise<TmdbTitleDetails> {
+    if (type === MediaType.MOVIE) {
+      const movie = await this.tmdbFetch<TmdbMovieDetailsResponse>(
+        `/movie/${tmdbId}`,
+        { append_to_response: 'credits' },
+      );
+      return mapMovieTitleDetails(movie);
+    }
+
+    const series = await this.tmdbFetch<TmdbTvDetailsResponse>(
+      `/tv/${tmdbId}`,
+      { append_to_response: 'credits' },
+    );
+    return mapSeriesTitleDetails(series);
+  }
+
   private async searchMovies(query: string): Promise<TmdbSearchResult[]> {
     const data = await this.tmdbFetch<{ results: TmdbMovieSearchItem[] }>(
       '/search/movie',
@@ -143,7 +146,9 @@ export class TmdbService {
   }
 
   private async getMovieDetails(tmdbId: number): Promise<TmdbMediaDetails> {
-    const movie = await this.tmdbFetch<TmdbMovieDetails>(`/movie/${tmdbId}`);
+    const movie = await this.tmdbFetch<TmdbMovieDetailsResponse>(
+      `/movie/${tmdbId}`,
+    );
 
     return {
       tmdbId: movie.id,
@@ -159,7 +164,7 @@ export class TmdbService {
   }
 
   private async getSeriesDetails(tmdbId: number): Promise<TmdbMediaDetails> {
-    const series = await this.tmdbFetch<TmdbTvDetails>(`/tv/${tmdbId}`);
+    const series = await this.tmdbFetch<TmdbTvDetailsResponse>(`/tv/${tmdbId}`);
     const episodeRuntime = series.episode_run_time?.[0] ?? null;
 
     return {

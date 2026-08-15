@@ -119,6 +119,64 @@ export class TmdbSearchResponseSchema {
   results!: TmdbSearchResultSchema[];
 }
 
+export class TmdbPersonSchema {
+  @ApiProperty()
+  tmdbId!: number;
+
+  @ApiProperty()
+  name!: string;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  role!: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  profilePath!: string | null;
+}
+
+export class TmdbTitleDetailsSchema {
+  @ApiProperty()
+  tmdbId!: number;
+
+  @ApiProperty({ enum: MediaType })
+  type!: MediaType;
+
+  @ApiProperty()
+  title!: string;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  overview!: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  posterPath!: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  backdropPath!: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  releaseDate!: string | null;
+
+  @ApiProperty({ type: [String] })
+  genres!: string[];
+
+  @ApiPropertyOptional({ nullable: true, type: Number })
+  runtime!: number | null;
+
+  @ApiPropertyOptional({ nullable: true, type: Number })
+  voteAverage!: number | null;
+
+  @ApiPropertyOptional({ nullable: true, type: Number })
+  seasonCount!: number | null;
+
+  @ApiProperty({ type: [TmdbPersonSchema] })
+  directors!: TmdbPersonSchema[];
+
+  @ApiProperty({ type: [TmdbPersonSchema] })
+  creators!: TmdbPersonSchema[];
+
+  @ApiProperty({ type: [TmdbPersonSchema] })
+  cast!: TmdbPersonSchema[];
+}
+
 export class CustomListSchema {
   @ApiProperty()
   id!: string;

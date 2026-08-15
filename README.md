@@ -16,7 +16,7 @@ Database: [Supabase](https://supabase.com/) managed PostgreSQL (Prisma uses a po
 ## Features
 
 - **Google OAuth** with JWT in an httpOnly cookie (private per-user libraries)
-- **TMDB search** and one-click import of movies / series (posters, genres, metadata)
+- **TMDB search**, title preview (cast, directors / creators), and one-click import of movies / series (posters, genres, metadata)
 - **Manual entries** when a title is missing from TMDB
 - **Library CRUD** with status (Watchlist / Watching / Watched / Future) and downloaded flag
 - **Filters & sort** by status, type, genre, downloaded, list; sort by title (default), date added, release date, or date watched; title search
@@ -132,16 +132,18 @@ This same-origin proxy is required in production: separate `*.vercel.app` fronte
 
 ## Using the app
 
-| Route           | Purpose                                                                 |
-| --------------- | ----------------------------------------------------------------------- |
-| `/search`       | TMDB search and import into the library                                 |
-| `/library`      | Full library with filters, sort, search, pagination, panels/list toggle |
-| `/library/[id]` | Title detail, status, lists, notes                                      |
-| `/lists`        | Custom lists CRUD                                                       |
-| `/lists/[id]`   | List detail, pagination, bulk add, per-list series progress             |
-| `/backup`       | Export library JSON / merge-import a backup                             |
+| Route                     | Purpose                                                                 |
+| ------------------------- | ----------------------------------------------------------------------- |
+| `/search`                 | TMDB search and import into the library                                 |
+| `/search/movie/[tmdbId]`  | TMDB movie preview (cast, crew) before adding                           |
+| `/search/series/[tmdbId]` | TMDB series preview (cast, creators) before adding                      |
+| `/library`                | Full library with filters, sort, search, pagination, panels/list toggle |
+| `/library/[id]`           | Title detail, status, lists, notes, TMDB credits                        |
+| `/lists`                  | Custom lists CRUD                                                       |
+| `/lists/[id]`             | List detail, pagination, bulk add, per-list series progress             |
+| `/backup`                 | Export library JSON / merge-import a backup                             |
 
-`GET /media` accepts filter, sort, and pagination query params (`page`, `pageSize`, including `search`). `PATCH /media/:id` updates library status and downloaded. `PATCH /lists/:id/items/:mediaItemId` updates per-list status, downloaded, and series progress. `GET /backup` / `POST /backup/import` handle JSON backup.
+`GET /tmdb/search` finds titles. `GET /tmdb/:type/:tmdbId` returns details and credits for the preview page. `GET /media` accepts filter, sort, and pagination query params (`page`, `pageSize`, including `search`). `PATCH /media/:id` updates library status and downloaded. `PATCH /lists/:id/items/:mediaItemId` updates per-list status, downloaded, and series progress. `GET /backup` / `POST /backup/import` handle JSON backup.
 
 ## Workspace layout
 

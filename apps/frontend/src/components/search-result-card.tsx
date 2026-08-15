@@ -1,47 +1,38 @@
 'use client';
 
-import { useState } from 'react';
+import Link from 'next/link';
 import type { MediaType, TmdbSearchResult } from '@mediashelf/shared-types';
-import { importMedia } from '@/lib/api';
+import { AddToLibraryButton } from '@/components/add-to-library-button';
 import { tmdbPosterUrl } from '@/lib/tmdb-images';
-import { Button } from '@/components/ui/button';
+import { tmdbPreviewHref } from '@/lib/tmdb-preview';
 
 type SearchResultCardProps = {
   result: TmdbSearchResult;
+  searchQuery?: string;
   alreadyInLibrary?: boolean;
-  onImported?: (tmdbId: number, type: MediaType) => void;
+  libraryItemId?: string | null;
+  onImported?: (tmdbId: number, type: MediaType, mediaItemId: string) => void;
 };
 
 export function SearchResultCard({
   result,
+  searchQuery,
   alreadyInLibrary = false,
+  libraryItemId = null,
   onImported,
 }: SearchResultCardProps) {
-  const [isImporting, setIsImporting] = useState(false);
-  const [imported, setImported] = useState(alreadyInLibrary);
-  const [error, setError] = useState<string | null>(null);
   const poster = tmdbPosterUrl(result.posterPath, 'w185');
   const year = result.releaseDate
     ? new Date(result.releaseDate).getFullYear()
     : null;
-
-  async function handleImport() {
-    setIsImporting(true);
-    setError(null);
-    try {
-      await importMedia({ tmdbId: result.tmdbId, type: result.type });
-      setImported(true);
-      onImported?.(result.tmdbId, result.type);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Import failed');
-    } finally {
-      setIsImporting(false);
-    }
-  }
+  const href = tmdbPreviewHref(result.type, result.tmdbId, searchQuery);
 
   return (
-    <article className="flex gap-4 rounded-lg border border-border bg-surface p-3 sm:p-4">
-      <div className="h-36 w-24 shrink-0 overflow-hidden rounded-md bg-[var(--overlay)] sm:h-40 sm:w-28">
+    <article className="flex gap-4 rounded-lg border border-border bg-surface p-3 transition hover:border-accent/40 sm:p-4">
+      <Link
+        href={href}
+        className="h-36 w-24 shrink-0 overflow-hidden rounded-md bg-[var(--overlay)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)] sm:h-40 sm:w-28"
+      >
         {poster ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -55,12 +46,17 @@ export function SearchResultCard({
             No poster
           </div>
         )}
-      </div>
+      </Link>
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
           <h3 className="font-display text-lg font-semibold text-foreground">
-            {result.title}
+            <Link
+              href={href}
+              className="hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
+            >
+              {result.title}
+            </Link>
           </h3>
           <span className="text-xs uppercase tracking-wide text-muted">
             {result.type === 'MOVIE' ? 'Movie' : 'Series'}
@@ -74,19 +70,19 @@ export function SearchResultCard({
         ) : null}
 
         <div className="mt-auto flex flex-wrap items-center gap-3 pt-3">
-          {imported ? (
-            <span className="text-sm font-medium text-accent">In library</span>
-          ) : (
-            <Button
-              type="button"
-              size="sm"
-              disabled={isImporting}
-              onClick={() => void handleImport()}
-            >
-              {isImporting ? 'Importing…' : 'Add to library'}
-            </Button>
-          )}
-          {error ? <p className="text-sm text-danger">{error}</p> : null}
+          <AddToLibraryButton
+            tmdbId={result.tmdbId}
+            type={result.type}
+            alreadyInLibrary={alreadyInLibrary}
+            libraryItemId={libraryItemId}
+            onImported={onImported}
+          />
+          <Link
+            href={href}
+            className="text-sm text-muted transition hover:text-foreground"
+          >
+            View info
+          </Link>
         </div>
       </div>
     </article>

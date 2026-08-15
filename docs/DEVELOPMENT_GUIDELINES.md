@@ -147,6 +147,10 @@ PATCH /media/:id
 
 DELETE /media/:id
 
+GET /tmdb/search?q=dune&type=ALL
+
+GET /tmdb/:type/:tmdbId
+
 GET /lists
 
 POST /lists

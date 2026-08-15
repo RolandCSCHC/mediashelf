@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { MediaType, type TmdbSearchResult } from '@mediashelf/shared-types';
 import { AppShell } from '@/components/app-shell';
 import { AuthGuard } from '@/components/auth-guard';
@@ -8,21 +9,30 @@ import { ManualMediaForm } from '@/components/manual-media-form';
 import { SearchResultCard } from '@/components/search-result-card';
 import { Button } from '@/components/ui/button';
 import { listAllMedia, searchTmdb } from '@/lib/api';
-
-type SearchFilter = 'ALL' | 'MOVIE' | 'SERIES';
+import {
+  parseSearchTypeFilter,
+  searchHref,
+  type SearchTypeFilter,
+} from '@/lib/tmdb-preview';
 
 function SearchContent() {
-  const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState<SearchFilter>('ALL');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlQuery = searchParams.get('q')?.trim() ?? '';
+  const urlFilter = parseSearchTypeFilter(searchParams.get('type'));
+
+  const [query, setQuery] = useState(urlQuery);
+  const [filter, setFilter] = useState<SearchTypeFilter>(urlFilter);
   const [results, setResults] = useState<TmdbSearchResult[]>([]);
-  const [libraryKeys, setLibraryKeys] = useState<Set<string>>(new Set());
+  const [libraryIds, setLibraryIds] = useState<Map<string, string>>(new Map());
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showManualForm, setShowManualForm] = useState(false);
   const [manualTitle, setManualTitle] = useState('');
+  const hydratedQuery = useRef<string | null>(null);
 
-  const filters: { value: SearchFilter; label: string }[] = [
+  const filters: { value: SearchTypeFilter; label: string }[] = [
     { value: 'ALL', label: 'All' },
     { value: 'MOVIE', label: 'Movies' },
     { value: 'SERIES', label: 'Series' },
@@ -36,46 +46,86 @@ function SearchContent() {
     setShowManualForm(true);
   }
 
-  async function runSearch(event: React.FormEvent) {
+  const runSearch = useCallback(
+    async (searchQuery: string, searchFilter: SearchTypeFilter) => {
+      setIsSearching(true);
+      setError(null);
+      setHasSearched(true);
+      setShowManualForm(false);
+
+      try {
+        const [searchResponse, media] = await Promise.all([
+          searchTmdb(searchQuery, searchFilter),
+          listAllMedia(),
+        ]);
+
+        setResults(searchResponse.results);
+        setLibraryIds(
+          new Map(
+            media
+              .filter((item) => item.tmdbId != null)
+              .map((item) => [`${item.type}:${item.tmdbId}`, item.id]),
+          ),
+        );
+
+        if (searchResponse.results.length === 0) {
+          setManualTitle(searchQuery);
+          setShowManualForm(true);
+        }
+      } catch (err) {
+        setResults([]);
+        setError(err instanceof Error ? err.message : 'Search failed');
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    setQuery(urlQuery);
+    setFilter(urlFilter);
+
+    if (!urlQuery) {
+      hydratedQuery.current = '';
+      setResults([]);
+      setHasSearched(false);
+      return;
+    }
+
+    const hydrateKey = `${urlFilter}:${urlQuery}`;
+    if (hydratedQuery.current === hydrateKey) {
+      return;
+    }
+    hydratedQuery.current = hydrateKey;
+    void runSearch(urlQuery, urlFilter);
+  }, [urlQuery, urlFilter, runSearch]);
+
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     const trimmed = query.trim();
     if (!trimmed) {
       return;
     }
 
-    setIsSearching(true);
-    setError(null);
-    setHasSearched(true);
-    setShowManualForm(false);
-
-    try {
-      const [searchResponse, media] = await Promise.all([
-        searchTmdb(trimmed, filter),
-        listAllMedia(),
-      ]);
-
-      setResults(searchResponse.results);
-      setLibraryKeys(
-        new Set(
-          media
-            .filter((item) => item.tmdbId != null)
-            .map((item) => `${item.type}:${item.tmdbId}`),
-        ),
-      );
-
-      if (searchResponse.results.length === 0) {
-        openManualForm(trimmed);
-      }
-    } catch (err) {
-      setResults([]);
-      setError(err instanceof Error ? err.message : 'Search failed');
-    } finally {
-      setIsSearching(false);
+    const href = searchHref(trimmed, filter);
+    const current = searchHref(urlQuery, urlFilter);
+    if (href === current) {
+      void runSearch(trimmed, filter);
+      return;
     }
+
+    router.replace(href);
   }
 
-  function handleImported(tmdbId: number, type: MediaType) {
-    setLibraryKeys((prev) => new Set(prev).add(`${type}:${tmdbId}`));
+  function handleImported(
+    tmdbId: number,
+    type: MediaType,
+    mediaItemId: string,
+  ) {
+    setLibraryIds((prev) =>
+      new Map(prev).set(`${type}:${tmdbId}`, mediaItemId),
+    );
   }
 
   return (
@@ -87,12 +137,12 @@ function SearchContent() {
         Search TMDB
       </h1>
       <p className="ms-animate-fade-up ms-animate-delay-2 mt-3 max-w-xl text-muted">
-        Find a movie or series, then add it to your private library. If TMDB
-        does not have it, add it manually.
+        Find a movie or series, open it to see cast and crew, then add it to
+        your private library. If TMDB does not have it, add it manually.
       </p>
 
       <form
-        onSubmit={(event) => void runSearch(event)}
+        onSubmit={(event) => void handleSubmit(event)}
         className="ms-animate-fade-up ms-animate-delay-3 mt-8 space-y-4"
       >
         <div className="flex flex-col gap-3 sm:flex-row">
@@ -185,16 +235,21 @@ function SearchContent() {
           </p>
         ) : null}
 
-        {results.map((result) => (
-          <SearchResultCard
-            key={`${result.type}-${result.tmdbId}`}
-            result={result}
-            alreadyInLibrary={libraryKeys.has(
-              `${result.type}:${result.tmdbId}`,
-            )}
-            onImported={handleImported}
-          />
-        ))}
+        {results.map((result) => {
+          const libraryKey = `${result.type}:${result.tmdbId}`;
+          const libraryItemId = libraryIds.get(libraryKey) ?? null;
+
+          return (
+            <SearchResultCard
+              key={libraryKey}
+              result={result}
+              searchQuery={urlQuery || query}
+              alreadyInLibrary={libraryItemId !== null}
+              libraryItemId={libraryItemId}
+              onImported={handleImported}
+            />
+          );
+        })}
       </div>
     </AppShell>
   );
@@ -203,7 +258,15 @@ function SearchContent() {
 export default function SearchPage() {
   return (
     <AuthGuard>
-      <SearchContent />
+      <Suspense
+        fallback={
+          <AppShell width="wide">
+            <p className="mt-10 text-sm text-muted">Loading…</p>
+          </AppShell>
+        }
+      >
+        <SearchContent />
+      </Suspense>
     </AuthGuard>
   );
 }
