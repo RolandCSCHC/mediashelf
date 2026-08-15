@@ -274,5 +274,5 @@ export const DEFAULT_LIBRARY_FILTERS: LibraryFiltersState = {
   downloaded: '',
   listId: '',
   search: '',
-  sortBy: MediaSortBy.DATE_ADDED,
+  sortBy: MediaSortBy.TITLE,
 };

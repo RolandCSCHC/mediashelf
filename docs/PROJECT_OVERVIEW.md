@@ -288,9 +288,10 @@ Allow filtering by:
 
 ## Sorting
 
-Allow sorting by:
+Library and custom lists sort by title A–Z by default.
 
-- Title
+Users can also sort by:
+
 - Date added
 - Release date
 - Date watched
@@ -578,7 +579,7 @@ Production hosting: Next.js and NestJS on Vercel; database on Supabase.
 - English/Spanish toggle
 - Delete Open button in lists ✓
 - Make the lists cells clickable ✓
-- Sort by name by default
+- Sort by name by default ✓
 - Watch movie/series info before adding
 
 # Portfolio Goals

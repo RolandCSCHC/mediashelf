@@ -30,17 +30,17 @@ export function buildMediaItemWhere(
 }
 
 export function buildMediaItemOrderBy(
-  sortBy: MediaSortBy = MediaSortBy.DATE_ADDED,
+  sortBy: MediaSortBy = MediaSortBy.TITLE,
 ): Prisma.MediaItemOrderByWithRelationInput[] {
   switch (sortBy) {
-    case MediaSortBy.TITLE:
-      return [{ title: 'asc' }, { id: 'asc' }];
+    case MediaSortBy.DATE_ADDED:
+      return [{ createdAt: 'desc' }, { id: 'asc' }];
     case MediaSortBy.RELEASE_DATE:
       return [{ releaseDate: 'desc' }, { id: 'asc' }];
     case MediaSortBy.DATE_WATCHED:
       return [{ dateWatched: 'desc' }, { id: 'asc' }];
-    case MediaSortBy.DATE_ADDED:
+    case MediaSortBy.TITLE:
     default:
-      return [{ createdAt: 'desc' }, { id: 'asc' }];
+      return [{ title: 'asc' }, { id: 'asc' }];
   }
 }

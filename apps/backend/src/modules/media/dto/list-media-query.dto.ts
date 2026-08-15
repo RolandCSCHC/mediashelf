@@ -62,7 +62,7 @@ export class ListMediaQueryDto {
 
   @IsOptional()
   @IsEnum(MediaSortBy)
-  sortBy?: MediaSortBy = MediaSortBy.DATE_ADDED;
+  sortBy?: MediaSortBy = MediaSortBy.TITLE;
 
   @IsOptional()
   @Transform(({ value }) => toOptionalInt(value))

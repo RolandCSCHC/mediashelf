@@ -9,8 +9,8 @@ export const MEDIA_SORT_OPTIONS: {
   value: MediaSortBy;
   label: string;
 }[] = [
-  { value: MediaSortBy.DATE_ADDED, label: 'Date added' },
   { value: MediaSortBy.TITLE, label: 'Title' },
+  { value: MediaSortBy.DATE_ADDED, label: 'Date added' },
   { value: MediaSortBy.RELEASE_DATE, label: 'Release date' },
   { value: MediaSortBy.DATE_WATCHED, label: 'Date watched' },
 ];
@@ -103,15 +103,15 @@ export function compareMediaItems(
   sortBy: MediaSortBy,
 ): number {
   switch (sortBy) {
-    case MediaSortBy.TITLE:
-      return a.title.localeCompare(b.title);
+    case MediaSortBy.DATE_ADDED:
+      return compareNullableDates(a.createdAt, b.createdAt, 'desc');
     case MediaSortBy.RELEASE_DATE:
       return compareNullableDates(a.releaseDate, b.releaseDate, 'desc');
     case MediaSortBy.DATE_WATCHED:
       return compareNullableDates(a.dateWatched, b.dateWatched, 'desc');
-    case MediaSortBy.DATE_ADDED:
+    case MediaSortBy.TITLE:
     default:
-      return compareNullableDates(a.createdAt, b.createdAt, 'desc');
+      return a.title.localeCompare(b.title);
   }
 }
 
