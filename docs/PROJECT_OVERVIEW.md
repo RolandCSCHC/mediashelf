@@ -602,6 +602,12 @@ Production hosting: Next.js and NestJS on Vercel; database on Supabase.
 - Watch movie/series info before adding ✓
 - Change "Future" state to "Upcoming" ✓
 
+---
+
+## Phase 13
+
+- Add sort in "Add from library" ✓
+
 # Portfolio Goals
 
 This project should demonstrate proficiency in:

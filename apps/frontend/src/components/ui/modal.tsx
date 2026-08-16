@@ -11,6 +11,7 @@ type ModalProps = {
   onClose: () => void;
   children: ReactNode;
   size?: ModalSize;
+  nested?: boolean;
 };
 
 const sizeClass: Record<ModalSize, string> = {
@@ -24,6 +25,7 @@ export function Modal({
   onClose,
   children,
   size = 'md',
+  nested = false,
 }: ModalProps) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -40,11 +42,14 @@ export function Modal({
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
+        if (nested) {
+          event.stopImmediatePropagation();
+        }
         onCloseRef.current();
       }
     }
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, nested);
 
     // Prefer form fields so the header Close button is not autofocused.
     const focusTarget =
@@ -55,16 +60,18 @@ export function Modal({
 
     return () => {
       document.body.style.overflow = previousOverflow;
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keydown', handleKeyDown, nested);
     };
-  }, [open]);
+  }, [open, nested]);
 
   if (!open || typeof document === 'undefined') {
     return null;
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-50 overflow-y-auto p-4">
+    <div
+      className={`fixed inset-0 overflow-y-auto p-4 ${nested ? 'z-[60]' : 'z-50'}`}
+    >
       <button
         type="button"
         aria-label="Close dialog"
