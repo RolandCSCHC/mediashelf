@@ -11,7 +11,7 @@ const MAX_WAIT_MS = 90_000;
 
 /**
  * Polls `/api/health` until the Nest API (and DB) respond, or give up.
- * Used to avoid clicking Google login while a free-tier Render API is still waking.
+ * Used to avoid starting OAuth while a sleeping API is still waking.
  */
 export function useApiReady(): {
   state: ApiReadyState;

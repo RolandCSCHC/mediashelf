@@ -19,7 +19,8 @@ export enum MediaSortBy {
 
 export interface User {
   id: string;
-  googleId: string;
+  googleId: string | null;
+  microsoftId: string | null;
   email: string;
   name: string | null;
   picture: string | null;
@@ -27,7 +28,7 @@ export interface User {
   updatedAt: string;
 }
 
-/** Authenticated user profile returned by the API (no googleId). */
+/** Authenticated user profile returned by the API (no provider ids). */
 export interface AuthUser {
   id: string;
   email: string;

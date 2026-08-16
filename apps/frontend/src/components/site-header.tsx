@@ -4,11 +4,10 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useAuth } from '@/components/auth-provider';
-import { GoogleLoginButton } from '@/components/google-login-button';
 import { LanguageToggle } from '@/components/language-toggle';
 import { useI18n } from '@/components/locale-provider';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { Button } from '@/components/ui/button';
+import { Button, ButtonLink } from '@/components/ui/button';
 import type { MessageKey } from '@/i18n';
 
 const NAV_LINKS: { href: string; labelKey: MessageKey }[] = [
@@ -176,11 +175,9 @@ export function SiteHeader() {
               </Button>
             </>
           ) : (
-            <GoogleLoginButton
-              label={t('nav.login')}
-              variant="secondary"
-              size="sm"
-            />
+            <ButtonLink href="/login" variant="secondary" size="sm">
+              {t('nav.login')}
+            </ButtonLink>
           )}
         </nav>
       </div>

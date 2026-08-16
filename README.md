@@ -1,6 +1,6 @@
 # MediaShelf
 
-Personal media library for movies and TV series — Google login, TMDB search, custom lists, watch progress, JSON backup, and installable PWA. Built as a production-style portfolio app; frontend and API on Vercel, database on Supabase.
+Personal media library for movies and TV series — Google and Microsoft login, TMDB search, custom lists, watch progress, JSON backup, and installable PWA. Built as a production-style portfolio app; frontend and API on Vercel, database on Supabase.
 
 ## Deployment
 
@@ -15,7 +15,7 @@ Database: [Supabase](https://supabase.com/) managed PostgreSQL (Prisma uses a po
 
 ## Features
 
-- **Google OAuth** with JWT in an httpOnly cookie (private per-user libraries)
+- **Google and Microsoft OAuth** with JWT in an httpOnly cookie (same email = same private library)
 - **TMDB search**, title preview (cast, directors / creators), and one-click import of movies / series (posters, genres, metadata)
 - **Manual entries** when a title is missing from TMDB
 - **Library CRUD** with status (Watchlist / Watching / Watched / Upcoming) and downloaded flag
@@ -37,7 +37,7 @@ Database: [Supabase](https://supabase.com/) managed PostgreSQL (Prisma uses a po
 - **Frontend:** Next.js (App Router), TypeScript, Tailwind CSS
 - **Backend:** NestJS, TypeScript, Prisma
 - **Database:** PostgreSQL (Supabase in production; Docker Postgres locally)
-- **Auth:** Google OAuth + JWT httpOnly cookie
+- **Auth:** Google / Microsoft OAuth + JWT httpOnly cookie
 - **Monorepo:** pnpm workspaces
 - **Containers:** Docker + Docker Compose (local)
 - **Production:** Vercel (frontend + API) + Supabase (Postgres)
@@ -47,14 +47,15 @@ Database: [Supabase](https://supabase.com/) managed PostgreSQL (Prisma uses a po
 - [Docker](https://docs.docker.com/get-docker/) and Docker Compose
 - [Node.js](https://nodejs.org/) 20+ (for local non-Docker development)
 - [pnpm](https://pnpm.io/) 9+ (`corepack enable`)
-- A Google Cloud OAuth 2.0 Client (for login)
+- A Google Cloud OAuth 2.0 Client (for Google login)
+- A Microsoft Entra app registration (for Microsoft login)
 - A [TMDB](https://www.themoviedb.org/settings/api) API key (for search / import)
 
 ## Quick start (Docker)
 
 ```bash
 cp .env.example .env
-# Fill in GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, JWT_SECRET, and TMDB_API_KEY
+# Fill in GOOGLE_*, MICROSOFT_*, JWT_SECRET, and TMDB_API_KEY
 docker compose up --build
 ```
 
@@ -67,7 +68,7 @@ docker compose up --build
 | Login    | http://localhost:3000/login  |
 | Postgres | localhost:5432               |
 
-On startup the backend runs Prisma migrations. Log in with Google to create your account and start building your library.
+On startup the backend runs Prisma migrations. Log in with Google or Microsoft to create your account and start building your library.
 
 ## Google OAuth setup (local)
 
@@ -89,11 +90,38 @@ API_URL=http://localhost:3001
 TMDB_API_KEY=your_v3_api_key
 ```
 
+## Microsoft OAuth setup (local)
+
+Microsoft login uses [Microsoft Entra ID](https://entra.microsoft.com) (the former Azure AD portal). Create a **web** app registration (confidential client with a secret), not a SPA registration.
+
+1. Open [Microsoft Entra admin center](https://entra.microsoft.com) (or [Azure Portal](https://portal.azure.com) → **Microsoft Entra ID**).
+2. Go to **Identity** → **Applications** → **App registrations** → **New registration**.
+3. Set **Name** to `MediaShelf` (or similar).
+4. Under **Supported account types**, choose one of:
+   - **Accounts in any organizational directory and personal Microsoft accounts** → set `MICROSOFT_TENANT=common` (work/school + Outlook/Hotmail/Xbox).
+   - **Personal Microsoft accounts only** → set `MICROSOFT_TENANT=consumers`.
+5. Under **Redirect URI**, platform **Web** (not SPA), URI:
+   `http://localhost:3000/api/auth/microsoft/callback`
+6. Click **Register**.
+7. On the app **Overview**, copy **Application (client) ID** into `MICROSOFT_CLIENT_ID`.
+8. Go to **Certificates & secrets** → **New client secret**. Copy the **Value** immediately into `MICROSOFT_CLIENT_SECRET` (it is shown only once).
+9. Confirm **API permissions** includes Microsoft Graph delegated **User.Read** (added by default). Users consent to this on first login; admin consent is not required for personal accounts.
+10. Put the values in `.env`:
+
+```bash
+MICROSOFT_CLIENT_ID=...
+MICROSOFT_CLIENT_SECRET=...
+MICROSOFT_CALLBACK_URL=http://localhost:3000/api/auth/microsoft/callback
+MICROSOFT_TENANT=common
+```
+
+Do **not** enable implicit/hybrid tokens or “Treat application as a public client”. This app uses the authorization-code flow with a client secret.
+
 ## Auth flow
 
-1. Frontend sends the browser to same-origin `GET /api/auth/google` (Next.js proxies to Nest).
-2. NestJS completes the Google OAuth handshake at `/api/auth/google/callback` (also proxied).
-3. The backend upserts the `User` row and sets an httpOnly JWT cookie (`mediashelf_token`) on the **frontend** origin.
+1. Frontend sends the browser to same-origin `GET /api/auth/google` or `GET /api/auth/microsoft` (Next.js proxies to Nest).
+2. NestJS completes the OAuth handshake at `/api/auth/google/callback` or `/api/auth/microsoft/callback` (also proxied).
+3. The backend upserts the `User` row (linking Google and Microsoft by email) and sets an httpOnly JWT cookie (`mediashelf_token`) on the **frontend** origin.
 4. Protected API routes use `JwtAuthGuard` (cookie-based); the browser calls `/api/...` so the cookie is first-party.
 5. Protected UI routes (e.g. `/library`) call `GET /api/auth/me` with credentials and redirect to `/login` when unauthenticated.
 
@@ -102,10 +130,11 @@ This same-origin proxy is required in production: separate `*.vercel.app` fronte
 ### Production (Vercel + Supabase) checklist
 
 1. **Frontend** project env: `NEXT_PUBLIC_API_URL=/api`, `API_URL=https://mediashelf-api.vercel.app` (redeploy so `NEXT_PUBLIC_*` is baked in).
-2. **Backend** project env: `DATABASE_URL` (Supabase transaction pooler, port `6543`, `?pgbouncer=true`), `DIRECT_URL` (Supabase direct host `db.<project-ref>.supabase.co:5432`), plus `GOOGLE_*`, `JWT_SECRET`, `FRONTEND_URL`, `CORS_ORIGIN`.
-3. Backend: `GOOGLE_CALLBACK_URL=https://mediashelf-frontend.vercel.app/api/auth/google/callback` (and matching `FRONTEND_URL` / `CORS_ORIGIN`).
+2. **Backend** project env: `DATABASE_URL` (Supabase transaction pooler, port `6543`, `?pgbouncer=true`), `DIRECT_URL` (Supabase direct host `db.<project-ref>.supabase.co:5432`), plus `GOOGLE_*`, `MICROSOFT_*`, `JWT_SECRET`, `FRONTEND_URL`, `CORS_ORIGIN`.
+3. Backend: `GOOGLE_CALLBACK_URL=https://mediashelf-frontend.vercel.app/api/auth/google/callback` and `MICROSOFT_CALLBACK_URL=https://mediashelf-frontend.vercel.app/api/auth/microsoft/callback` (and matching `FRONTEND_URL` / `CORS_ORIGIN`).
 4. Google Cloud Console → authorized JavaScript origin: `https://mediashelf-frontend.vercel.app`; redirect URI: `https://mediashelf-frontend.vercel.app/api/auth/google/callback`.
-5. GitHub Actions secrets (same values as the backend Vercel env): `DATABASE_URL` (pooler) and `DIRECT_URL` (direct host, port `5432`). Pushes to `main` apply Prisma migrations after CI passes.
+5. Entra app registration → **Authentication** → add a **Web** redirect URI: `https://mediashelf-frontend.vercel.app/api/auth/microsoft/callback`.
+6. GitHub Actions secrets (same values as the backend Vercel env): `DATABASE_URL` (pooler) and `DIRECT_URL` (direct host, port `5432`). Pushes to `main` apply Prisma migrations after CI passes.
 
 ## Local development (apps outside Docker)
 

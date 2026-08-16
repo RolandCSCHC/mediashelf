@@ -17,6 +17,7 @@ import {
 import { CurrentUser } from './decorators/current-user.decorator';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { MicrosoftAuthGuard } from './guards/microsoft-auth.guard';
 import {
   AuthUserSchema,
   LogoutResponseSchema,
@@ -49,11 +50,32 @@ export class AuthController {
     @Req() request: Request & { user: AuthUser },
     @Res() response: Response,
   ): void {
-    const token = this.authService.signToken(request.user);
-    response.cookie(AUTH_COOKIE_NAME, token, getAuthCookieOptions());
+    this.completeOAuth(request, response);
+  }
 
-    const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
-    response.redirect(`${frontendUrl}/library`);
+  @Get('microsoft')
+  @UseGuards(MicrosoftAuthGuard)
+  @ApiOperation({
+    summary: 'Start Microsoft OAuth',
+    description:
+      'Redirects the browser to Microsoft. Open this URL in a browser tab — not via Swagger Try it out.',
+  })
+  microsoftAuth(): void {
+    // Passport redirects to Microsoft.
+  }
+
+  @Get('microsoft/callback')
+  @UseGuards(MicrosoftAuthGuard)
+  @ApiOperation({
+    summary: 'Microsoft OAuth callback',
+    description:
+      'Sets the auth cookie and redirects to the frontend library. Invoked by Microsoft after consent.',
+  })
+  microsoftCallback(
+    @Req() request: Request & { user: AuthUser },
+    @Res() response: Response,
+  ): void {
+    this.completeOAuth(request, response);
   }
 
   @Get('me')
@@ -72,5 +94,16 @@ export class AuthController {
   logout(@Res({ passthrough: true }) response: Response): LogoutResponse {
     response.clearCookie(AUTH_COOKIE_NAME, getClearAuthCookieOptions());
     return { success: true };
+  }
+
+  private completeOAuth(
+    request: Request & { user: AuthUser },
+    response: Response,
+  ): void {
+    const token = this.authService.signToken(request.user);
+    response.cookie(AUTH_COOKIE_NAME, token, getAuthCookieOptions());
+
+    const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
+    response.redirect(`${frontendUrl}/library`);
   }
 }

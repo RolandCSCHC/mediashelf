@@ -49,16 +49,21 @@ export const en = {
   home: {
     kicker: 'Your private media library',
     description:
-      'Track movies and TV series in one place. Sign in with Google to open your private library.',
+      'Track movies and TV series in one place. Sign in with Google or Microsoft to open your private library.',
   },
   login: {
     kicker: 'Account',
     title: 'Sign in',
     description:
-      'MediaShelf uses Google accounts only. Your library stays private to your account.',
+      'Sign in with Google or Microsoft. The same email opens the same private library.',
   },
   google: {
     continue: 'Continue with Google',
+  },
+  microsoft: {
+    continue: 'Continue with Microsoft',
+  },
+  oauth: {
     retry: 'Server unavailable — Retry',
     retryShort: 'Retry',
     connecting: 'Waking server…',

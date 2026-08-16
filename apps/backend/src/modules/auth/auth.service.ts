@@ -1,10 +1,15 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import type { AuthUser } from '@mediashelf/shared-types';
-import type { Profile } from 'passport-google-oauth20';
 import type { User as PrismaUser } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { JWT_EXPIRES_IN } from './auth.constants';
+import {
+  normalizeEmail,
+  providerDisplayName,
+  type OAuthProfile,
+  type OAuthProvider,
+} from './oauth-profile';
 import type { JwtPayload } from './strategies/jwt.strategy';
 
 @Injectable()
@@ -14,34 +19,66 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async validateGoogleProfile(profile: Profile): Promise<AuthUser> {
-    const googleId = profile.id;
-    const email = profile.emails?.[0]?.value;
-    const name = profile.displayName ?? null;
-    const picture = profile.photos?.[0]?.value ?? null;
+  async upsertFromOAuth(profile: OAuthProfile): Promise<AuthUser> {
+    const email = normalizeEmail(profile.email);
+    const providerLabel = providerDisplayName(profile.provider);
 
-    if (!email) {
+    if (!profile.providerId) {
       throw new UnauthorizedException(
-        'Google account did not provide an email',
+        `${providerLabel} account did not provide an id`,
       );
     }
 
-    const user = await this.prisma.user.upsert({
-      where: { googleId },
-      update: {
+    if (!email) {
+      throw new UnauthorizedException(
+        `${providerLabel} account did not provide an email`,
+      );
+    }
+
+    const existingByProvider = await this.findByProvider(
+      profile.provider,
+      profile.providerId,
+    );
+
+    if (existingByProvider) {
+      const updated = await this.prisma.user.update({
+        where: { id: existingByProvider.id },
+        data: {
+          email,
+          name: profile.name ?? existingByProvider.name,
+          picture: profile.picture ?? existingByProvider.picture,
+        },
+      });
+      return this.toAuthUser(updated);
+    }
+
+    const existingByEmail = await this.prisma.user.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' } },
+    });
+
+    if (existingByEmail) {
+      const updated = await this.prisma.user.update({
+        where: { id: existingByEmail.id },
+        data: {
+          ...this.providerIdData(profile),
+          email,
+          name: profile.name ?? existingByEmail.name,
+          picture: profile.picture ?? existingByEmail.picture,
+        },
+      });
+      return this.toAuthUser(updated);
+    }
+
+    const created = await this.prisma.user.create({
+      data: {
+        ...this.providerIdData(profile),
         email,
-        name,
-        picture,
-      },
-      create: {
-        googleId,
-        email,
-        name,
-        picture,
+        name: profile.name,
+        picture: profile.picture,
       },
     });
 
-    return this.toAuthUser(user);
+    return this.toAuthUser(created);
   }
 
   async findAuthUserById(id: string): Promise<AuthUser | null> {
@@ -69,5 +106,28 @@ export class AuthService {
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
     };
+  }
+
+  private async findByProvider(
+    provider: OAuthProvider,
+    providerId: string,
+  ): Promise<PrismaUser | null> {
+    if (provider === 'google') {
+      return this.prisma.user.findUnique({ where: { googleId: providerId } });
+    }
+
+    return this.prisma.user.findUnique({
+      where: { microsoftId: providerId },
+    });
+  }
+
+  private providerIdData(
+    profile: OAuthProfile,
+  ): { googleId: string } | { microsoftId: string } {
+    if (profile.provider === 'google') {
+      return { googleId: profile.providerId };
+    }
+
+    return { microsoftId: profile.providerId };
   }
 }

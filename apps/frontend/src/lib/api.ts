@@ -104,6 +104,10 @@ export function getGoogleLoginUrl(): string {
   return `${browserApiUrl}/auth/google`;
 }
 
+export function getMicrosoftLoginUrl(): string {
+  return `${browserApiUrl}/auth/microsoft`;
+}
+
 /** Browser-side health check via the same-origin BFF proxy (wakes a sleeping API). */
 export async function fetchApiHealth(
   timeoutMs = 20_000,

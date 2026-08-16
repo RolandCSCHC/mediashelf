@@ -51,16 +51,21 @@ export const es: Messages = {
   home: {
     kicker: 'Tu biblioteca de medios privada',
     description:
-      'Lleva el control de películas y series en un solo lugar. Inicia sesión con Google para abrir tu biblioteca privada.',
+      'Lleva el control de películas y series en un solo lugar. Inicia sesión con Google o Microsoft para abrir tu biblioteca privada.',
   },
   login: {
     kicker: 'Cuenta',
     title: 'Iniciar sesión',
     description:
-      'MediaShelf solo usa cuentas de Google. Tu biblioteca permanece privada para tu cuenta.',
+      'Inicia sesión con Google o Microsoft. El mismo correo abre la misma biblioteca privada.',
   },
   google: {
     continue: 'Continuar con Google',
+  },
+  microsoft: {
+    continue: 'Continuar con Microsoft',
+  },
+  oauth: {
     retry: 'Servidor no disponible — Reintentar',
     retryShort: 'Reintentar',
     connecting: 'Despertando el servidor…',

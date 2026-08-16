@@ -1,6 +1,6 @@
 'use client';
 
-import { GoogleLoginButton } from '@/components/google-login-button';
+import { LoginButtons } from '@/components/oauth-login-buttons';
 import { useI18n } from '@/components/locale-provider';
 
 export function HomeHero() {
@@ -19,7 +19,7 @@ export function HomeHero() {
       </p>
 
       <div className="ms-animate-fade-up ms-animate-delay-3 mt-8">
-        <GoogleLoginButton />
+        <LoginButtons />
       </div>
     </>
   );

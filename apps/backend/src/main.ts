@@ -36,8 +36,8 @@ async function bootstrap() {
         '',
         'Most endpoints require authentication via an HTTP-only JWT cookie',
         `(\`${AUTH_COOKIE_NAME}\`). Use **Authorize** after signing in through`,
-        '`GET /auth/google` in the browser, then paste the cookie value here',
-        'to try protected routes from this UI.',
+        '`GET /auth/google` or `GET /auth/microsoft` in the browser, then paste',
+        'the cookie value here to try protected routes from this UI.',
       ].join('\n'),
     )
     .setVersion('1.0')

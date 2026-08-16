@@ -73,13 +73,16 @@ The data is highly relational, PostgreSQL is widely used in production, Supabase
 
 ## Authentication
 
-Google OAuth only.
+Google and Microsoft OAuth.
 
 No traditional username/password authentication.
 
+Google and Microsoft sessions that share the same email are the same MediaShelf account.
+
 Store:
 
-- Google ID
+- Google ID (optional)
+- Microsoft ID (optional)
 - Email
 - Name
 - Profile Picture
@@ -184,6 +187,7 @@ The `packages` directory is intended for code shared between the frontend and ba
 ## Authentication
 
 - Google Login
+- Microsoft Login
 - Logout
 - Private user accounts
 
@@ -607,6 +611,7 @@ Production hosting: Next.js and NestJS on Vercel; database on Supabase.
 ## Phase 13
 
 - Add sort in "Add from library" ✓
+- Microsoft Authentication ✓
 
 # Portfolio Goals
 
@@ -619,6 +624,7 @@ This project should demonstrate proficiency in:
 - Prisma
 - Docker
 - Google OAuth
+- Microsoft OAuth
 - REST API development
 - Swagger / OpenAPI
 - TMDB integration

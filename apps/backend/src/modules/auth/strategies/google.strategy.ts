@@ -37,7 +37,13 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     done: VerifyCallback,
   ): Promise<void> {
     try {
-      const user = await this.authService.validateGoogleProfile(profile);
+      const user = await this.authService.upsertFromOAuth({
+        provider: 'google',
+        providerId: profile.id,
+        email: profile.emails?.[0]?.value ?? '',
+        name: profile.displayName ?? null,
+        picture: profile.photos?.[0]?.value ?? null,
+      });
       done(null, user);
     } catch (error) {
       this.logger.error('Google profile validation failed', error);

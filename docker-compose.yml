@@ -39,6 +39,10 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-http://localhost:3000/api/auth/google/callback}
+      MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID:-}
+      MICROSOFT_CLIENT_SECRET: ${MICROSOFT_CLIENT_SECRET:-}
+      MICROSOFT_CALLBACK_URL: ${MICROSOFT_CALLBACK_URL:-http://localhost:3000/api/auth/microsoft/callback}
+      MICROSOFT_TENANT: ${MICROSOFT_TENANT:-common}
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
       TMDB_API_KEY: ${TMDB_API_KEY:-}
     ports:
