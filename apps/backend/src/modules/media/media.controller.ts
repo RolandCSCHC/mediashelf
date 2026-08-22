@@ -30,11 +30,13 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { MediaService } from './media.service';
 import { CreateManualMediaDto } from './dto/create-manual-media.dto';
 import { ImportMediaDto } from './dto/import-media.dto';
+import { RefreshLastAirDatesDto } from './dto/refresh-last-air-dates.dto';
 import { UpdateMediaItemDto } from './dto/update-media-item.dto';
 import { ListMediaQueryDto } from './dto/list-media-query.dto';
 import {
   MediaItemSchema,
   PaginatedMediaResponseSchema,
+  RefreshLastAirDatesResponseSchema,
 } from '../../swagger/api-schemas';
 
 @ApiTags('Media')
@@ -76,6 +78,23 @@ export class MediaController {
     @Body() body: CreateManualMediaDto,
   ): Promise<MediaItem> {
     return this.mediaService.createManual(user.id, body);
+  }
+
+  @Post('refresh-last-air-dates')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Backfill last episode air dates from TMDB for existing series',
+  })
+  @ApiOkResponse({ type: RefreshLastAirDatesResponseSchema })
+  async refreshLastAirDates(
+    @CurrentUser() user: AuthUser,
+    @Body() body: RefreshLastAirDatesDto,
+  ): Promise<{ items: MediaItem[] }> {
+    const items = await this.mediaService.refreshLastAirDates(
+      user.id,
+      body.mediaItemIds,
+    );
+    return { items };
   }
 
   @Post()

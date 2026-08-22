@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import type {
@@ -18,6 +19,8 @@ import type { UpdateMediaItemDto } from './dto/update-media-item.dto';
 
 @Injectable()
 export class MediaService {
+  private readonly logger = new Logger(MediaService.name);
+
   constructor(
     private readonly mediaRepository: MediaRepository,
     private readonly tmdbService: TmdbService,
@@ -130,6 +133,50 @@ export class MediaService {
     return toMediaItem(created);
   }
 
+  async refreshLastAirDates(
+    userId: string,
+    mediaItemIds: string[],
+  ): Promise<MediaItem[]> {
+    const uniqueIds = Array.from(new Set(mediaItemIds));
+    const pending = await this.mediaRepository.findTmdbSeriesMissingLastAirDate(
+      userId,
+      uniqueIds,
+    );
+
+    const updated = await Promise.all(
+      pending.map(async (item) => {
+        if (item.tmdbId == null) {
+          return null;
+        }
+
+        try {
+          const details = await this.tmdbService.getDetails(
+            item.tmdbId,
+            MediaType.SERIES,
+          );
+          if (!details.lastAirDate) {
+            return null;
+          }
+
+          const saved = await this.mediaRepository.updateOwned(
+            item.id,
+            userId,
+            { lastAirDate: details.lastAirDate },
+          );
+          return saved ? toMediaItem(saved) : null;
+        } catch (error) {
+          this.logger.warn(
+            `Failed to refresh last air date for ${item.id}`,
+            error instanceof Error ? error.message : error,
+          );
+          return null;
+        }
+      }),
+    );
+
+    return updated.filter((item): item is MediaItem => item !== null);
+  }
+
   async createManual(
     userId: string,
     dto: CreateManualMediaDto,
@@ -178,6 +225,7 @@ export class MediaService {
       posterPath: string | null;
       backdropPath: string | null;
       releaseDate: string | null;
+      lastAirDate: string | null;
       genres: string[];
       runtime: number | null;
       status: MediaStatus;
@@ -199,6 +247,7 @@ export class MediaService {
       posterPath: data.posterPath,
       backdropPath: data.backdropPath,
       releaseDate: data.releaseDate ? new Date(data.releaseDate) : null,
+      lastAirDate: data.lastAirDate ? new Date(data.lastAirDate) : null,
       genres: data.genres,
       runtime: data.runtime,
       status: data.status,

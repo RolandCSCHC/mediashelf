@@ -100,6 +100,7 @@ Use TMDB to:
 - Retrieve posters
 - Retrieve descriptions
 - Retrieve release dates
+- Retrieve last episode air dates
 - Retrieve genres
 - Retrieve seasons
 - Retrieve episodes
@@ -206,7 +207,8 @@ Each media item should contain information such as:
 - Description
 - Poster
 - Backdrop
-- Release date
+- Release date (day, month, and year)
+- Last episode air date (series; existing titles are backfilled from TMDB)
 - Genres
 - Runtime
 - Media type (Movie / Series)
@@ -394,6 +396,7 @@ Primary library resource:
 - `GET /media`
 - `GET /media?status=WATCHING&type=SERIES&sortBy=TITLE&page=1&pageSize=25`
 - `POST /media`
+- `POST /media/refresh-last-air-dates`
 - `GET /media/:id`
 - `PATCH /media/:id`
 - `DELETE /media/:id`
@@ -615,7 +618,7 @@ Production hosting: Next.js and NestJS on Vercel; database on Neon.
 
 ## Phase 14
 - Tutorial
-- Complete release date
+- Complete release date ✓
 - Warning when movie/last episode is released
 - Cellphone port
 - Tasks to save database daily

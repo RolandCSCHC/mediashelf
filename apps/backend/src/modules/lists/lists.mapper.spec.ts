@@ -24,6 +24,7 @@ function buildPrismaMediaItem(
     posterPath: null,
     backdropPath: null,
     releaseDate: null,
+    lastAirDate: null,
     genres: [],
     runtime: null,
     status: 'WATCHING',

@@ -10,13 +10,15 @@ import { ListMembershipControls } from '@/components/list-membership-controls';
 import { LibraryTmdbCredits } from '@/components/library-tmdb-credits';
 import { MediaItemControls } from '@/components/media-item-controls';
 import { getMedia } from '@/lib/api';
+import { formatReleaseLabel } from '@/lib/format-date';
+import { useRefreshLastAirDates } from '@/lib/refresh-last-air-dates';
 import { tmdbPosterUrl } from '@/lib/tmdb-images';
 import { useI18n } from '@/components/locale-provider';
 
 const LIST_ID_PATTERN = /^[a-z0-9]+$/i;
 
 function MediaDetailContent() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const params = useParams<{ id: string }>();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -52,9 +54,11 @@ function MediaDetailContent() {
   }, [load]);
 
   const poster = item ? tmdbPosterUrl(item.posterPath, 'w500') : null;
-  const year = item?.releaseDate
-    ? new Date(item.releaseDate).getFullYear()
-    : null;
+  const releaseLabel = item ? formatReleaseLabel(item, locale) : null;
+
+  useRefreshLastAirDates(item ? [item] : [], (updated) => {
+    setItem(updated);
+  });
 
   return (
     <AppShell width="wide">
@@ -96,7 +100,7 @@ function MediaDetailContent() {
             <div>
               <p className="text-sm uppercase tracking-[0.2em] text-muted">
                 {item.type === 'MOVIE' ? t('common.movie') : t('common.series')}
-                {year ? ` · ${year}` : ''}
+                {releaseLabel ? ` · ${releaseLabel}` : ''}
               </p>
               <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
                 {item.title}

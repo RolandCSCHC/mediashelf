@@ -17,6 +17,8 @@ import type {
   MediaItem,
   MediaListMembership,
   PaginatedMediaResponse,
+  RefreshLastAirDatesRequest,
+  RefreshLastAirDatesResponse,
   TmdbSearchResponse,
   TmdbTitleDetails,
   UpdateCustomListRequest,
@@ -218,6 +220,18 @@ export async function updateMedia(
     method: 'PATCH',
     body: JSON.stringify(payload),
   });
+}
+
+export async function refreshLastAirDates(
+  payload: RefreshLastAirDatesRequest,
+): Promise<RefreshLastAirDatesResponse> {
+  return apiFetch<RefreshLastAirDatesResponse>(
+    '/media/refresh-last-air-dates',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+  );
 }
 
 export async function deleteMedia(id: string): Promise<void> {

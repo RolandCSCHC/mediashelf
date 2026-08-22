@@ -15,6 +15,7 @@ function buildPrismaMediaItem(
     posterPath: '/poster.jpg',
     backdropPath: '/backdrop.jpg',
     releaseDate: new Date('2020-01-15T00:00:00.000Z'),
+    lastAirDate: null,
     genres: ['Drama'],
     runtime: 120,
     status: 'WATCHLIST',
@@ -41,6 +42,7 @@ describe('toMediaItem', () => {
       posterPath: '/poster.jpg',
       backdropPath: '/backdrop.jpg',
       releaseDate: '2020-01-15T00:00:00.000Z',
+      lastAirDate: null,
       genres: ['Drama'],
       runtime: 120,
       status: MediaStatus.WATCHLIST,
@@ -60,6 +62,7 @@ describe('toMediaItem', () => {
         posterPath: null,
         backdropPath: null,
         releaseDate: null,
+        lastAirDate: null,
         runtime: null,
         notes: null,
         dateWatched: null,
@@ -73,11 +76,23 @@ describe('toMediaItem', () => {
     expect(result.posterPath).toBeNull();
     expect(result.backdropPath).toBeNull();
     expect(result.releaseDate).toBeNull();
+    expect(result.lastAirDate).toBeNull();
     expect(result.runtime).toBeNull();
     expect(result.notes).toBeNull();
     expect(result.dateWatched).toBeNull();
     expect(result.type).toBe(MediaType.SERIES);
     expect(result.status).toBe(MediaStatus.WATCHED);
+  });
+
+  it('converts lastAirDate to ISO when present', () => {
+    const result = toMediaItem(
+      buildPrismaMediaItem({
+        type: 'SERIES',
+        lastAirDate: new Date('2013-09-29T00:00:00.000Z'),
+      }),
+    );
+
+    expect(result.lastAirDate).toBe('2013-09-29T00:00:00.000Z');
   });
 
   it('converts dateWatched to ISO when present', () => {

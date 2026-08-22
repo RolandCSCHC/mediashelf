@@ -55,6 +55,7 @@ import {
 import { resolvePageSize } from '@/lib/media-pagination';
 import { mediaCollectionClassName } from '@/lib/media-view-mode';
 import { formatListStateSummary } from '@/lib/list-state';
+import { useRefreshLastAirDates } from '@/lib/refresh-last-air-dates';
 
 function toListQuery(filters: LibraryFiltersState): ListMediaQuery {
   const search = filters.search.trim();
@@ -258,6 +259,11 @@ function ListDetailContent() {
         : prev,
     );
   }
+
+  useRefreshLastAirDates(
+    list?.items.map((entry) => entry.mediaItem) ?? [],
+    handleUpdated,
+  );
 
   async function handleDeleted() {
     setActionError(null);

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
 import { useI18n } from '@/components/locale-provider';
 import { addMediaItemsToList, listAllMedia } from '@/lib/api';
+import { formatReleaseLabel } from '@/lib/format-date';
 import { compareMediaItems, MEDIA_SORT_OPTIONS } from '@/lib/media-filters';
 import { tmdbPosterUrl } from '@/lib/tmdb-images';
 
@@ -29,7 +30,7 @@ export function AddLibraryToListModal({
   onAdded,
   onError,
 }: AddLibraryToListModalProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [library, setLibrary] = useState<MediaItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -262,9 +263,7 @@ export function AddLibraryToListModal({
               <ul className="divide-y divide-border">
                 {visibleItems.map((item) => {
                   const poster = tmdbPosterUrl(item.posterPath, 'w185');
-                  const year = item.releaseDate
-                    ? new Date(item.releaseDate).getFullYear()
-                    : null;
+                  const releaseLabel = formatReleaseLabel(item, locale);
                   const checked = selectedIds.has(item.id);
 
                   return (
@@ -296,7 +295,7 @@ export function AddLibraryToListModal({
                             {item.type === MediaType.MOVIE
                               ? t('common.movie')
                               : t('common.series')}
-                            {year ? ` · ${year}` : ''}
+                            {releaseLabel ? ` · ${releaseLabel}` : ''}
                           </p>
                         </div>
                       </label>

@@ -166,6 +166,7 @@ describe('tmdb.mapper', () => {
       expect(details.title).toBe('Fight Club');
       expect(details.runtime).toBe(139);
       expect(details.seasonCount).toBeNull();
+      expect(details.lastAirDate).toBeNull();
       expect(details.creators).toEqual([]);
       expect(details.directors).toHaveLength(1);
       expect(details.cast[0]?.name).toBe('Edward Norton');
@@ -196,6 +197,7 @@ describe('tmdb.mapper', () => {
         name: 'Breaking Bad',
         overview: 'A chemistry teacher...',
         first_air_date: '2008-01-20',
+        last_air_date: '2013-09-29',
         genres: [{ id: 18, name: 'Drama' }],
         episode_run_time: [47, 58],
         vote_average: 8.9,
@@ -215,6 +217,8 @@ describe('tmdb.mapper', () => {
       });
 
       expect(details.type).toBe(MediaType.SERIES);
+      expect(details.releaseDate).toBe('2008-01-20');
+      expect(details.lastAirDate).toBe('2013-09-29');
       expect(details.runtime).toBe(47);
       expect(details.seasonCount).toBe(5);
       expect(details.creators[0]?.name).toBe('Vince Gilligan');

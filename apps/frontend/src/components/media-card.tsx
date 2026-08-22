@@ -12,6 +12,7 @@ import { useI18n } from '@/components/locale-provider';
 import { mediaStatusLabelKey } from '@/lib/media-status';
 import { formatSeriesProgress } from '@/lib/media-filters';
 import type { MediaViewMode } from '@/lib/media-view-mode';
+import { formatReleaseLabel } from '@/lib/format-date';
 import { tmdbPosterUrl } from '@/lib/tmdb-images';
 
 type MediaCardProps = {
@@ -60,15 +61,13 @@ export function MediaCard({
   onDeleted,
   onError,
 }: MediaCardProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const href = mediaDetailHref(item.id, fromListId);
   const poster = tmdbPosterUrl(
     item.posterPath,
     variant === 'list' ? 'w185' : 'w500',
   );
-  const year = item.releaseDate
-    ? new Date(item.releaseDate).getFullYear()
-    : null;
+  const releaseLabel = formatReleaseLabel(item, locale);
   const progress =
     item.type === 'SERIES'
       ? formatSeriesProgress(progressSeason, progressEpisode)
@@ -78,7 +77,7 @@ export function MediaCard({
   const meta = (
     <>
       <TypeLabel type={item.type} />
-      {year ? ` · ${year}` : ''}
+      {releaseLabel ? ` · ${releaseLabel}` : ''}
       {` · ${t(mediaStatusLabelKey(displayedStatus))}`}
       {progress ? ` · ${progress}` : ''}
       {displayedDownloaded ? ` · ${t('common.downloaded')}` : ''}

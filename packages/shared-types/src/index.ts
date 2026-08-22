@@ -52,6 +52,7 @@ export interface MediaItem {
   posterPath: string | null;
   backdropPath: string | null;
   releaseDate: string | null;
+  lastAirDate: string | null;
   genres: string[];
   runtime: number | null;
   status: MediaStatus;
@@ -109,6 +110,7 @@ export interface TmdbTitleDetails {
   posterPath: string | null;
   backdropPath: string | null;
   releaseDate: string | null;
+  lastAirDate: string | null;
   genres: string[];
   runtime: number | null;
   voteAverage: number | null;
@@ -128,6 +130,17 @@ export interface UpdateMediaItemRequest {
   downloaded?: boolean;
   notes?: string | null;
   dateWatched?: string | null;
+}
+
+/** Max series to backfill from TMDB in one request. */
+export const REFRESH_LAST_AIR_DATES_MAX = 25;
+
+export interface RefreshLastAirDatesRequest {
+  mediaItemIds: string[];
+}
+
+export interface RefreshLastAirDatesResponse {
+  items: MediaItem[];
 }
 
 /** Request every matching item in one page. */
@@ -266,6 +279,7 @@ export interface LibraryBackupMediaItem {
   posterPath: string | null;
   backdropPath: string | null;
   releaseDate: string | null;
+  lastAirDate?: string | null;
   genres: string[];
   runtime: number | null;
   status: MediaStatus;

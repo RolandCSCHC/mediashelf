@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type { MediaType, TmdbSearchResult } from '@mediashelf/shared-types';
 import { AddToLibraryButton } from '@/components/add-to-library-button';
 import { useI18n } from '@/components/locale-provider';
+import { formatReleaseLabel } from '@/lib/format-date';
 import { tmdbPosterUrl } from '@/lib/tmdb-images';
 import { tmdbPreviewHref } from '@/lib/tmdb-preview';
 
@@ -22,11 +23,9 @@ export function SearchResultCard({
   libraryItemId = null,
   onImported,
 }: SearchResultCardProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const poster = tmdbPosterUrl(result.posterPath, 'w185');
-  const year = result.releaseDate
-    ? new Date(result.releaseDate).getFullYear()
-    : null;
+  const releaseLabel = formatReleaseLabel(result, locale);
   const href = tmdbPreviewHref(result.type, result.tmdbId, searchQuery);
 
   return (
@@ -62,7 +61,7 @@ export function SearchResultCard({
           </h3>
           <span className="text-xs uppercase tracking-wide text-muted">
             {result.type === 'MOVIE' ? t('common.movie') : t('common.series')}
-            {year ? ` · ${year}` : ''}
+            {releaseLabel ? ` · ${releaseLabel}` : ''}
           </span>
         </div>
         {result.overview ? (

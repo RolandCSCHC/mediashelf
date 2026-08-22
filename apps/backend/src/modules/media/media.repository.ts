@@ -94,6 +94,25 @@ export class MediaRepository {
     });
   }
 
+  findTmdbSeriesMissingLastAirDate(
+    userId: string,
+    ids: string[],
+  ): Promise<PrismaMediaItem[]> {
+    if (ids.length === 0) {
+      return Promise.resolve([]);
+    }
+
+    return this.prisma.mediaItem.findMany({
+      where: {
+        userId,
+        id: { in: ids },
+        type: 'SERIES',
+        tmdbId: { not: null },
+        lastAirDate: null,
+      },
+    });
+  }
+
   findByUserAndTmdb(
     userId: string,
     tmdbId: number,
@@ -141,6 +160,7 @@ export class MediaRepository {
         posterPath: details.posterPath,
         backdropPath: details.backdropPath,
         releaseDate: details.releaseDate,
+        lastAirDate: details.lastAirDate,
         genres: details.genres,
         runtime: details.runtime,
         ...(options?.status !== undefined ? { status: options.status } : {}),
@@ -192,6 +212,7 @@ export class MediaRepository {
       posterPath: string | null;
       backdropPath: string | null;
       releaseDate: Date | null;
+      lastAirDate: Date | null;
       genres: string[];
       runtime: number | null;
       status: MediaStatus;
@@ -210,6 +231,7 @@ export class MediaRepository {
         posterPath: data.posterPath,
         backdropPath: data.backdropPath,
         releaseDate: data.releaseDate,
+        lastAirDate: data.lastAirDate,
         genres: data.genres,
         runtime: data.runtime,
         status: data.status,
@@ -228,6 +250,7 @@ export class MediaRepository {
       downloaded?: boolean;
       notes?: string | null;
       dateWatched?: Date | null;
+      lastAirDate?: Date | null;
     },
   ): Promise<PrismaMediaItem | null> {
     const result = await this.prisma.mediaItem.updateMany({

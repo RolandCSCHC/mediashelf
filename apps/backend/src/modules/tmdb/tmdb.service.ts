@@ -43,6 +43,7 @@ export type TmdbMediaDetails = {
   posterPath: string | null;
   backdropPath: string | null;
   releaseDate: Date | null;
+  lastAirDate: Date | null;
   genres: string[];
   runtime: number | null;
 };
@@ -158,6 +159,7 @@ export class TmdbService {
       posterPath: movie.poster_path ?? null,
       backdropPath: movie.backdrop_path ?? null,
       releaseDate: this.parseDate(movie.release_date),
+      lastAirDate: null,
       genres: (movie.genres ?? []).map((genre) => genre.name),
       runtime: movie.runtime ?? null,
     };
@@ -175,6 +177,7 @@ export class TmdbService {
       posterPath: series.poster_path ?? null,
       backdropPath: series.backdrop_path ?? null,
       releaseDate: this.parseDate(series.first_air_date),
+      lastAirDate: this.parseDate(series.last_air_date),
       genres: (series.genres ?? []).map((genre) => genre.name),
       runtime: episodeRuntime,
     };

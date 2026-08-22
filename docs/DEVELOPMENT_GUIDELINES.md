@@ -151,6 +151,10 @@ GET /media?status=WATCHING&type=SERIES&sortBy=TITLE&page=1&pageSize=25
 
 POST /media
 
+POST /media/manual
+
+POST /media/refresh-last-air-dates
+
 GET /media/:id
 
 PATCH /media/:id

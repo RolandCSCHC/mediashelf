@@ -46,6 +46,7 @@ export type TmdbTvDetailsResponse = {
   poster_path?: string | null;
   backdrop_path?: string | null;
   first_air_date?: string;
+  last_air_date?: string;
   genres?: TmdbGenre[];
   episode_run_time?: number[];
   vote_average?: number;

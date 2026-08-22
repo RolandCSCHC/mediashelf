@@ -60,6 +60,12 @@ export class LibraryBackupMediaItemDto {
   @MaxLength(40)
   releaseDate!: string | null;
 
+  @IsOptional()
+  @ValidateIf((_, value) => value !== null)
+  @IsString()
+  @MaxLength(40)
+  lastAirDate?: string | null;
+
   @IsArray()
   @ArrayMaxSize(50)
   @IsString({ each: true })

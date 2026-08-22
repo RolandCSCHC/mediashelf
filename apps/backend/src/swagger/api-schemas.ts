@@ -66,6 +66,9 @@ export class MediaItemSchema {
   @ApiPropertyOptional({ nullable: true, type: String })
   releaseDate!: string | null;
 
+  @ApiPropertyOptional({ nullable: true, type: String })
+  lastAirDate!: string | null;
+
   @ApiProperty({ type: [String] })
   genres!: string[];
 
@@ -154,6 +157,9 @@ export class TmdbTitleDetailsSchema {
 
   @ApiPropertyOptional({ nullable: true, type: String })
   releaseDate!: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  lastAirDate!: string | null;
 
   @ApiProperty({ type: [String] })
   genres!: string[];
@@ -275,6 +281,11 @@ export class PaginatedMediaResponseSchema {
   genres!: string[];
 }
 
+export class RefreshLastAirDatesResponseSchema {
+  @ApiProperty({ type: [MediaItemSchema] })
+  items!: MediaItemSchema[];
+}
+
 export class MediaListMembershipSchema {
   @ApiProperty()
   listId!: string;
@@ -322,6 +333,9 @@ export class LibraryBackupMediaItemSchema {
 
   @ApiPropertyOptional({ nullable: true, type: String })
   releaseDate!: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  lastAirDate?: string | null;
 
   @ApiProperty({ type: [String] })
   genres!: string[];

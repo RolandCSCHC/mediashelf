@@ -9,6 +9,7 @@ import { AppShell } from '@/components/app-shell';
 import { AuthGuard } from '@/components/auth-guard';
 import { TmdbTitleCredits } from '@/components/tmdb-title-credits';
 import { getTmdbTitle, listAllMedia } from '@/lib/api';
+import { formatReleaseLabel } from '@/lib/format-date';
 import { tmdbBackdropUrl, tmdbPosterUrl } from '@/lib/tmdb-images';
 import { mediaTypeFromPreviewKind, searchHref } from '@/lib/tmdb-preview';
 import { useI18n } from '@/components/locale-provider';
@@ -28,7 +29,7 @@ function formatRuntime(
 }
 
 function TmdbPreviewContent() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const params = useParams<{ type: string; tmdbId: string }>();
   const searchParams = useSearchParams();
   const mediaType = mediaTypeFromPreviewKind(params.type);
@@ -79,9 +80,7 @@ function TmdbPreviewContent() {
   const backdrop = details
     ? tmdbBackdropUrl(details.backdropPath, 'w1280')
     : null;
-  const year = details?.releaseDate
-    ? new Date(details.releaseDate).getFullYear()
-    : null;
+  const releaseLabel = details ? formatReleaseLabel(details, locale) : null;
   const runtime = details
     ? formatRuntime(details.runtime, details.type, t)
     : null;
@@ -95,7 +94,7 @@ function TmdbPreviewContent() {
       : null;
   const meta = [
     details?.type === 'MOVIE' ? t('common.movie') : t('common.series'),
-    year ? String(year) : null,
+    releaseLabel,
     runtime,
     seasons,
     rating ? t('preview.tmdbRating', { rating }) : null,

@@ -13,6 +13,7 @@ export function toMediaItem(item: PrismaMediaItem): MediaItem {
     posterPath: item.posterPath,
     backdropPath: item.backdropPath,
     releaseDate: item.releaseDate?.toISOString() ?? null,
+    lastAirDate: item.lastAirDate?.toISOString() ?? null,
     genres: item.genres,
     runtime: item.runtime,
     status: item.status as MediaStatus,

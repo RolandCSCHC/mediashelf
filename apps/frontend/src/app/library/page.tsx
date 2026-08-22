@@ -30,6 +30,7 @@ import { useI18n } from '@/components/locale-provider';
 import { Button } from '@/components/ui/button';
 import { listCustomLists, listMedia } from '@/lib/api';
 import { resolvePageSize } from '@/lib/media-pagination';
+import { useRefreshLastAirDates } from '@/lib/refresh-last-air-dates';
 import { mediaCollectionClassName } from '@/lib/media-view-mode';
 
 function toListQuery(filters: LibraryFiltersState): ListMediaQuery {
@@ -169,6 +170,8 @@ function LibraryContent() {
       prev.map((item) => (item.id === updated.id ? updated : item)),
     );
   }
+
+  useRefreshLastAirDates(items, handleUpdated);
 
   function handleDeleted(id: string) {
     setActionError(null);
