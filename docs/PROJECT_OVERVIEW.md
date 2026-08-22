@@ -293,6 +293,14 @@ Allow filtering by:
 - Genre
 - Movie / Series
 - Downloaded
+- Released (Upcoming titles whose movie release or last episode date has arrived)
+
+Movie and series cards (and detail pages) show a date badge when a usable date exists:
+
+- **Out now** (accent) when the movie release or last episode date has arrived, in any status
+- **Not out yet** (red) when that date is still in the future
+
+Titles with no date have no badge. The Released filter still only applies to Upcoming titles.
 
 ---
 
@@ -395,6 +403,7 @@ Primary library resource:
 
 - `GET /media`
 - `GET /media?status=WATCHING&type=SERIES&sortBy=TITLE&page=1&pageSize=25`
+- `GET /media?released=true`
 - `POST /media`
 - `POST /media/refresh-last-air-dates`
 - `GET /media/:id`
@@ -619,7 +628,7 @@ Production hosting: Next.js and NestJS on Vercel; database on Neon.
 ## Phase 14
 - Tutorial
 - Complete release date ✓
-- Warning when movie/last episode is released
+- Warning when movie/last episode is released ✓
 - Cellphone port
 - Tasks to save database daily
 

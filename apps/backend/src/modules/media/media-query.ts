@@ -1,8 +1,32 @@
-import { MediaSortBy, type ListMediaQuery } from '@mediashelf/shared-types';
+import {
+  MediaSortBy,
+  MediaStatus,
+  startOfTomorrowUtc,
+  type ListMediaQuery,
+} from '@mediashelf/shared-types';
 import type { Prisma } from '@prisma/client';
+
+export function buildDateArrivedWhere(
+  now = new Date(),
+): Prisma.MediaItemWhereInput {
+  const beforeTomorrow = startOfTomorrowUtc(now);
+
+  return {
+    OR: [
+      { type: 'MOVIE', releaseDate: { lt: beforeTomorrow } },
+      { type: 'SERIES', lastAirDate: { lt: beforeTomorrow } },
+      {
+        type: 'SERIES',
+        lastAirDate: null,
+        releaseDate: { lt: beforeTomorrow },
+      },
+    ],
+  };
+}
 
 export function buildMediaItemWhere(
   filters: ListMediaQuery,
+  now = new Date(),
 ): Prisma.MediaItemWhereInput {
   const where: Prisma.MediaItemWhereInput = {};
 
@@ -26,7 +50,18 @@ export function buildMediaItemWhere(
     where.title = { contains: filters.search, mode: 'insensitive' };
   }
 
-  return where;
+  if (filters.released === undefined) {
+    return where;
+  }
+
+  const releasedClause: Prisma.MediaItemWhereInput[] = [
+    { status: MediaStatus.UPCOMING },
+    filters.released
+      ? buildDateArrivedWhere(now)
+      : { NOT: buildDateArrivedWhere(now) },
+  ];
+
+  return { AND: [where, ...releasedClause] };
 }
 
 export function buildMediaItemOrderBy(

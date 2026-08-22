@@ -51,6 +51,11 @@ export class ListMediaQueryDto {
   downloaded?: boolean;
 
   @IsOptional()
+  @Transform(({ value }) => toOptionalBoolean(value))
+  @IsBoolean()
+  released?: boolean;
+
+  @IsOptional()
   @IsString()
   @MinLength(1)
   listId?: string;

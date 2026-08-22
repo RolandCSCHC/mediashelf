@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import type { MediaType, TmdbSearchResult } from '@mediashelf/shared-types';
 import { AddToLibraryButton } from '@/components/add-to-library-button';
+import { ReleaseStatusBadge } from '@/components/release-status-badge';
 import { useI18n } from '@/components/locale-provider';
 import { formatReleaseLabel } from '@/lib/format-date';
 import { tmdbPosterUrl } from '@/lib/tmdb-images';
@@ -32,7 +33,7 @@ export function SearchResultCard({
     <article className="flex gap-4 rounded-lg border border-border bg-surface p-3 transition hover:border-accent/40 sm:p-4">
       <Link
         href={href}
-        className="h-36 w-24 shrink-0 overflow-hidden rounded-md bg-[var(--overlay)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)] sm:h-40 sm:w-28"
+        className="relative h-36 w-24 shrink-0 overflow-hidden rounded-md bg-[var(--overlay)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)] sm:h-40 sm:w-28"
       >
         {poster ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -47,6 +48,10 @@ export function SearchResultCard({
             {t('common.noPoster')}
           </div>
         )}
+        <ReleaseStatusBadge
+          item={result}
+          className="absolute right-1.5 top-1.5"
+        />
       </Link>
 
       <div className="flex min-w-0 flex-1 flex-col">

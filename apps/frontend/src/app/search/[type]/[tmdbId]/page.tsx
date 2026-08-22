@@ -6,6 +6,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import type { TmdbTitleDetails } from '@mediashelf/shared-types';
 import { AddToLibraryButton } from '@/components/add-to-library-button';
 import { AppShell } from '@/components/app-shell';
+import { ReleaseStatusBadge } from '@/components/release-status-badge';
 import { AuthGuard } from '@/components/auth-guard';
 import { TmdbTitleCredits } from '@/components/tmdb-title-credits';
 import { getTmdbTitle, listAllMedia } from '@/lib/api';
@@ -156,6 +157,7 @@ function TmdbPreviewContent() {
               <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
                 {details.title}
               </h1>
+              <ReleaseStatusBadge item={details} size="md" className="mt-3" />
 
               {details.genres.length > 0 ? (
                 <p className="mt-3 text-sm text-muted">

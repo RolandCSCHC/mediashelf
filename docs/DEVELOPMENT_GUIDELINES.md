@@ -149,6 +149,8 @@ GET /media
 
 GET /media?status=WATCHING&type=SERIES&sortBy=TITLE&page=1&pageSize=25
 
+GET /media?released=true
+
 POST /media
 
 POST /media/manual

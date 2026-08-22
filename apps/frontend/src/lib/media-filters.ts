@@ -2,6 +2,7 @@ import {
   MediaSortBy,
   MediaStatus,
   MediaType,
+  isReleasedUpcoming,
   type MediaItem,
 } from '@mediashelf/shared-types';
 import type { MessageKey } from '@/i18n';
@@ -45,11 +46,21 @@ export const DOWNLOADED_FILTER_OPTIONS: {
   { value: 'false', labelKey: 'common.notDownloaded' },
 ];
 
+export const RELEASED_FILTER_OPTIONS: {
+  value: '' | 'true' | 'false';
+  labelKey: MessageKey;
+}[] = [
+  { value: '', labelKey: 'filters.anyRelease' },
+  { value: 'true', labelKey: 'common.outNow' },
+  { value: 'false', labelKey: 'filters.notYetReleased' },
+];
+
 export type MediaFilterSortInput = {
   status: '' | MediaStatus;
   type: '' | MediaType;
   genre: string;
   downloaded: '' | 'true' | 'false';
+  released?: '' | 'true' | 'false';
   search?: string;
   sortBy: MediaSortBy;
 };
@@ -71,6 +82,16 @@ export function matchesMediaFilters(
     return false;
   }
   if (filters.downloaded === 'false' && item.downloaded) {
+    return false;
+  }
+  if (filters.released === 'true' && !isReleasedUpcoming(item, item.status)) {
+    return false;
+  }
+  if (
+    filters.released === 'false' &&
+    (item.status !== MediaStatus.UPCOMING ||
+      isReleasedUpcoming(item, item.status))
+  ) {
     return false;
   }
   const query = filters.search?.trim().toLowerCase();

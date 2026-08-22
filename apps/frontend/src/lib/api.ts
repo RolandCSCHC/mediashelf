@@ -82,6 +82,9 @@ function toQueryString(query: ListMediaQuery): string {
   if (query.downloaded !== undefined) {
     params.set('downloaded', String(query.downloaded));
   }
+  if (query.released !== undefined) {
+    params.set('released', String(query.released));
+  }
   if (query.listId) {
     params.set('listId', query.listId);
   }

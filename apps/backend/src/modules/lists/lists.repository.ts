@@ -8,6 +8,7 @@ import type {
 import type { ListMediaQuery } from '@mediashelf/shared-types';
 import { resolvePagination, uniqueSortedGenres } from '../../common/pagination';
 import {
+  buildDateArrivedWhere,
   buildMediaItemOrderBy,
   buildMediaItemWhere,
 } from '../media/media-query';
@@ -66,12 +67,23 @@ export class ListsRepository {
       return null;
     }
 
-    const { status, downloaded, ...mediaFilters } = filters;
+    const { status, downloaded, released, ...mediaFilters } = filters;
     const itemWhere: Prisma.CustomListItemWhereInput = {
       listId: id,
-      ...(status ? { status } : {}),
-      ...(downloaded !== undefined ? { downloaded } : {}),
-      mediaItem: buildMediaItemWhere(mediaFilters),
+      AND: [
+        ...(status ? [{ status }] : []),
+        ...(downloaded !== undefined ? [{ downloaded }] : []),
+        ...(released !== undefined ? [{ status: 'UPCOMING' as const }] : []),
+        {
+          mediaItem: {
+            AND: [
+              buildMediaItemWhere(mediaFilters),
+              ...(released === true ? [buildDateArrivedWhere()] : []),
+              ...(released === false ? [{ NOT: buildDateArrivedWhere() }] : []),
+            ],
+          },
+        },
+      ],
     };
 
     const [total, metaRows] = await Promise.all([

@@ -166,6 +166,8 @@ export interface ListMediaQuery {
   type?: MediaType;
   genre?: string;
   downloaded?: boolean;
+  /** Upcoming titles whose release / last-air date has arrived (`true`) or not yet (`false`). */
+  released?: boolean;
   listId?: string;
   search?: string;
   sortBy?: MediaSortBy;
@@ -328,3 +330,12 @@ export interface LibraryBackupImportResponse {
   errorCount: number;
   errors: string[];
 }
+
+export {
+  hasDateArrived,
+  isReleasedUpcoming,
+  releaseAvailability,
+  relevantAirDate,
+  startOfTomorrowUtc,
+} from './release-status';
+export type { ReleaseAvailability } from './release-status';

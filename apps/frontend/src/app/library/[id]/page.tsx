@@ -9,6 +9,7 @@ import { AuthGuard } from '@/components/auth-guard';
 import { ListMembershipControls } from '@/components/list-membership-controls';
 import { LibraryTmdbCredits } from '@/components/library-tmdb-credits';
 import { MediaItemControls } from '@/components/media-item-controls';
+import { ReleaseStatusBadge } from '@/components/release-status-badge';
 import { getMedia } from '@/lib/api';
 import { formatReleaseLabel } from '@/lib/format-date';
 import { useRefreshLastAirDates } from '@/lib/refresh-last-air-dates';
@@ -102,6 +103,7 @@ function MediaDetailContent() {
                 {item.type === 'MOVIE' ? t('common.movie') : t('common.series')}
                 {releaseLabel ? ` · ${releaseLabel}` : ''}
               </p>
+              <ReleaseStatusBadge item={item} size="md" className="mt-2" />
               <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
                 {item.title}
               </h1>

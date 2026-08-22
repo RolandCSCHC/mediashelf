@@ -66,6 +66,7 @@ function toListQuery(filters: LibraryFiltersState): ListMediaQuery {
     ...(filters.downloaded
       ? { downloaded: filters.downloaded === 'true' }
       : {}),
+    ...(filters.released ? { released: filters.released === 'true' } : {}),
     ...(search ? { search } : {}),
     sortBy: filters.sortBy,
   };
@@ -118,6 +119,7 @@ function ListDetailContent() {
         type: filters.type,
         genre: filters.genre,
         downloaded: filters.downloaded,
+        released: filters.released,
         listId: filters.listId,
         search: debouncedSearch,
         sortBy: filters.sortBy,
@@ -127,6 +129,7 @@ function ListDetailContent() {
       filters.type,
       filters.genre,
       filters.downloaded,
+      filters.released,
       filters.listId,
       filters.sortBy,
       debouncedSearch,
@@ -320,6 +323,7 @@ function ListDetailContent() {
     filters.type !== '' ||
     filters.genre !== '' ||
     filters.downloaded !== '' ||
+    filters.released !== '' ||
     filters.search.trim() !== '';
 
   const stateSummary = list ? formatListStateSummary(list, t) : null;

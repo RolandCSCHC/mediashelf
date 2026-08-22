@@ -2,12 +2,13 @@
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import type {
-  MediaItem,
-  MediaStatus,
-  MediaType,
+import {
+  type MediaItem,
+  type MediaStatus,
+  type MediaType,
 } from '@mediashelf/shared-types';
 import { MediaItemControls } from '@/components/media-item-controls';
+import { ReleaseStatusBadge } from '@/components/release-status-badge';
 import { useI18n } from '@/components/locale-provider';
 import { mediaStatusLabelKey } from '@/lib/media-status';
 import { formatSeriesProgress } from '@/lib/media-filters';
@@ -108,9 +109,12 @@ export function MediaCard({
               )}
             </div>
             <div className="min-w-0 space-y-1">
-              <h3 className="truncate text-sm font-semibold text-foreground group-hover:text-accent">
-                {item.title}
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="min-w-0 truncate text-sm font-semibold text-foreground group-hover:text-accent">
+                  {item.title}
+                </h3>
+                <ReleaseStatusBadge item={item} />
+              </div>
               <p className="text-xs text-muted">{meta}</p>
             </div>
           </Link>
@@ -143,7 +147,7 @@ export function MediaCard({
         href={href}
         className="group block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
       >
-        <div className="aspect-[2/3] bg-[var(--overlay)]">
+        <div className="relative aspect-[2/3] bg-[var(--overlay)]">
           {poster ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -157,6 +161,10 @@ export function MediaCard({
               {t('common.noPoster')}
             </div>
           )}
+          <ReleaseStatusBadge
+            item={item}
+            className="absolute right-2 top-2"
+          />
         </div>
         <div className="space-y-1 p-3 pb-2">
           <h3 className="line-clamp-2 text-sm font-semibold text-foreground group-hover:text-accent">

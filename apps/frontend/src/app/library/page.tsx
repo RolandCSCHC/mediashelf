@@ -42,6 +42,7 @@ function toListQuery(filters: LibraryFiltersState): ListMediaQuery {
     ...(filters.downloaded
       ? { downloaded: filters.downloaded === 'true' }
       : {}),
+    ...(filters.released ? { released: filters.released === 'true' } : {}),
     ...(filters.listId ? { listId: filters.listId } : {}),
     ...(search ? { search } : {}),
     sortBy: filters.sortBy,
@@ -97,6 +98,7 @@ function LibraryContent() {
         type: filters.type,
         genre: filters.genre,
         downloaded: filters.downloaded,
+        released: filters.released,
         listId: filters.listId,
         search: debouncedSearch,
         sortBy: filters.sortBy,
@@ -106,6 +108,7 @@ function LibraryContent() {
       filters.type,
       filters.genre,
       filters.downloaded,
+      filters.released,
       filters.listId,
       filters.sortBy,
       debouncedSearch,
@@ -191,6 +194,7 @@ function LibraryContent() {
     filters.type !== '' ||
     filters.genre !== '' ||
     filters.downloaded !== '' ||
+    filters.released !== '' ||
     filters.listId !== '' ||
     filters.search.trim() !== '';
 

@@ -15,6 +15,7 @@ import {
   MEDIA_SORT_OPTIONS,
   MEDIA_STATUS_FILTER_OPTIONS,
   MEDIA_TYPE_FILTER_OPTIONS,
+  RELEASED_FILTER_OPTIONS,
 } from '@/lib/media-filters';
 
 export type LibraryFiltersState = {
@@ -22,6 +23,7 @@ export type LibraryFiltersState = {
   type: '' | MediaType;
   genre: string;
   downloaded: '' | 'true' | 'false';
+  released: '' | 'true' | 'false';
   listId: string;
   search: string;
   sortBy: MediaSortBy;
@@ -60,6 +62,7 @@ export function LibraryFilterSortControls({
     value.type,
     value.genre,
     value.downloaded,
+    value.released,
     ...(showListFilter ? [value.listId] : []),
   ].filter(Boolean).length;
 
@@ -185,6 +188,28 @@ export function LibraryFilterSortControls({
             </select>
           </label>
 
+          <label className="block space-y-1.5">
+            <span className="text-xs uppercase tracking-wide text-muted">
+              {t('filters.release')}
+            </span>
+            <select
+              value={value.released}
+              onChange={(event) =>
+                patch({
+                  released: event.target
+                    .value as LibraryFiltersState['released'],
+                })
+              }
+              className={fieldClass}
+            >
+              {RELEASED_FILTER_OPTIONS.map((option) => (
+                <option key={option.labelKey} value={option.value}>
+                  {t(option.labelKey)}
+                </option>
+              ))}
+            </select>
+          </label>
+
           {showListFilter ? (
             <label className="block space-y-1.5">
               <span className="text-xs uppercase tracking-wide text-muted">
@@ -277,6 +302,7 @@ export const DEFAULT_LIBRARY_FILTERS: LibraryFiltersState = {
   type: '',
   genre: '',
   downloaded: '',
+  released: '',
   listId: '',
   search: '',
   sortBy: MediaSortBy.TITLE,
