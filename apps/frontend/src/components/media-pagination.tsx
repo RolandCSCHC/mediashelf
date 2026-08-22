@@ -9,7 +9,6 @@ import {
   isPageSizeChoice,
   pageRange,
   paginationItems,
-  parseStoredPageSizeChoice,
   panelColumnCount,
   resolvePageSize,
   type PageSizeChoice,
@@ -41,25 +40,13 @@ export function useMediaPageSize(): [
 
   useEffect(() => {
     try {
-      const stored = parseStoredPageSizeChoice(
-        window.localStorage.getItem(MEDIA_PAGE_SIZE_STORAGE_KEY),
-      );
-      setChoice(stored);
+      window.localStorage.removeItem(MEDIA_PAGE_SIZE_STORAGE_KEY);
     } catch {
       // Ignore storage access errors (private mode, etc.).
     }
   }, []);
 
-  function updateChoice(next: PageSizeChoice) {
-    setChoice(next);
-    try {
-      window.localStorage.setItem(MEDIA_PAGE_SIZE_STORAGE_KEY, String(next));
-    } catch {
-      // Ignore storage write errors.
-    }
-  }
-
-  return [choice, updateChoice];
+  return [choice, setChoice];
 }
 
 type MediaPaginationProps = {
