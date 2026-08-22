@@ -24,7 +24,7 @@ The application should be something I personally use every day while also showca
 
 # Purpose of the Application
 
-MediaShelf is an online personal media library I can access from anywhere after deploying it to Vercel (apps) and Supabase (database).
+MediaShelf is an online personal media library I can access from anywhere after deploying it to Vercel (apps) and Neon (database).
 
 Each authenticated user has their own private media library.
 
@@ -67,7 +67,7 @@ ORM:
 
 ### Reason
 
-The data is highly relational, PostgreSQL is widely used in production, Supabase provides managed PostgreSQL (with connection pooling for serverless), and Prisma offers an excellent developer experience with type safety, migrations and a modern ORM.
+The data is highly relational, PostgreSQL is widely used in production, Neon provides managed PostgreSQL (with connection pooling for serverless), and Prisma offers an excellent developer experience with type safety, migrations and a modern ORM.
 
 ---
 
@@ -114,13 +114,13 @@ Only store the TMDB ID together with the metadata required by the application.
 Platforms:
 
 - **Vercel** — frontend (Next.js) and backend (NestJS) as separate projects
-- **Supabase** — managed PostgreSQL
+- **Neon** — managed PostgreSQL
 
 Services:
 
 - Frontend (`mediashelf-frontend`)
 - Backend / API (`mediashelf-api`)
-- Managed PostgreSQL on Supabase (`DATABASE_URL` pooler + `DIRECT_URL` for Prisma migrations)
+- Managed PostgreSQL on Neon (`DATABASE_URL` pooled host + `DIRECT_URL` for Prisma migrations)
 
 ---
 
@@ -447,7 +447,7 @@ Run automatically on every Pull Request and every push to `main`:
 - Build backend
 
 On every successful push to `main`, also run `prisma migrate deploy` against
-Supabase (GitHub Actions secrets `DATABASE_URL` + `DIRECT_URL`). Vercel still
+Neon (GitHub Actions secrets `DATABASE_URL` + `DIRECT_URL`). Vercel still
 deploys the apps; this job is what applies schema changes.
 
 Possible future additions:
@@ -483,7 +483,7 @@ Possible future additions:
                           Prisma ORM
                              |
                   +----------v-----------+
-                  | PostgreSQL (Supabase)|
+                  | PostgreSQL (Neon)    |
                   +----------+-----------+
                              |
                   +----------v-----------+
@@ -491,7 +491,7 @@ Possible future additions:
                   +----------------------+
 ```
 
-Production hosting: Next.js and NestJS on Vercel; database on Supabase.
+Production hosting: Next.js and NestJS on Vercel; database on Neon.
 
 ---
 
@@ -580,7 +580,7 @@ Production hosting: Next.js and NestJS on Vercel; database on Supabase.
 ## Phase 10
 
 - Production deployment on Vercel (frontend + backend) ✓
-- Managed PostgreSQL on Supabase ✓
+- Managed PostgreSQL on Neon ✓
 
 ---
 
@@ -613,6 +613,13 @@ Production hosting: Next.js and NestJS on Vercel; database on Supabase.
 - Add sort in "Add from library" ✓
 - Microsoft Authentication ✓
 
+## Phase 14
+- Tutorial
+- Complete release date
+- Warning when movie/last episode is released
+- Cellphone port
+- Tasks to save database daily
+
 # Portfolio Goals
 
 This project should demonstrate proficiency in:
@@ -634,7 +641,7 @@ This project should demonstrate proficiency in:
 - Database design
 - Modern full-stack architecture
 - Deployment to Vercel
-- Managed PostgreSQL on Supabase
+- Managed PostgreSQL on Neon
 - Monorepo architecture
 
 The final result should resemble a real production application rather than a simple CRUD project, showcasing both software engineering practices and a polished user experience suitable for a professional portfolio.

@@ -141,7 +141,7 @@ jobs:
       - name: Check database secrets
         run: |
           if [ -z "$DATABASE_URL" ] || [ -z "$DIRECT_URL" ]; then
-            echo "Set GitHub Actions secrets DATABASE_URL and DIRECT_URL (Supabase)."
+            echo "Set GitHub Actions secrets DATABASE_URL and DIRECT_URL (Neon pooled + direct)."
             exit 1
           fi
 

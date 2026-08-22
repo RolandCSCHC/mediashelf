@@ -31,7 +31,7 @@ services:
       NODE_ENV: production
       PORT: 3001
       # Local Postgres has no pooler — DATABASE_URL and DIRECT_URL are the same.
-      # (On Vercel/Supabase they differ: pooler vs direct.)
+      # (On Vercel/Neon they differ: pooled -pooler host vs direct host.)
       DATABASE_URL: postgresql://${POSTGRES_USER:-mediashelf}:${POSTGRES_PASSWORD:-mediashelf}@postgres:5432/${POSTGRES_DB:-mediashelf}?schema=public
       DIRECT_URL: postgresql://${POSTGRES_USER:-mediashelf}:${POSTGRES_PASSWORD:-mediashelf}@postgres:5432/${POSTGRES_DB:-mediashelf}?schema=public
       CORS_ORIGIN: http://localhost:3000

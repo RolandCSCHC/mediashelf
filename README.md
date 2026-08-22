@@ -1,6 +1,6 @@
 # MediaShelf
 
-Personal media library for movies and TV series — Google and Microsoft login, TMDB search, custom lists, watch progress, JSON backup, and installable PWA. Built as a production-style portfolio app; frontend and API on Vercel, database on Supabase.
+Personal media library for movies and TV series — Google and Microsoft login, TMDB search, custom lists, watch progress, JSON backup, and installable PWA. Built as a production-style portfolio app; frontend and API on Vercel, database on Neon.
 
 ## Deployment
 
@@ -11,7 +11,7 @@ Personal media library for movies and TV series — Google and Microsoft login, 
 | Health   | https://mediashelf-api.vercel.app/health |
 | Swagger  | https://mediashelf-api.vercel.app/docs   |
 
-Database: [Supabase](https://supabase.com/) managed PostgreSQL (Prisma uses a pooled `DATABASE_URL` at runtime and a direct `DIRECT_URL` for migrations).
+Database: [Neon](https://neon.tech/) managed PostgreSQL (Prisma uses a pooled `DATABASE_URL` at runtime and a direct `DIRECT_URL` for migrations).
 
 ## Features
 
@@ -36,11 +36,11 @@ Database: [Supabase](https://supabase.com/) managed PostgreSQL (Prisma uses a po
 
 - **Frontend:** Next.js (App Router), TypeScript, Tailwind CSS
 - **Backend:** NestJS, TypeScript, Prisma
-- **Database:** PostgreSQL (Supabase in production; Docker Postgres locally)
+- **Database:** PostgreSQL (Neon in production; Docker Postgres locally)
 - **Auth:** Google / Microsoft OAuth + JWT httpOnly cookie
 - **Monorepo:** pnpm workspaces
 - **Containers:** Docker + Docker Compose (local)
-- **Production:** Vercel (frontend + API) + Supabase (Postgres)
+- **Production:** Vercel (frontend + API) + Neon (Postgres)
 
 ## Prerequisites
 
@@ -127,14 +127,14 @@ Do **not** enable implicit/hybrid tokens or “Treat application as a public cli
 
 This same-origin proxy is required in production: separate `*.vercel.app` frontend/API hosts are cross-site, and **Safari blocks third-party auth cookies** (desktop Chrome is more lenient). Cookies use `SameSite=Lax` (+ `Secure` on HTTPS).
 
-### Production (Vercel + Supabase) checklist
+### Production (Vercel + Neon) checklist
 
 1. **Frontend** project env: `NEXT_PUBLIC_API_URL=/api`, `API_URL=https://mediashelf-api.vercel.app` (redeploy so `NEXT_PUBLIC_*` is baked in).
-2. **Backend** project env: `DATABASE_URL` (Supabase transaction pooler, port `6543`, `?pgbouncer=true`), `DIRECT_URL` (Supabase direct host `db.<project-ref>.supabase.co:5432`), plus `GOOGLE_*`, `MICROSOFT_*`, `JWT_SECRET`, `FRONTEND_URL`, `CORS_ORIGIN`.
+2. **Backend** project env: `DATABASE_URL` (Neon **pooled** host — hostname contains `-pooler`, add `?sslmode=require&pgbouncer=true&connect_timeout=15`), `DIRECT_URL` (Neon **direct** host — same endpoint without `-pooler`, add `?sslmode=require&connect_timeout=15`), plus `GOOGLE_*`, `MICROSOFT_*`, `JWT_SECRET`, `FRONTEND_URL`, `CORS_ORIGIN`.
 3. Backend: `GOOGLE_CALLBACK_URL=https://mediashelf-frontend.vercel.app/api/auth/google/callback` and `MICROSOFT_CALLBACK_URL=https://mediashelf-frontend.vercel.app/api/auth/microsoft/callback` (and matching `FRONTEND_URL` / `CORS_ORIGIN`).
 4. Google Cloud Console → authorized JavaScript origin: `https://mediashelf-frontend.vercel.app`; redirect URI: `https://mediashelf-frontend.vercel.app/api/auth/google/callback`.
 5. Entra app registration → **Authentication** → add a **Web** redirect URI: `https://mediashelf-frontend.vercel.app/api/auth/microsoft/callback`.
-6. GitHub Actions secrets (same values as the backend Vercel env): `DATABASE_URL` (pooler) and `DIRECT_URL` (direct host, port `5432`). Pushes to `main` apply Prisma migrations after CI passes.
+6. GitHub Actions secrets (same values as the backend Vercel env): `DATABASE_URL` (pooled) and `DIRECT_URL` (direct). Pushes to `main` apply Prisma migrations after CI passes.
 
 ## Local development (apps outside Docker)
 
@@ -149,7 +149,7 @@ This same-origin proxy is required in production: separate `*.vercel.app` fronte
    ```bash
    cp .env.example .env
    # Keep DATABASE_URL and DIRECT_URL pointed at local Postgres for this flow
-   # (Docker Compose sets both itself; Vercel/Supabase uses pooler + direct).
+   # (Docker Compose sets both itself; Vercel/Neon uses pooled + direct).
    pnpm install
    pnpm --filter @mediashelf/shared-types build
    pnpm --filter @mediashelf/backend exec prisma migrate deploy
@@ -202,7 +202,7 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on every pull request and every
 1. **Lint and typecheck** — ESLint, `tsc`, Prettier
 2. **Unit tests** — Jest (mappers, cookies, etc.)
 3. **Build** — full monorepo build (Prisma client generated in CI)
-4. **Migrate** (`main` only) — `prisma migrate deploy` against Supabase after CI succeeds
+4. **Migrate** (`main` only) — `prisma migrate deploy` against Neon after CI succeeds
 
 ## Documentation
 
