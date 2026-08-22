@@ -92,8 +92,6 @@ export const es: Messages = {
     kicker: 'Biblioteca privada',
     headingNamed: 'Estantería de {name}',
     headingYours: 'Tu estantería',
-    description:
-      'Filtra y ordena tu estantería, organiza títulos en listas y sigue el progreso de series por lista.',
     exportImportLink: 'Exportar o importar JSON',
     filtersActive: 'Hay filtros activos',
     clearFilters: 'Quitar filtros',
@@ -111,8 +109,6 @@ export const es: Messages = {
   lists: {
     kicker: 'Organización',
     heading: 'Listas personalizadas',
-    description:
-      'Agrupa títulos como quieras: Favoritos, Marvel, Navidad y más.',
     create: 'Crear una lista',
     loading: 'Cargando listas…',
     loadFailed: 'No se pudieron cargar las listas',
@@ -246,8 +242,6 @@ export const es: Messages = {
   search: {
     kicker: 'Descubrir',
     heading: 'Buscar TMDB',
-    description:
-      'Encuentra una película o serie, ábrela para ver el reparto y el equipo, y añádela a tu biblioteca. Si TMDB no la tiene, añádela a mano.',
     placeholder: 'El Señor de los Anillos',
     queryAria: 'Consulta de búsqueda',
     searching: 'Buscando…',
@@ -278,8 +272,6 @@ export const es: Messages = {
   backup: {
     kicker: 'Copia de seguridad',
     heading: 'Exportar e importar',
-    description:
-      'Descarga tu biblioteca y listas en JSON, o fusiona una copia en esta cuenta. Los títulos de TMDB conservan sus IDs, así que los nombres ambiguos siguen siendo exactos.',
     export: 'Exportar',
     exportBody:
       'Incluye cada título (estado, notas, pósters), listas personalizadas y el progreso de series por lista.',
@@ -353,5 +345,20 @@ export const es: Messages = {
     setDownloaded: 'Descarga al añadir',
     leaveUnchanged: 'Dejar igual',
     help: 'Los títulos nuevos reciben el estado y la marca de descarga de esta lista, solo en esta lista. Puedes pasar un título a Viendo aquí sin cambiar su estado en otras listas.',
+  },
+  tips: {
+    label: 'Cómo usar esta página',
+    gotIt: 'Entendido',
+    restore: 'Volver a mostrar las ayudas',
+    library:
+      'Cada título tiene un estado (Por ver, Viendo, Visto, Próximamente) y una marca de descargado aparte. Filtra y ordena la estantería, y usa Ya disponible / Aún no sale para ver qué se ha estrenado.',
+    search:
+      'Busca en TMDB, abre un título para ver el reparto y los detalles, y añádelo a tu biblioteca. Si TMDB no lo tiene, añádelo a mano.',
+    lists:
+      'Agrupa títulos como quieras. Cada pertenencia a una lista tiene su propio estado, marca de descarga y progreso de serie. Los valores predeterminados de una lista solo se aplican al añadir o mover un título a esa lista.',
+    listDetail:
+      'Añade títulos desde tu biblioteca o muévelos entre listas. El progreso de serie, el estado y la descarga de esta página pertenecen solo a esta lista.',
+    backup:
+      'Exportar descarga tu biblioteca y listas en JSON. Importar fusiona: se omiten los títulos que ya existen y se añaden las listas y pertenencias que falten.',
   },
 };

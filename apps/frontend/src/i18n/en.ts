@@ -89,8 +89,6 @@ export const en = {
     kicker: 'Private library',
     headingNamed: "{name}'s shelf",
     headingYours: 'Your shelf',
-    description:
-      'Filter and sort your shelf, organize titles into custom lists, and track series progress per list.',
     exportImportLink: 'Export or import JSON',
     filtersActive: 'Filters are active',
     clearFilters: 'Clear filters',
@@ -107,8 +105,6 @@ export const en = {
   lists: {
     kicker: 'Organization',
     heading: 'Custom lists',
-    description:
-      'Group titles however you like — Favorites, Marvel, Christmas, and more.',
     create: 'Create a list',
     loading: 'Loading lists…',
     loadFailed: 'Failed to load lists',
@@ -242,8 +238,6 @@ export const en = {
   search: {
     kicker: 'Discover',
     heading: 'Search TMDB',
-    description:
-      'Find a movie or series, open it to see cast and crew, then add it to your private library. If TMDB does not have it, add it manually.',
     placeholder: 'The Lord of the Rings',
     queryAria: 'Search query',
     searching: 'Searching…',
@@ -274,8 +268,6 @@ export const en = {
   backup: {
     kicker: 'Backup',
     heading: 'Export & import',
-    description:
-      'Download your library and lists as JSON, or merge a backup into this account. TMDB titles keep their IDs, so ambiguous names stay exact.',
     export: 'Export',
     exportBody:
       'Includes every media item (status, notes, posters), custom lists, and per-list series progress.',
@@ -348,5 +340,20 @@ export const en = {
     setDownloaded: 'Set downloaded when adding',
     leaveUnchanged: 'Leave unchanged',
     help: 'New titles get this list’s status and downloaded flag on this list only. You can still switch a title to Watching in this list without changing its status in other lists.',
+  },
+  tips: {
+    label: 'How to use this page',
+    gotIt: 'Got it',
+    restore: 'Show tips again',
+    library:
+      'Each title has a status (Watchlist, Watching, Watched, Upcoming) and a separate downloaded flag. Filter and sort the shelf, and use Out now / Not out yet to see what has been released.',
+    search:
+      'Search TMDB, open a title to preview cast and details, then add it to your library. If TMDB does not have it, add it manually.',
+    lists:
+      'Group titles however you like. Each list membership has its own status, downloaded flag, and series progress. Optional list defaults apply only when you add or move a title into that list.',
+    listDetail:
+      'Add titles from your library or move them between lists. Series progress, status, and downloaded on this page belong to this list only.',
+    backup:
+      'Export downloads your library and lists as JSON. Import merges: existing titles are skipped, and missing lists and memberships are added.',
   },
 } as const;

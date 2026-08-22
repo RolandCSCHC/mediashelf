@@ -395,6 +395,18 @@ TMDB title metadata stays in the language returned by TMDB.
 
 ---
 
+## Tutorial
+
+Short, dismissible tips on Library, Search, Lists, list detail, and Backup.
+
+Each tip is shown the first time you open that view. **Got it** hides that tip
+in this browser. A header control restores all tips. Dismissal is stored in
+localStorage (not on the account).
+
+Empty states still explain what to do when a view has no data.
+
+---
+
 # REST API
 
 The frontend communicates with the backend through a REST API.
@@ -626,7 +638,7 @@ Production hosting: Next.js and NestJS on Vercel; database on Neon.
 - Microsoft Authentication ✓
 
 ## Phase 14
-- Tutorial
+- Tutorial ✓
 - Complete release date ✓
 - Warning when movie/last episode is released ✓
 - Cellphone port

@@ -14,6 +14,7 @@ import {
 } from '@/components/list-editor-fields';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
+import { ViewTip } from '@/components/view-tip';
 import { useI18n } from '@/components/locale-provider';
 import {
   createCustomList,
@@ -140,7 +141,6 @@ function ListsContent() {
           <h1 className="font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
             {t('lists.heading')}
           </h1>
-          <p className="mt-3 max-w-xl text-muted">{t('lists.description')}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <Button type="button" size="sm" onClick={openCreateModal}>
@@ -148,6 +148,8 @@ function ListsContent() {
           </Button>
         </div>
       </div>
+
+      <ViewTip id="lists" />
 
       {error ? (
         <p className="mt-6 text-sm text-danger" role="alert">

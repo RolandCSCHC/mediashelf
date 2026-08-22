@@ -161,10 +161,7 @@ export function MediaCard({
               {t('common.noPoster')}
             </div>
           )}
-          <ReleaseStatusBadge
-            item={item}
-            className="absolute right-2 top-2"
-          />
+          <ReleaseStatusBadge item={item} className="absolute right-2 top-2" />
         </div>
         <div className="space-y-1 p-3 pb-2">
           <h3 className="line-clamp-2 text-sm font-semibold text-foreground group-hover:text-accent">

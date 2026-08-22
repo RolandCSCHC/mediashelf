@@ -8,6 +8,7 @@ import { AuthGuard } from '@/components/auth-guard';
 import { ManualMediaForm } from '@/components/manual-media-form';
 import { SearchResultCard } from '@/components/search-result-card';
 import { Button } from '@/components/ui/button';
+import { ViewTip } from '@/components/view-tip';
 import { useI18n } from '@/components/locale-provider';
 import { listAllMedia, searchTmdb } from '@/lib/api';
 import {
@@ -141,9 +142,7 @@ function SearchContent() {
       <h1 className="ms-animate-fade-up ms-animate-delay-1 font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
         {t('search.heading')}
       </h1>
-      <p className="ms-animate-fade-up ms-animate-delay-2 mt-3 max-w-xl text-muted">
-        {t('search.description')}
-      </p>
+      <ViewTip id="search" />
 
       <form
         onSubmit={(event) => void handleSubmit(event)}

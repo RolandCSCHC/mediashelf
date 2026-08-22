@@ -6,6 +6,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { useAuth } from '@/components/auth-provider';
 import { LanguageToggle } from '@/components/language-toggle';
 import { useI18n } from '@/components/locale-provider';
+import { RestoreTipsButton } from '@/components/restore-tips-button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button, ButtonLink } from '@/components/ui/button';
 import type { MessageKey } from '@/i18n';
@@ -94,6 +95,7 @@ export function SiteHeader() {
         >
           <LanguageToggle />
           <ThemeToggle />
+          {user ? <RestoreTipsButton /> : null}
 
           {isLoading ? (
             <span className="text-sm text-muted" aria-live="polite">

@@ -44,6 +44,7 @@ import {
 import { SeriesProgressControls } from '@/components/series-progress-controls';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
+import { ViewTip } from '@/components/view-tip';
 import { useI18n } from '@/components/locale-provider';
 import {
   deleteCustomList,
@@ -415,6 +416,8 @@ function ListDetailContent() {
               </Button>
             </div>
           </div>
+
+          <ViewTip id="list-detail" />
 
           {hasActiveFilters ? (
             <div className="mt-6 flex flex-wrap items-center gap-3">

@@ -28,6 +28,7 @@ import {
 import { useAuth } from '@/components/auth-provider';
 import { useI18n } from '@/components/locale-provider';
 import { Button } from '@/components/ui/button';
+import { ViewTip } from '@/components/view-tip';
 import { listCustomLists, listMedia } from '@/lib/api';
 import { resolvePageSize } from '@/lib/media-pagination';
 import { useRefreshLastAirDates } from '@/lib/refresh-last-air-dates';
@@ -212,9 +213,11 @@ function LibraryContent() {
               ? t('library.headingNamed', { name: firstName })
               : t('library.headingYours')}
           </h1>
-          <p className="ms-animate-fade-up ms-animate-delay-2 mt-3 max-w-xl text-muted">
-            {t('library.description')}{' '}
-            <Link href="/backup" className="text-accent hover:underline">
+          <p className="ms-animate-fade-up ms-animate-delay-2 mt-3">
+            <Link
+              href="/backup"
+              className="text-sm text-accent hover:underline"
+            >
               {t('library.exportImportLink')}
             </Link>
           </p>
@@ -230,6 +233,8 @@ function LibraryContent() {
           />
         </div>
       </div>
+
+      <ViewTip id="library" />
 
       {hasActiveFilters ? (
         <div className="mt-6 flex flex-wrap items-center gap-3">

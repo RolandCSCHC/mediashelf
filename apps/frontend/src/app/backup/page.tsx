@@ -10,6 +10,7 @@ import { LIBRARY_BACKUP_VERSION } from '@mediashelf/shared-types';
 import { AppShell } from '@/components/app-shell';
 import { AuthGuard } from '@/components/auth-guard';
 import { Button } from '@/components/ui/button';
+import { ViewTip } from '@/components/view-tip';
 import { useI18n } from '@/components/locale-provider';
 import { exportLibraryBackup, importLibraryBackup } from '@/lib/api';
 
@@ -110,9 +111,7 @@ function BackupContent() {
         <h1 className="ms-animate-fade-up ms-animate-delay-1 font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
           {t('backup.heading')}
         </h1>
-        <p className="ms-animate-fade-up ms-animate-delay-2 mt-3 max-w-xl text-muted">
-          {t('backup.description')}
-        </p>
+        <ViewTip id="backup" />
       </div>
 
       <section className="ms-animate-fade-up ms-animate-delay-3 mt-10 space-y-4">
