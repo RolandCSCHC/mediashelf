@@ -17,6 +17,28 @@ export enum MediaSortBy {
   DATE_WATCHED = 'DATE_WATCHED',
 }
 
+export enum FeedbackKind {
+  BUG = 'BUG',
+  IMPROVEMENT = 'IMPROVEMENT',
+}
+
+export interface CreateFeedbackRequest {
+  kind: FeedbackKind;
+  summary: string;
+  details: string;
+  email?: string;
+}
+
+export interface FeedbackSubmission {
+  id: string;
+  kind: FeedbackKind;
+  summary: string;
+  details: string;
+  email: string | null;
+  userId: string | null;
+  createdAt: string;
+}
+
 export interface User {
   id: string;
   googleId: string | null;

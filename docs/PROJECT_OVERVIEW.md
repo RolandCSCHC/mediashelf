@@ -412,6 +412,16 @@ Empty states still explain what to do when a view has no data.
 
 ---
 
+## Feedback
+
+Users can report a bug or suggest an improvement from the app (`/feedback`).
+
+Submissions are stored in Postgres (`POST /feedback`). Signing in is optional.
+The account whose email matches `FEEDBACK_ADMIN_EMAIL` can list them
+(`GET /feedback`) and sees an inbox on the same page.
+
+---
+
 # REST API
 
 The frontend communicates with the backend through a REST API.
@@ -426,6 +436,8 @@ Primary library resource:
 - `GET /media/:id`
 - `PATCH /media/:id`
 - `DELETE /media/:id`
+- `POST /feedback`
+- `GET /feedback`
 
 `GET /media` and `GET /lists/:id` return a page of titles (`items`, `page`, `pageSize`, `total`, `totalPages`). Use `pageSize=all` to request every matching item.
 
@@ -656,7 +668,7 @@ Production hosting: Next.js and NestJS on Vercel; database on Neon.
 - Complete release date ✓
 - Warning when movie/last episode is released ✓
 - Tasks to save database daily ✓
-- Google Forms
+- In-app feedback ✓
 
 # Portfolio Goals
 

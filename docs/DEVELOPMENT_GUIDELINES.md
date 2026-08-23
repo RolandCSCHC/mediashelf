@@ -193,6 +193,10 @@ GET /backup
 
 POST /backup/import
 
+POST /feedback
+
+GET /feedback
+
 Return consistent HTTP status codes.
 
 Return meaningful error messages.

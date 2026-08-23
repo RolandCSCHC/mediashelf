@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  FeedbackKind,
   MediaStatus,
   MediaType,
   LIBRARY_BACKUP_VERSION,
@@ -428,4 +429,27 @@ export class LibraryBackupImportResponseSchema {
 
   @ApiProperty({ type: [String] })
   errors!: string[];
+}
+
+export class FeedbackSubmissionSchema {
+  @ApiProperty()
+  id!: string;
+
+  @ApiProperty({ enum: FeedbackKind })
+  kind!: FeedbackKind;
+
+  @ApiProperty()
+  summary!: string;
+
+  @ApiProperty()
+  details!: string;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  email!: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  userId!: string | null;
+
+  @ApiProperty()
+  createdAt!: string;
 }

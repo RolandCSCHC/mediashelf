@@ -6,6 +6,7 @@ import { TmdbModule } from './modules/tmdb/tmdb.module';
 import { MediaModule } from './modules/media/media.module';
 import { ListsModule } from './modules/lists/lists.module';
 import { BackupModule } from './modules/backup/backup.module';
+import { FeedbackModule } from './modules/feedback/feedback.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { BackupModule } from './modules/backup/backup.module';
     MediaModule,
     ListsModule,
     BackupModule,
+    FeedbackModule,
   ],
 })
 export class AppModule {}

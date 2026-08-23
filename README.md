@@ -28,6 +28,7 @@ Database: [Neon](https://neon.tech/) managed PostgreSQL (Prisma uses a pooled `D
 - **Daily JSON backup** to a GitHub Actions artifact (90 days) and Dropbox (`Movies & Series/MediaShelf jsons/{email}/`)
 - **Dark / light mode**
 - **English / Spanish UI**
+- **Feedback** (report a bug or suggest an improvement from `/feedback`)
 - **Responsive shell, mobile nav**
 - **PWA** (manifest, icons, service worker) — installable on phone over HTTPS
 - **Swagger / OpenAPI** at `/docs`
@@ -118,6 +119,24 @@ MICROSOFT_TENANT=common
 
 Do **not** enable implicit/hybrid tokens or “Treat application as a public client”. This app uses the authorization-code flow with a client secret.
 
+## Feedback
+
+The header **Send feedback** control opens `/feedback`. Anyone can submit a bug
+report or an improvement idea (signing in is optional). Submissions are stored
+in Postgres.
+
+To read them in the app, set `FEEDBACK_ADMIN_EMAIL` on the **backend** to your
+MediaShelf login email. That account sees an inbox on `/feedback`. Other
+accounts can still submit; they do not see the inbox.
+
+```bash
+FEEDBACK_ADMIN_EMAIL=you@example.com
+```
+
+On Vercel, add this to the API project (not the frontend). After the first
+deploy that includes the feedback migration, `prisma migrate deploy` on `main`
+creates the table.
+
 ## Auth flow
 
 1. Frontend sends the browser to same-origin `GET /api/auth/google` or `GET /api/auth/microsoft` (Next.js proxies to Nest).
@@ -131,7 +150,7 @@ This same-origin proxy is required in production: separate `*.vercel.app` fronte
 ### Production (Vercel + Neon) checklist
 
 1. **Frontend** project env: `NEXT_PUBLIC_API_URL=/api`, `API_URL=https://mediashelf-api.vercel.app` (redeploy so `NEXT_PUBLIC_*` is baked in).
-2. **Backend** project env: `DATABASE_URL` (Neon **pooled** host — hostname contains `-pooler`, add `?sslmode=require&pgbouncer=true&connect_timeout=15`), `DIRECT_URL` (Neon **direct** host — same endpoint without `-pooler`, add `?sslmode=require&connect_timeout=15`), plus `GOOGLE_*`, `MICROSOFT_*`, `JWT_SECRET`, `FRONTEND_URL`, `CORS_ORIGIN`.
+2. **Backend** project env: `DATABASE_URL` (Neon **pooled** host — hostname contains `-pooler`, add `?sslmode=require&pgbouncer=true&connect_timeout=15`), `DIRECT_URL` (Neon **direct** host — same endpoint without `-pooler`, add `?sslmode=require&connect_timeout=15`), plus `GOOGLE_*`, `MICROSOFT_*`, `JWT_SECRET`, `FRONTEND_URL`, `CORS_ORIGIN`, `FEEDBACK_ADMIN_EMAIL` (your login email, to see the `/feedback` inbox).
 3. Backend: `GOOGLE_CALLBACK_URL=https://mediashelf-frontend.vercel.app/api/auth/google/callback` and `MICROSOFT_CALLBACK_URL=https://mediashelf-frontend.vercel.app/api/auth/microsoft/callback` (and matching `FRONTEND_URL` / `CORS_ORIGIN`).
 4. Google Cloud Console → authorized JavaScript origin: `https://mediashelf-frontend.vercel.app`; redirect URI: `https://mediashelf-frontend.vercel.app/api/auth/google/callback`.
 5. Entra app registration → **Authentication** → add a **Web** redirect URI: `https://mediashelf-frontend.vercel.app/api/auth/microsoft/callback`.
@@ -174,8 +193,9 @@ This same-origin proxy is required in production: separate `*.vercel.app` fronte
 | `/lists`                  | Custom lists CRUD                                                       |
 | `/lists/[id]`             | List detail, pagination, bulk add, per-list series progress             |
 | `/backup`                 | Export library JSON / merge-import a backup                             |
+| `/feedback`               | Report a bug or suggest an improvement                                  |
 
-`GET /tmdb/search` finds titles. `GET /tmdb/:type/:tmdbId` returns details and credits for the preview page. `GET /media` accepts filter, sort, and pagination query params (`page`, `pageSize`, including `search`). `PATCH /media/:id` updates library status and downloaded. `PATCH /lists/:id/items/:mediaItemId` updates per-list status, downloaded, and series progress. `GET /backup` / `POST /backup/import` handle JSON backup.
+`GET /tmdb/search` finds titles. `GET /tmdb/:type/:tmdbId` returns details and credits for the preview page. `GET /media` accepts filter, sort, and pagination query params (`page`, `pageSize`, including `search`). `PATCH /media/:id` updates library status and downloaded. `PATCH /lists/:id/items/:mediaItemId` updates per-list status, downloaded, and series progress. `GET /backup` / `POST /backup/import` handle JSON backup. `POST /feedback` stores a bug report or improvement; `GET /feedback` lists them for `FEEDBACK_ADMIN_EMAIL`.
 
 ## Workspace layout
 

@@ -3,10 +3,12 @@ import type {
   AddListItemsRequest,
   AuthUser,
   CreateCustomListRequest,
+  CreateFeedbackRequest,
   CreateManualMediaRequest,
   CustomList,
   CustomListDetail,
   CustomListEntry,
+  FeedbackSubmission,
   HealthResponse,
   ImportMediaRequest,
   LibraryBackupImportRequest,
@@ -346,4 +348,34 @@ export async function importLibraryBackup(
     method: 'POST',
     body: JSON.stringify(payload),
   });
+}
+
+export async function submitFeedback(
+  payload: CreateFeedbackRequest,
+): Promise<FeedbackSubmission> {
+  return apiFetch<FeedbackSubmission>('/feedback', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function listFeedback(): Promise<FeedbackSubmission[] | null> {
+  try {
+    const response = await fetch(`${browserApiUrl}/feedback`, {
+      credentials: 'include',
+      cache: 'no-store',
+    });
+
+    if (response.status === 401 || response.status === 403) {
+      return null;
+    }
+
+    if (!response.ok) {
+      throw new Error(`Request failed (${response.status})`);
+    }
+
+    return (await response.json()) as FeedbackSubmission[];
+  } catch {
+    return null;
+  }
 }

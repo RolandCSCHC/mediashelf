@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useAuth } from '@/components/auth-provider';
+import { FeedbackButton } from '@/components/feedback-button';
 import { LanguageToggle } from '@/components/language-toggle';
 import { useI18n } from '@/components/locale-provider';
 import { RestoreTipsButton } from '@/components/restore-tips-button';
@@ -95,6 +96,7 @@ export function SiteHeader() {
         >
           <LanguageToggle />
           <ThemeToggle />
+          <FeedbackButton />
           {user ? <RestoreTipsButton /> : null}
 
           {isLoading ? (
@@ -201,6 +203,13 @@ export function SiteHeader() {
                 {t(link.labelKey)}
               </Link>
             ))}
+            <Link
+              href="/feedback"
+              className="rounded-md px-3 py-2.5 text-sm text-foreground transition hover:bg-[var(--overlay)]"
+              onClick={() => setMenuOpen(false)}
+            >
+              {t('feedback.open')}
+            </Link>
             <button
               type="button"
               className="rounded-md px-3 py-2.5 text-left text-sm text-muted transition hover:bg-[var(--overlay)] hover:text-foreground"
