@@ -25,6 +25,7 @@ Database: [Neon](https://neon.tech/) managed PostgreSQL (Prisma uses a pooled `D
 - **Panels / list view toggle** on library and list pages (persisted in `localStorage`)
 - **Pagination** on library and lists (server-side; default 2 panel rows or 10 list rows; 25 / 50 / 100 / all)
 - **JSON export / merge import** for library + lists (`/backup`)
+- **Daily JSON backup** to a GitHub Actions artifact (90 days) and Dropbox (`Movies & Series/MediaShelf jsons/{email}/`)
 - **Dark / light mode**
 - **English / Spanish UI**
 - **Responsive shell, mobile nav**
@@ -203,6 +204,51 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on every pull request and every
 2. **Unit tests** — Jest (mappers, cookies, etc.)
 3. **Build** — full monorepo build (Prisma client generated in CI)
 4. **Migrate** (`main` only) — `prisma migrate deploy` against Neon after CI succeeds
+
+A separate **Daily library backup** workflow (`.github/workflows/backup.yml`) runs every day at 12:00 UTC and can be started by hand from the Actions tab. It writes the same JSON as `/backup`, stores it as an artifact for 90 days, and uploads it to Dropbox.
+
+### Dropbox daily backup (one-time setup)
+
+The backup job reuses `DATABASE_URL` and `DIRECT_URL`. Add three Dropbox secrets so it can write to `Movies & Series/MediaShelf jsons/{email}/`:
+
+| Secret                  | Value                                               |
+| ----------------------- | --------------------------------------------------- |
+| `DROPBOX_APP_KEY`       | Dropbox app key                                     |
+| `DROPBOX_APP_SECRET`    | Dropbox app secret                                  |
+| `DROPBOX_REFRESH_TOKEN` | OAuth refresh token (does not expire until revoked) |
+
+1. Open [Dropbox App Console](https://www.dropbox.com/developers/apps) → **Create app**.
+2. Choose **Scoped access** and **Full Dropbox** (not App folder — the target path is outside `/Apps`).
+3. On the **Permissions** tab, enable **`files.content.write`** and **`files.metadata.write`**, then click **Submit**. Do this **before** the authorize URL, or the token will not be allowed to create folders.
+4. In **OAuth 2**, add redirect URI `http://localhost`.
+5. In a browser, open (replace `APP_KEY`):
+
+   `https://www.dropbox.com/oauth2/authorize?client_id=APP_KEY&response_type=code&token_access_type=offline&redirect_uri=http://localhost&scope=files.content.write%20files.metadata.write`
+
+6. Approve the app. The browser will fail to load `http://localhost/?code=...` — copy the `code` query value.
+7. Exchange it for a refresh token:
+
+```bash
+curl -sS https://api.dropboxapi.com/oauth2/token \
+  -d code=PASTE_CODE \
+  -d grant_type=authorization_code \
+  -d redirect_uri=http://localhost \
+  -d client_id=APP_KEY \
+  -d client_secret=APP_SECRET
+```
+
+Copy `refresh_token` from the JSON into GitHub secret `DROPBOX_REFRESH_TOKEN`. If you change scopes later, repeat the authorize step and replace the token.
+
+8. GitHub repo → **Settings → Secrets and variables → Actions** → add the three secrets.
+9. **Actions → Daily library backup → Run workflow** to test. Confirm a file appears in Dropbox under `Movies & Series/MediaShelf jsons/<your-email>/` (for example `you@gmail.com/mediashelf-backup-2026-08-23.json`) and an artifact on the workflow run.
+
+Restore: download that JSON, then **Backup → Import** in the app. Do not commit library JSON to the public repo.
+
+To export locally (after `pnpm --filter @mediashelf/backend build` and a valid `DATABASE_URL`):
+
+```bash
+BACKUP_OUT_DIR="$PWD/backup-out" pnpm --filter @mediashelf/backend backup:export
+```
 
 ## Documentation
 

@@ -13,7 +13,8 @@
     "test:watch": "jest --watch",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
-    "prisma:migrate:dev": "prisma migrate dev"
+    "prisma:migrate:dev": "prisma migrate dev",
+    "backup:export": "node dist/cli/export-library-backup.js"
   },
   "dependencies": {
     "@mediashelf/shared-types": "workspace:*",

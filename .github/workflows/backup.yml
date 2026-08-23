@@ -1,0 +1,77 @@
+name: Daily library backup
+
+on:
+  schedule:
+    # 12:00 UTC = 08:00 Eastern in daylight time
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: daily-library-backup
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    name: Export JSON to GitHub and Dropbox
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DIRECT_URL: ${{ secrets.DIRECT_URL }}
+      BACKUP_OUT_DIR: ${{ github.workspace }}/backup-out
+      DROPBOX_FOLDER: /Movies & Series/MediaShelf jsons
+      DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
+      DROPBOX_APP_SECRET: ${{ secrets.DROPBOX_APP_SECRET }}
+      DROPBOX_REFRESH_TOKEN: ${{ secrets.DROPBOX_REFRESH_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 9.15.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Check database secrets
+        run: |
+          if [ -z "$DATABASE_URL" ] || [ -z "$DIRECT_URL" ]; then
+            echo "Set GitHub Actions secrets DATABASE_URL and DIRECT_URL (Neon pooled + direct)."
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared types
+        run: pnpm --filter @mediashelf/shared-types build
+
+      - name: Generate Prisma client
+        run: pnpm --filter @mediashelf/backend exec prisma generate
+
+      - name: Build backend
+        run: pnpm --filter @mediashelf/backend build
+
+      - name: Export library JSON
+        run: pnpm --filter @mediashelf/backend backup:export
+
+      - name: Upload GitHub artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mediashelf-library-json
+          path: backup-out/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload to Dropbox
+        run: bash scripts/upload-dropbox-backups.sh "$BACKUP_OUT_DIR"

@@ -350,6 +350,11 @@ Import the same JSON with **merge** semantics:
 
 The backup stores resolved TMDB IDs, so ambiguous titles do not need to be re-matched on import.
 
+A GitHub Actions workflow exports this same JSON daily (and on demand). It
+keeps a 90-day Actions artifact and uploads each user’s JSON to Dropbox at
+`Movies & Series/MediaShelf jsons/{email}/`. That is a copy of the library, not a
+substitute for Neon’s database restore.
+
 ---
 
 ## Responsive Design
@@ -473,6 +478,15 @@ Run automatically on every Pull Request and every push to `main`:
 On every successful push to `main`, also run `prisma migrate deploy` against
 Neon (GitHub Actions secrets `DATABASE_URL` + `DIRECT_URL`). Vercel still
 deploys the apps; this job is what applies schema changes.
+
+Daily (and on demand via **Run workflow**):
+
+- Export each user’s library JSON with the same payload as `GET /backup`
+- Upload a GitHub Actions artifact (90-day retention)
+- Upload each user’s JSON to Dropbox (`Movies & Series/MediaShelf jsons/{email}/`)
+
+Requires additional GitHub Actions secrets: `DROPBOX_APP_KEY`,
+`DROPBOX_APP_SECRET`, `DROPBOX_REFRESH_TOKEN`.
 
 Possible future additions:
 
@@ -641,8 +655,8 @@ Production hosting: Next.js and NestJS on Vercel; database on Neon.
 - Tutorial ✓
 - Complete release date ✓
 - Warning when movie/last episode is released ✓
-- Cellphone port
-- Tasks to save database daily
+- Tasks to save database daily ✓
+- Google Forms
 
 # Portfolio Goals
 

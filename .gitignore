@@ -151,5 +151,8 @@ vite.config.ts.timestamp-*
 apps/backend/prisma/*.db
 apps/backend/prisma/*.db-journal
 
+# Local library JSON exports
+backup-out/
+
 # Docker
 *.pid
