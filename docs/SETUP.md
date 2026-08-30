@@ -1,0 +1,249 @@
+# Setup
+
+How to run MediaShelf locally, configure OAuth, deploy, and operate backups.
+
+For product architecture, features, and design patterns, see the [README](../README.md).
+
+## Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) and Docker Compose
+- [Node.js](https://nodejs.org/) 20+ (for local non-Docker development)
+- [pnpm](https://pnpm.io/) 9+ (`corepack enable`)
+- A Google Cloud OAuth 2.0 Client (for Google login)
+- A Microsoft Entra app registration (for Microsoft login)
+- A [TMDB](https://www.themoviedb.org/settings/api) API key (for search / import)
+
+Copy `.env.example` to `.env` and fill in the values described below.
+
+---
+
+## Quick start (Docker)
+
+```bash
+cp .env.example .env
+# Fill in GOOGLE_*, MICROSOFT_*, JWT_SECRET, and TMDB_API_KEY
+docker compose up --build
+```
+
+| Service  | URL                          |
+| -------- | ---------------------------- |
+| Frontend | http://localhost:3000        |
+| Backend  | http://localhost:3001        |
+| Health   | http://localhost:3001/health |
+| Swagger  | http://localhost:3001/docs   |
+| Login    | http://localhost:3000/login  |
+| Postgres | localhost:5432               |
+
+On startup the backend runs Prisma migrations. Log in with Google or Microsoft to create your account and start building your library.
+
+---
+
+## Google OAuth setup (local)
+
+1. Open [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials).
+2. Create an **OAuth 2.0 Client ID** (application type: Web application).
+3. Add authorized JavaScript origin: `http://localhost:3000`
+4. Add authorized redirect URI: `http://localhost:3000/api/auth/google/callback`
+5. Copy the client ID and secret into `.env`:
+
+```bash
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+GOOGLE_CALLBACK_URL=http://localhost:3000/api/auth/google/callback
+JWT_SECRET=use-a-long-random-string
+FRONTEND_URL=http://localhost:3000
+CORS_ORIGIN=http://localhost:3000
+NEXT_PUBLIC_API_URL=/api
+API_URL=http://localhost:3001
+TMDB_API_KEY=your_v3_api_key
+```
+
+---
+
+## Microsoft OAuth setup (local)
+
+Microsoft login uses [Microsoft Entra ID](https://entra.microsoft.com) (the former Azure AD portal). Create a **web** app registration (confidential client with a secret), not a SPA registration.
+
+1. Open [Microsoft Entra admin center](https://entra.microsoft.com) (or [Azure Portal](https://portal.azure.com) → **Microsoft Entra ID**).
+2. Go to **Identity** → **Applications** → **App registrations** → **New registration**.
+3. Set **Name** to `MediaShelf` (or similar).
+4. Under **Supported account types**, choose one of:
+   - **Accounts in any organizational directory and personal Microsoft accounts** → set `MICROSOFT_TENANT=common` (work/school + Outlook/Hotmail/Xbox).
+   - **Personal Microsoft accounts only** → set `MICROSOFT_TENANT=consumers`.
+5. Under **Redirect URI**, platform **Web** (not SPA), URI:
+   `http://localhost:3000/api/auth/microsoft/callback`
+6. Click **Register**.
+7. On the app **Overview**, copy **Application (client) ID** into `MICROSOFT_CLIENT_ID`.
+8. Go to **Certificates & secrets** → **New client secret**. Copy the **Value** immediately into `MICROSOFT_CLIENT_SECRET` (it is shown only once).
+9. Confirm **API permissions** includes Microsoft Graph delegated **User.Read** (added by default). Users consent to this on first login; admin consent is not required for personal accounts.
+10. Put the values in `.env`:
+
+```bash
+MICROSOFT_CLIENT_ID=...
+MICROSOFT_CLIENT_SECRET=...
+MICROSOFT_CALLBACK_URL=http://localhost:3000/api/auth/microsoft/callback
+MICROSOFT_TENANT=common
+```
+
+Do **not** enable implicit/hybrid tokens or “Treat application as a public client”. This app uses the authorization-code flow with a client secret.
+
+---
+
+## Auth flow
+
+1. Frontend sends the browser to same-origin `GET /api/auth/google` or `GET /api/auth/microsoft` (Next.js proxies to Nest).
+2. NestJS completes the OAuth handshake at `/api/auth/google/callback` or `/api/auth/microsoft/callback` (also proxied).
+3. The backend upserts the `User` row (linking Google and Microsoft by email) and sets an httpOnly JWT cookie (`mediashelf_token`) on the **frontend** origin.
+4. Protected API routes use `JwtAuthGuard` (cookie-based); the browser calls `/api/...` so the cookie is first-party.
+5. Protected UI routes (e.g. `/library`) call `GET /api/auth/me` with credentials and redirect to `/login` when unauthenticated.
+
+This same-origin proxy is required in production: separate `*.vercel.app` frontend/API hosts are cross-site, and **Safari blocks third-party auth cookies** (desktop Chrome is more lenient). Cookies use `SameSite=Lax` (+ `Secure` on HTTPS).
+
+---
+
+## Feedback admin
+
+The header **Send feedback** control opens `/feedback`. Anyone can submit a bug report or an improvement idea (signing in is optional). Submissions are stored in Postgres.
+
+To read them in the app, set `FEEDBACK_ADMIN_EMAIL` on the **backend** to your MediaShelf login email. That account sees an inbox on `/feedback`. Other accounts can still submit; they do not see the inbox.
+
+```bash
+FEEDBACK_ADMIN_EMAIL=you@example.com
+```
+
+On Vercel, add this to the API project (not the frontend). After the first deploy that includes the feedback migration, `prisma migrate deploy` on `main` creates the table.
+
+---
+
+## Production (Vercel + Neon) checklist
+
+1. **Frontend** project env: `NEXT_PUBLIC_API_URL=/api`, `API_URL=https://mediashelf-api.vercel.app` (redeploy so `NEXT_PUBLIC_*` is baked in).
+2. **Backend** project env: `DATABASE_URL` (Neon **pooled** host — hostname contains `-pooler`, add `?sslmode=require&pgbouncer=true&connect_timeout=15`), `DIRECT_URL` (Neon **direct** host — same endpoint without `-pooler`, add `?sslmode=require&connect_timeout=15`), plus `GOOGLE_*`, `MICROSOFT_*`, `JWT_SECRET`, `FRONTEND_URL`, `CORS_ORIGIN`, `FEEDBACK_ADMIN_EMAIL` (your login email, to see the `/feedback` inbox).
+3. Backend: `GOOGLE_CALLBACK_URL=https://mediashelf-frontend.vercel.app/api/auth/google/callback` and `MICROSOFT_CALLBACK_URL=https://mediashelf-frontend.vercel.app/api/auth/microsoft/callback` (and matching `FRONTEND_URL` / `CORS_ORIGIN`).
+4. Google Cloud Console → authorized JavaScript origin: `https://mediashelf-frontend.vercel.app`; redirect URI: `https://mediashelf-frontend.vercel.app/api/auth/google/callback`.
+5. Entra app registration → **Authentication** → add a **Web** redirect URI: `https://mediashelf-frontend.vercel.app/api/auth/microsoft/callback`.
+6. GitHub Actions secrets (same values as the backend Vercel env): `DATABASE_URL` (pooled) and `DIRECT_URL` (direct). Pushes to `main` apply Prisma migrations after CI passes.
+
+Live URLs:
+
+| Service  | URL                                      |
+| -------- | ---------------------------------------- |
+| Frontend | https://mediashelf-frontend.vercel.app   |
+| API      | https://mediashelf-api.vercel.app        |
+| Health   | https://mediashelf-api.vercel.app/health |
+| Swagger  | https://mediashelf-api.vercel.app/docs   |
+
+---
+
+## Local development (apps outside Docker)
+
+1. Start only Postgres:
+
+   ```bash
+   docker compose up postgres -d
+   ```
+
+2. Install dependencies and prepare the database:
+
+   ```bash
+   cp .env.example .env
+   # Keep DATABASE_URL and DIRECT_URL pointed at local Postgres for this flow
+   # (Docker Compose sets both itself; Vercel/Neon uses pooled + direct).
+   pnpm install
+   pnpm --filter @mediashelf/shared-types build
+   pnpm --filter @mediashelf/backend exec prisma migrate deploy
+   ```
+
+3. Run apps:
+
+   ```bash
+   pnpm dev
+   ```
+
+---
+
+## Using the app
+
+| Route                     | Purpose                                                                 |
+| ------------------------- | ----------------------------------------------------------------------- |
+| `/search`                 | TMDB search and import into the library                                 |
+| `/search/movie/[tmdbId]`  | TMDB movie preview (cast, crew) before adding                           |
+| `/search/series/[tmdbId]` | TMDB series preview (cast, creators) before adding                      |
+| `/library`                | Full library with filters, sort, search, pagination, panels/list toggle |
+| `/library/[id]`           | Title detail, status, lists, notes, TMDB credits                        |
+| `/lists`                  | Custom lists CRUD                                                       |
+| `/lists/[id]`             | List detail, pagination, bulk add, per-list series progress             |
+| `/backup`                 | Export library JSON / merge-import a backup                             |
+| `/feedback`               | Report a bug or suggest an improvement                                  |
+
+`GET /tmdb/search` finds titles. `GET /tmdb/:type/:tmdbId` returns details and credits for the preview page. `GET /media` accepts filter, sort, and pagination query params (`page`, `pageSize`, including `search`). `PATCH /media/:id` updates library status and downloaded. `PATCH /lists/:id/items/:mediaItemId` updates per-list status, downloaded, and series progress. `GET /backup` / `POST /backup/import` handle JSON backup. `POST /feedback` stores a bug report or improvement; `GET /feedback` lists them for `FEEDBACK_ADMIN_EMAIL`.
+
+Interactive API docs: [Swagger](http://localhost:3001/docs) (local) or [production Swagger](https://mediashelf-api.vercel.app/docs).
+
+---
+
+## Code quality
+
+```bash
+pnpm lint          # ESLint (frontend, backend, shared-types)
+pnpm typecheck     # TypeScript --noEmit across packages
+pnpm test          # Backend Jest unit tests
+pnpm format        # Prettier write
+pnpm format:check  # Prettier check (CI-friendly)
+pnpm check         # Prepare deps, then lint + typecheck + test + format
+pnpm build         # Build shared-types, backend, frontend
+```
+
+GitHub Actions (`.github/workflows/ci.yml`) runs on every pull request and every push to `main`:
+
+1. **Lint and typecheck** — ESLint, `tsc`, Prettier
+2. **Unit tests** — Jest (mappers, cookies, services, etc.)
+3. **Build** — full monorepo build (Prisma client generated in CI)
+4. **Migrate** (`main` only) — `prisma migrate deploy` against Neon after CI succeeds
+
+A separate **Daily library backup** workflow (`.github/workflows/backup.yml`) runs every day at 12:00 UTC and can be started by hand from the Actions tab. It writes the same JSON as `/backup`, stores it as an artifact for 90 days, and uploads it to Dropbox.
+
+---
+
+## Dropbox daily backup (one-time setup)
+
+The backup job reuses `DATABASE_URL` and `DIRECT_URL`. Add three Dropbox secrets so it can write to `Movies & Series/MediaShelf jsons/{email}/`:
+
+| Secret                  | Value                                               |
+| ----------------------- | --------------------------------------------------- |
+| `DROPBOX_APP_KEY`       | Dropbox app key                                     |
+| `DROPBOX_APP_SECRET`    | Dropbox app secret                                  |
+| `DROPBOX_REFRESH_TOKEN` | OAuth refresh token (does not expire until revoked) |
+
+1. Open [Dropbox App Console](https://www.dropbox.com/developers/apps) → **Create app**.
+2. Choose **Scoped access** and **Full Dropbox** (not App folder — the target path is outside `/Apps`).
+3. On the **Permissions** tab, enable **`files.content.write`** and **`files.metadata.write`**, then click **Submit**. Do this **before** the authorize URL, or the token will not be allowed to create folders.
+4. In **OAuth 2**, add redirect URI `http://localhost`.
+5. In a browser, open (replace `APP_KEY`):
+
+   `https://www.dropbox.com/oauth2/authorize?client_id=APP_KEY&response_type=code&token_access_type=offline&redirect_uri=http://localhost&scope=files.content.write%20files.metadata.write`
+
+6. Approve the app. The browser will fail to load `http://localhost/?code=...` — copy the `code` query value.
+7. Exchange it for a refresh token:
+
+```bash
+curl -sS https://api.dropboxapi.com/oauth2/token \
+  -d code=PASTE_CODE \
+  -d grant_type=authorization_code \
+  -d redirect_uri=http://localhost \
+  -d client_id=APP_KEY \
+  -d client_secret=APP_SECRET
+```
+
+Copy `refresh_token` from the JSON into GitHub secret `DROPBOX_REFRESH_TOKEN`. If you change scopes later, repeat the authorize step and replace the token.
+
+8. GitHub repo → **Settings → Secrets and variables → Actions** → add the three secrets.
+9. **Actions → Daily library backup → Run workflow** to test. Confirm a file appears in Dropbox under `Movies & Series/MediaShelf jsons/<your-email>/` (for example `you@gmail.com/mediashelf-backup-2026-08-23.json`) and an artifact on the workflow run.
+
+Restore: download that JSON, then **Backup → Import** in the app. Do not commit library JSON to the public repo.
+
+To export locally (after `pnpm --filter @mediashelf/backend build` and a valid `DATABASE_URL`):
+
+```bash
+BACKUP_OUT_DIR="$PWD/backup-out" pnpm --filter @mediashelf/backend backup:export
+```

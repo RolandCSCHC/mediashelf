@@ -1,276 +1,165 @@
 # MediaShelf
 
-Personal media library for movies and TV series — Google and Microsoft login, TMDB search, custom lists, watch progress, JSON backup, and installable PWA. Built as a production-style portfolio app; frontend and API on Vercel, database on Neon.
+A production-style personal media library for movies and TV series. Sign in with Google or Microsoft, search TMDB, keep custom lists with per-list watch progress, and export JSON backups. Frontend and API run on Vercel; the database is Neon PostgreSQL.
 
-## Deployment
+This is a portfolio project: a real app I use, built to show modern full-stack engineering rather than a thin CRUD demo.
 
-| Service  | URL                                      |
-| -------- | ---------------------------------------- |
-| Frontend | https://mediashelf-frontend.vercel.app   |
-| API      | https://mediashelf-api.vercel.app        |
-| Health   | https://mediashelf-api.vercel.app/health |
-| Swagger  | https://mediashelf-api.vercel.app/docs   |
+|             |                                                                              |
+| ----------- | ---------------------------------------------------------------------------- |
+| **App**     | [mediashelf-frontend.vercel.app](https://mediashelf-frontend.vercel.app)     |
+| **API**     | [mediashelf-api.vercel.app](https://mediashelf-api.vercel.app)               |
+| **Health**  | [mediashelf-api.vercel.app/health](https://mediashelf-api.vercel.app/health) |
+| **Swagger** | [mediashelf-api.vercel.app/docs](https://mediashelf-api.vercel.app/docs)     |
 
-Database: [Neon](https://neon.tech/) managed PostgreSQL (Prisma uses a pooled `DATABASE_URL` at runtime and a direct `DIRECT_URL` for migrations).
+Local setup, OAuth, Vercel/Neon, and backups: **[docs/SETUP.md](docs/SETUP.md)**.
+
+---
 
 ## Features
 
-- **Google and Microsoft OAuth** with JWT in an httpOnly cookie (same email = same private library)
-- **TMDB search**, title preview (cast, directors / creators), and one-click import of movies / series (posters, genres, metadata)
+- **Google and Microsoft OAuth** — JWT in an httpOnly cookie; same email is the same private library
+- **TMDB search and import** — posters, genres, metadata; preview cast / directors / creators before adding
 - **Manual entries** when a title is missing from TMDB
-- **Library CRUD** with status (Watchlist / Watching / Watched / Upcoming) and downloaded flag
-- **Filters & sort** by status, type, genre, downloaded, list; sort by title (default), date added, release date, or date watched; title search
-- **Custom lists** with optional default status / downloaded (both are per list membership), bulk add from the library, and per-list edit
-- **Series progress per list** (season / episode, status, and downloaded on membership, not only on the media item)
+- **Library CRUD** with status (Watchlist / Watching / Watched / Upcoming) and a separate downloaded flag
+- **Filters and sort** — status, type, genre, downloaded, list; sort by title (default), date added, release date, or date watched; title search
+- **Custom lists** with optional default status / downloaded, bulk add from the library, and move between lists
+- **Series progress per list** — season / episode, status, and downloaded live on membership, not only on the title
+- **Release awareness** — complete dates and “out now” / “not out yet” badges; refresh last-episode air dates from TMDB
 - **Panels / list view toggle** on library and list pages (persisted in `localStorage`)
-- **Pagination** on library and lists (server-side; default 2 panel rows or 10 list rows; 25 / 50 / 100 / all)
-- **JSON export / merge import** for library + lists (`/backup`)
-- **Daily JSON backup** to a GitHub Actions artifact (90 days) and Dropbox (`Movies & Series/MediaShelf jsons/{email}/`)
-- **Dark / light mode**
-- **English / Spanish UI**
-- **Feedback** (report a bug or suggest an improvement from `/feedback`)
-- **Responsive shell, mobile nav**
-- **PWA** (manifest, icons, service worker) — installable on phone over HTTPS
+- **Server-side pagination** (default 2 panel rows or 10 list rows; 25 / 50 / 100 / all)
+- **JSON export / merge import** for library + lists
+- **Daily JSON backup** to a GitHub Actions artifact (90 days) and Dropbox
+- **Dark / light mode**, **English / Spanish UI**, **responsive shell** with mobile nav
+- **PWA** (manifest, icons, service worker) — installable on a phone over HTTPS
+- **In-app feedback** — report a bug or suggest an improvement; optional admin inbox
+- **First-run tutorial** — dismissible tips per view, restorable from the header
 - **Swagger / OpenAPI** at `/docs`
-- **CI** on GitHub Actions (lint, typecheck, Prettier, unit tests, build)
+
+---
+
+## Architecture
+
+```text
+                  +----------------------+
+                  |      Next.js         |
+                  |   App Router + PWA   |
+                  |  same-origin /api    |
+                  +----------+-----------+
+                             |  BFF proxy
+                             v
+                  +----------------------+
+                  |       NestJS         |
+                  |  modules + Prisma    |
+                  +----------+-----------+
+                             |
+                  +----------v-----------+
+                  | PostgreSQL (Neon)    |
+                  +----------+-----------+
+                             |
+                  +----------v-----------+
+                  |      TMDB API        |
+                  +----------------------+
+```
+
+The browser talks only to the Next.js origin. A catch-all App Router route (`/api/[...path]`) forwards to Nest at request time. That **BFF proxy** keeps the auth cookie first-party, which is required because Safari blocks third-party cookies across `*.vercel.app` hosts.
+
+Production: Next.js and NestJS as separate Vercel projects; Prisma uses Neon’s pooled `DATABASE_URL` at runtime and a direct `DIRECT_URL` for migrations.
+
+---
+
+## Domain model
+
+Media is a **unified `MediaItem`** (`MOVIE` | `SERIES`), not separate movie/series tables. The REST resource is `/media`.
+
+Library status and downloaded live on the title. Custom-list **membership** (`CustomListItem`) has its own status, downloaded flag, and series progress. The same series can be Watchlist in one list and Watching S3 in another.
+
+Lists can set default membership state. Adding or moving a title into a configured list applies that list’s defaults to **that membership** without rewriting the library title or other lists.
+
+JSON backup stores resolved TMDB IDs and imports with **merge** semantics: existing titles and memberships are left unchanged; missing lists and memberships are created.
+
+---
+
+## Design patterns and engineering practices
+
+| Practice                       | How MediaShelf uses it                                                                                                                   |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **Modular monolith**           | Nest feature modules (`auth`, `media`, `lists`, `tmdb`, `backup`, `feedback`) each own controllers, services, DTOs, and tests            |
+| **Layered architecture**       | Controllers validate and delegate; services hold business logic; repositories talk to Prisma                                             |
+| **Dependency injection**       | Nest providers for services, Prisma, Passport strategies, and guards                                                                     |
+| **DTO + validation**           | Global `ValidationPipe` (`whitelist`, `forbidNonWhitelisted`, `transform`) on request bodies and query DTOs                              |
+| **Mapper**                     | Prisma records mapped to shared API types (`media.mapper`, `tmdb.mapper`, `lists.mapper`) so the HTTP contract is not the database shape |
+| **Repository**                 | Data access isolated from services (`media.repository`, `lists.repository`)                                                              |
+| **Guard / strategy**           | Passport Google, Microsoft, and JWT strategies; `JwtAuthGuard` on protected routes; optional JWT for public feedback                     |
+| **Custom decorators**          | `@CurrentUser()` / optional current user for controllers                                                                                 |
+| **BFF / same-origin proxy**    | Next.js forwards `/api/*` so cookies stay first-party on Safari                                                                          |
+| **Shared kernel**              | `packages/shared-types` enums and interfaces used by frontend and backend                                                                |
+| **Discriminated domain types** | `MediaType` / `MediaStatus` shared across Prisma, API, and UI                                                                            |
+| **Idempotent merge import**    | Backup import matches TMDB titles on `(tmdbId, type)` and manuals on `(title, type)`                                                     |
+| **Typed i18n**                 | English catalog is the source of truth; Spanish must match the key tree or TypeScript fails                                              |
+| **Auth linking by email**      | Google and Microsoft upsert one `User`; provider IDs are optional and unique                                                             |
+
+Frontend code is organized by domain (routes, hooks, UI components, API client) rather than a single dump of screens. Auth and guest guards wrap protected and login-only pages.
+
+---
 
 ## Stack
 
-- **Frontend:** Next.js (App Router), TypeScript, Tailwind CSS
-- **Backend:** NestJS, TypeScript, Prisma
-- **Database:** PostgreSQL (Neon in production; Docker Postgres locally)
-- **Auth:** Google / Microsoft OAuth + JWT httpOnly cookie
-- **Monorepo:** pnpm workspaces
-- **Containers:** Docker + Docker Compose (local)
-- **Production:** Vercel (frontend + API) + Neon (Postgres)
+| Layer      | Choice                                                                                     |
+| ---------- | ------------------------------------------------------------------------------------------ |
+| Frontend   | Next.js (App Router), TypeScript, Tailwind CSS                                             |
+| Backend    | NestJS, TypeScript, Prisma                                                                 |
+| Database   | PostgreSQL (Neon in production; Docker Postgres locally)                                   |
+| Auth       | Google / Microsoft OAuth + JWT httpOnly cookie (`SameSite=Lax`)                            |
+| Monorepo   | pnpm workspaces (`apps/*`, `packages/*`)                                                   |
+| Containers | Docker + Docker Compose (local)                                                            |
+| Production | Vercel (frontend + API) + Neon                                                             |
+| CI/CD      | GitHub Actions — lint, typecheck, Prettier, Jest, build, `prisma migrate deploy` on `main` |
 
-## Prerequisites
+---
 
-- [Docker](https://docs.docker.com/get-docker/) and Docker Compose
-- [Node.js](https://nodejs.org/) 20+ (for local non-Docker development)
-- [pnpm](https://pnpm.io/) 9+ (`corepack enable`)
-- A Google Cloud OAuth 2.0 Client (for Google login)
-- A Microsoft Entra app registration (for Microsoft login)
-- A [TMDB](https://www.themoviedb.org/settings/api) API key (for search / import)
-
-## Quick start (Docker)
-
-```bash
-cp .env.example .env
-# Fill in GOOGLE_*, MICROSOFT_*, JWT_SECRET, and TMDB_API_KEY
-docker compose up --build
-```
-
-| Service  | URL                          |
-| -------- | ---------------------------- |
-| Frontend | http://localhost:3000        |
-| Backend  | http://localhost:3001        |
-| Health   | http://localhost:3001/health |
-| Swagger  | http://localhost:3001/docs   |
-| Login    | http://localhost:3000/login  |
-| Postgres | localhost:5432               |
-
-On startup the backend runs Prisma migrations. Log in with Google or Microsoft to create your account and start building your library.
-
-## Google OAuth setup (local)
-
-1. Open [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials).
-2. Create an **OAuth 2.0 Client ID** (application type: Web application).
-3. Add authorized JavaScript origin: `http://localhost:3000`
-4. Add authorized redirect URI: `http://localhost:3000/api/auth/google/callback`
-5. Copy the client ID and secret into `.env`:
-
-```bash
-GOOGLE_CLIENT_ID=...
-GOOGLE_CLIENT_SECRET=...
-GOOGLE_CALLBACK_URL=http://localhost:3000/api/auth/google/callback
-JWT_SECRET=use-a-long-random-string
-FRONTEND_URL=http://localhost:3000
-CORS_ORIGIN=http://localhost:3000
-NEXT_PUBLIC_API_URL=/api
-API_URL=http://localhost:3001
-TMDB_API_KEY=your_v3_api_key
-```
-
-## Microsoft OAuth setup (local)
-
-Microsoft login uses [Microsoft Entra ID](https://entra.microsoft.com) (the former Azure AD portal). Create a **web** app registration (confidential client with a secret), not a SPA registration.
-
-1. Open [Microsoft Entra admin center](https://entra.microsoft.com) (or [Azure Portal](https://portal.azure.com) → **Microsoft Entra ID**).
-2. Go to **Identity** → **Applications** → **App registrations** → **New registration**.
-3. Set **Name** to `MediaShelf` (or similar).
-4. Under **Supported account types**, choose one of:
-   - **Accounts in any organizational directory and personal Microsoft accounts** → set `MICROSOFT_TENANT=common` (work/school + Outlook/Hotmail/Xbox).
-   - **Personal Microsoft accounts only** → set `MICROSOFT_TENANT=consumers`.
-5. Under **Redirect URI**, platform **Web** (not SPA), URI:
-   `http://localhost:3000/api/auth/microsoft/callback`
-6. Click **Register**.
-7. On the app **Overview**, copy **Application (client) ID** into `MICROSOFT_CLIENT_ID`.
-8. Go to **Certificates & secrets** → **New client secret**. Copy the **Value** immediately into `MICROSOFT_CLIENT_SECRET` (it is shown only once).
-9. Confirm **API permissions** includes Microsoft Graph delegated **User.Read** (added by default). Users consent to this on first login; admin consent is not required for personal accounts.
-10. Put the values in `.env`:
-
-```bash
-MICROSOFT_CLIENT_ID=...
-MICROSOFT_CLIENT_SECRET=...
-MICROSOFT_CALLBACK_URL=http://localhost:3000/api/auth/microsoft/callback
-MICROSOFT_TENANT=common
-```
-
-Do **not** enable implicit/hybrid tokens or “Treat application as a public client”. This app uses the authorization-code flow with a client secret.
-
-## Feedback
-
-The header **Send feedback** control opens `/feedback`. Anyone can submit a bug
-report or an improvement idea (signing in is optional). Submissions are stored
-in Postgres.
-
-To read them in the app, set `FEEDBACK_ADMIN_EMAIL` on the **backend** to your
-MediaShelf login email. That account sees an inbox on `/feedback`. Other
-accounts can still submit; they do not see the inbox.
-
-```bash
-FEEDBACK_ADMIN_EMAIL=you@example.com
-```
-
-On Vercel, add this to the API project (not the frontend). After the first
-deploy that includes the feedback migration, `prisma migrate deploy` on `main`
-creates the table.
-
-## Auth flow
-
-1. Frontend sends the browser to same-origin `GET /api/auth/google` or `GET /api/auth/microsoft` (Next.js proxies to Nest).
-2. NestJS completes the OAuth handshake at `/api/auth/google/callback` or `/api/auth/microsoft/callback` (also proxied).
-3. The backend upserts the `User` row (linking Google and Microsoft by email) and sets an httpOnly JWT cookie (`mediashelf_token`) on the **frontend** origin.
-4. Protected API routes use `JwtAuthGuard` (cookie-based); the browser calls `/api/...` so the cookie is first-party.
-5. Protected UI routes (e.g. `/library`) call `GET /api/auth/me` with credentials and redirect to `/login` when unauthenticated.
-
-This same-origin proxy is required in production: separate `*.vercel.app` frontend/API hosts are cross-site, and **Safari blocks third-party auth cookies** (desktop Chrome is more lenient). Cookies use `SameSite=Lax` (+ `Secure` on HTTPS).
-
-### Production (Vercel + Neon) checklist
-
-1. **Frontend** project env: `NEXT_PUBLIC_API_URL=/api`, `API_URL=https://mediashelf-api.vercel.app` (redeploy so `NEXT_PUBLIC_*` is baked in).
-2. **Backend** project env: `DATABASE_URL` (Neon **pooled** host — hostname contains `-pooler`, add `?sslmode=require&pgbouncer=true&connect_timeout=15`), `DIRECT_URL` (Neon **direct** host — same endpoint without `-pooler`, add `?sslmode=require&connect_timeout=15`), plus `GOOGLE_*`, `MICROSOFT_*`, `JWT_SECRET`, `FRONTEND_URL`, `CORS_ORIGIN`, `FEEDBACK_ADMIN_EMAIL` (your login email, to see the `/feedback` inbox).
-3. Backend: `GOOGLE_CALLBACK_URL=https://mediashelf-frontend.vercel.app/api/auth/google/callback` and `MICROSOFT_CALLBACK_URL=https://mediashelf-frontend.vercel.app/api/auth/microsoft/callback` (and matching `FRONTEND_URL` / `CORS_ORIGIN`).
-4. Google Cloud Console → authorized JavaScript origin: `https://mediashelf-frontend.vercel.app`; redirect URI: `https://mediashelf-frontend.vercel.app/api/auth/google/callback`.
-5. Entra app registration → **Authentication** → add a **Web** redirect URI: `https://mediashelf-frontend.vercel.app/api/auth/microsoft/callback`.
-6. GitHub Actions secrets (same values as the backend Vercel env): `DATABASE_URL` (pooled) and `DIRECT_URL` (direct). Pushes to `main` apply Prisma migrations after CI passes.
-
-## Local development (apps outside Docker)
-
-1. Start only Postgres:
-
-   ```bash
-   docker compose up postgres -d
-   ```
-
-2. Install dependencies and prepare the database:
-
-   ```bash
-   cp .env.example .env
-   # Keep DATABASE_URL and DIRECT_URL pointed at local Postgres for this flow
-   # (Docker Compose sets both itself; Vercel/Neon uses pooled + direct).
-   pnpm install
-   pnpm --filter @mediashelf/shared-types build
-   pnpm --filter @mediashelf/backend exec prisma migrate deploy
-   ```
-
-3. Run apps:
-
-   ```bash
-   pnpm dev
-   ```
-
-## Using the app
-
-| Route                     | Purpose                                                                 |
-| ------------------------- | ----------------------------------------------------------------------- |
-| `/search`                 | TMDB search and import into the library                                 |
-| `/search/movie/[tmdbId]`  | TMDB movie preview (cast, crew) before adding                           |
-| `/search/series/[tmdbId]` | TMDB series preview (cast, creators) before adding                      |
-| `/library`                | Full library with filters, sort, search, pagination, panels/list toggle |
-| `/library/[id]`           | Title detail, status, lists, notes, TMDB credits                        |
-| `/lists`                  | Custom lists CRUD                                                       |
-| `/lists/[id]`             | List detail, pagination, bulk add, per-list series progress             |
-| `/backup`                 | Export library JSON / merge-import a backup                             |
-| `/feedback`               | Report a bug or suggest an improvement                                  |
-
-`GET /tmdb/search` finds titles. `GET /tmdb/:type/:tmdbId` returns details and credits for the preview page. `GET /media` accepts filter, sort, and pagination query params (`page`, `pageSize`, including `search`). `PATCH /media/:id` updates library status and downloaded. `PATCH /lists/:id/items/:mediaItemId` updates per-list status, downloaded, and series progress. `GET /backup` / `POST /backup/import` handle JSON backup. `POST /feedback` stores a bug report or improvement; `GET /feedback` lists them for `FEEDBACK_ADMIN_EMAIL`.
-
-## Workspace layout
+## Repository layout
 
 ```text
-apps/frontend           Next.js (PWA, UI)
+apps/frontend           Next.js (PWA, UI, BFF proxy)
 apps/backend            NestJS + Prisma + Swagger
 packages/shared-types   Shared enums and interfaces
 packages/eslint-config  Shared ESLint flat configs
+.github/workflows       CI and daily library backup
+docs/                   Setup, project overview, engineering guidelines
 ```
 
-## Code quality
+---
 
-```bash
-pnpm lint          # ESLint (frontend, backend, shared-types)
-pnpm typecheck     # TypeScript --noEmit across packages
-pnpm test          # Backend Jest unit tests
-pnpm format        # Prettier write
-pnpm format:check  # Prettier check (CI-friendly)
-pnpm check         # Prepare deps, then lint + typecheck + test + format
-pnpm build         # Build shared-types, backend, frontend
-```
+## API surface
 
-GitHub Actions (`.github/workflows/ci.yml`) runs on every pull request and every push to `main`:
+Primary resources: `/media`, `/lists`, `/tmdb`, `/backup`, `/feedback`, `/auth`.
 
-1. **Lint and typecheck** — ESLint, `tsc`, Prettier
-2. **Unit tests** — Jest (mappers, cookies, etc.)
-3. **Build** — full monorepo build (Prisma client generated in CI)
-4. **Migrate** (`main` only) — `prisma migrate deploy` against Neon after CI succeeds
+Examples:
 
-A separate **Daily library backup** workflow (`.github/workflows/backup.yml`) runs every day at 12:00 UTC and can be started by hand from the Actions tab. It writes the same JSON as `/backup`, stores it as an artifact for 90 days, and uploads it to Dropbox.
+- `GET /media?status=WATCHING&type=SERIES&sortBy=TITLE&page=1&pageSize=25`
+- `GET /media?released=true`
+- `POST /media` (TMDB import) / `POST /media/manual`
+- `PATCH /lists/:id/items/:mediaItemId` (per-list status, downloaded, series progress)
+- `GET /backup` / `POST /backup/import`
 
-### Dropbox daily backup (one-time setup)
+`GET /media` and `GET /lists/:id` return a page (`items`, `page`, `pageSize`, `total`, `totalPages`). Use `pageSize=all` for every matching item.
 
-The backup job reuses `DATABASE_URL` and `DIRECT_URL`. Add three Dropbox secrets so it can write to `Movies & Series/MediaShelf jsons/{email}/`:
+Full request/response schemas and try-it-out: [Swagger](https://mediashelf-api.vercel.app/docs).
 
-| Secret                  | Value                                               |
-| ----------------------- | --------------------------------------------------- |
-| `DROPBOX_APP_KEY`       | Dropbox app key                                     |
-| `DROPBOX_APP_SECRET`    | Dropbox app secret                                  |
-| `DROPBOX_REFRESH_TOKEN` | OAuth refresh token (does not expire until revoked) |
+---
 
-1. Open [Dropbox App Console](https://www.dropbox.com/developers/apps) → **Create app**.
-2. Choose **Scoped access** and **Full Dropbox** (not App folder — the target path is outside `/Apps`).
-3. On the **Permissions** tab, enable **`files.content.write`** and **`files.metadata.write`**, then click **Submit**. Do this **before** the authorize URL, or the token will not be allowed to create folders.
-4. In **OAuth 2**, add redirect URI `http://localhost`.
-5. In a browser, open (replace `APP_KEY`):
+## Quality bar
 
-   `https://www.dropbox.com/oauth2/authorize?client_id=APP_KEY&response_type=code&token_access_type=offline&redirect_uri=http://localhost&scope=files.content.write%20files.metadata.write`
+- **TypeScript strict** across the monorepo; no `any` in public APIs
+- **Jest unit tests** for services, mappers, auth cookies, pagination, list-state, and backup helpers
+- **ESLint + Prettier** on CI; `pnpm check` runs lint, typecheck, tests, and format
+- **Prisma migrations** applied from GitHub Actions after a successful `main` build, not ad hoc on the server
+- **Docker Compose** for a one-command local stack (frontend, backend, Postgres)
 
-6. Approve the app. The browser will fail to load `http://localhost/?code=...` — copy the `code` query value.
-7. Exchange it for a refresh token:
-
-```bash
-curl -sS https://api.dropboxapi.com/oauth2/token \
-  -d code=PASTE_CODE \
-  -d grant_type=authorization_code \
-  -d redirect_uri=http://localhost \
-  -d client_id=APP_KEY \
-  -d client_secret=APP_SECRET
-```
-
-Copy `refresh_token` from the JSON into GitHub secret `DROPBOX_REFRESH_TOKEN`. If you change scopes later, repeat the authorize step and replace the token.
-
-8. GitHub repo → **Settings → Secrets and variables → Actions** → add the three secrets.
-9. **Actions → Daily library backup → Run workflow** to test. Confirm a file appears in Dropbox under `Movies & Series/MediaShelf jsons/<your-email>/` (for example `you@gmail.com/mediashelf-backup-2026-08-23.json`) and an artifact on the workflow run.
-
-Restore: download that JSON, then **Backup → Import** in the app. Do not commit library JSON to the public repo.
-
-To export locally (after `pnpm --filter @mediashelf/backend build` and a valid `DATABASE_URL`):
-
-```bash
-BACKUP_OUT_DIR="$PWD/backup-out" pnpm --filter @mediashelf/backend backup:export
-```
+---
 
 ## Documentation
 
+- [Setup](docs/SETUP.md) — local Docker, OAuth, Vercel/Neon, Dropbox backup, commands
 - [Project overview](docs/PROJECT_OVERVIEW.md) — goals, features, roadmap
 - [Development guidelines](docs/DEVELOPMENT_GUIDELINES.md) — engineering standards

@@ -170,6 +170,9 @@ mediashelf/
 ├── README.md
 ├── .github/
 └── docs/
+    ├── PROJECT_OVERVIEW.md
+    ├── DEVELOPMENT_GUIDELINES.md
+    └── SETUP.md
 ```
 
 The `packages` directory is intended for code shared between the frontend and backend, such as:
@@ -669,6 +672,9 @@ Production hosting: Next.js and NestJS on Vercel; database on Neon.
 - Warning when movie/last episode is released ✓
 - Tasks to save database daily ✓
 - In-app feedback ✓
+
+## Phase 15
+- Setup in docs and docu in readme ✓
 
 # Portfolio Goals
 

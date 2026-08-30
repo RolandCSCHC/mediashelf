@@ -344,6 +344,10 @@ Examples:
 
 Keep documentation updated when architecture changes.
 
+Update README.md when product features, architecture, or design patterns change.
+
+Update SETUP.md when local or production setup changes.
+
 Update PROJECT_OVERVIEW.md when requirements evolve.
 
 Update DEVELOPMENT_GUIDELINES.md when coding standards change.
