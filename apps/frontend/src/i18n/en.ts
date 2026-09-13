@@ -285,7 +285,6 @@ export const en = {
     title: 'Title',
     type: 'Type',
     yearOptional: 'Year (optional)',
-    status: 'Status',
     descriptionOptional: 'Description (optional)',
     notesOptional: 'Notes (optional)',
     titleRequired: 'Title is required',
@@ -300,7 +299,7 @@ export const en = {
     heading: 'Export & import',
     export: 'Export',
     exportBody:
-      'Includes every media item (status, notes, posters), custom lists, and per-list series progress.',
+      'Includes every media item (notes, posters), custom lists, and per-list status, downloaded flag, and series progress.',
     preparing: 'Preparing…',
     downloadJson: 'Download JSON',
     exportFailed: 'Export failed',
@@ -368,15 +367,15 @@ export const en = {
     descriptionPlaceholder: 'Optional',
     setStatus: 'Set status when adding',
     setDownloaded: 'Set downloaded when adding',
-    leaveUnchanged: 'Leave unchanged',
-    help: 'New titles get this list’s status and downloaded flag on this list only. You can still switch a title to Watching in this list without changing its status in other lists.',
+    leaveUnchanged: 'No default',
+    help: 'If you set a default, new titles get that status and downloaded flag on this list only. Otherwise they start as Watchlist and not downloaded. You can still switch a title to Watching here without changing other lists.',
   },
   tips: {
     label: 'How to use this page',
     gotIt: 'Got it',
     restore: 'Show tips again',
     library:
-      'Each title has a status (Watchlist, Watching, Watched, Upcoming) and a separate downloaded flag. Filter and sort the shelf, and use Out now / Not out yet to see what has been released.',
+      'The library is your catalog. Status and downloaded live on each list a title is in, so the same movie can be Watching in one list and Watched in another. Filter by Watching to see titles with that status in any list.',
     search:
       'Search TMDB, open a title to preview cast and details, then add it to your library. If TMDB does not have it, add it manually.',
     lists:

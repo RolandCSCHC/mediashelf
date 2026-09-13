@@ -11,7 +11,7 @@ describe('resolveMembershipStatus', () => {
     ).toBe(MediaStatus.WATCHED);
   });
 
-  it('falls back to the title status when the list has no default', () => {
+  it('falls back to the provided status when the list has no default', () => {
     expect(resolveMembershipStatus(null, MediaStatus.WATCHING)).toBe(
       MediaStatus.WATCHING,
     );
@@ -24,7 +24,7 @@ describe('resolveMembershipDownloaded', () => {
     expect(resolveMembershipDownloaded(true, false)).toBe(true);
   });
 
-  it('falls back to the title downloaded flag when the list has no default', () => {
+  it('falls back to the provided downloaded flag when the list has no default', () => {
     expect(resolveMembershipDownloaded(null, true)).toBe(true);
     expect(resolveMembershipDownloaded(null, false)).toBe(false);
   });

@@ -10,7 +10,7 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { MediaStatus, MediaType } from '@mediashelf/shared-types';
+import { MediaType } from '@mediashelf/shared-types';
 
 export class CreateManualMediaDto {
   @IsString()
@@ -39,8 +39,4 @@ export class CreateManualMediaDto {
   @MaxLength(4000)
   @IsOptional()
   notes?: string | null;
-
-  @IsOptional()
-  @IsEnum(MediaStatus)
-  status?: MediaStatus;
 }

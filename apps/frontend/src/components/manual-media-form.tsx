@@ -3,14 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  MediaStatus,
   MediaType,
   type CreateManualMediaRequest,
 } from '@mediashelf/shared-types';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/components/locale-provider';
 import { createManualMedia } from '@/lib/api';
-import { MEDIA_STATUS_OPTIONS } from '@/lib/media-status';
 
 type ManualMediaFormProps = {
   initialTitle?: string;
@@ -30,7 +28,6 @@ export function ManualMediaForm({
   const [releaseYear, setReleaseYear] = useState('');
   const [description, setDescription] = useState('');
   const [notes, setNotes] = useState('');
-  const [status, setStatus] = useState<MediaStatus>(MediaStatus.WATCHLIST);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,7 +50,6 @@ export function ManualMediaForm({
     const payload: CreateManualMediaRequest = {
       title: trimmedTitle,
       type,
-      status,
     };
 
     const yearText = releaseYear.trim();
@@ -118,7 +114,7 @@ export function ManualMediaForm({
         />
       </label>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2">
         <label className="block space-y-1.5">
           <span className="text-sm font-medium text-foreground">
             {t('manual.type')}
@@ -149,24 +145,6 @@ export function ManualMediaForm({
             className={fieldClass}
             aria-label={t('manual.yearAria')}
           />
-        </label>
-
-        <label className="block space-y-1.5">
-          <span className="text-sm font-medium text-foreground">
-            {t('manual.status')}
-          </span>
-          <select
-            value={status}
-            onChange={(event) => setStatus(event.target.value as MediaStatus)}
-            className={fieldClass}
-            aria-label={t('manual.status')}
-          >
-            {MEDIA_STATUS_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {t(option.labelKey)}
-              </option>
-            ))}
-          </select>
         </label>
       </div>
 

@@ -9,8 +9,8 @@ import {
 } from '@mediashelf/shared-types';
 import {
   buildDateArrivedWhere,
+  buildLibraryMembershipWhere,
   buildMediaItemOrderBy,
-  buildMediaItemWhere,
 } from './media-query';
 
 describe('buildMediaItemOrderBy', () => {
@@ -100,11 +100,34 @@ describe('release date arrival', () => {
     });
   });
 
-  it('restricts released=true to Upcoming titles with an arrived date', () => {
-    const where = buildMediaItemWhere({ released: true }, now);
+  it('restricts released=true to Upcoming memberships with an arrived date', () => {
+    const where = buildLibraryMembershipWhere({ released: true }, now);
 
-    expect(where).toEqual({
-      AND: [{}, { status: MediaStatus.UPCOMING }, buildDateArrivedWhere(now)],
+    expect(where).toEqual([
+      { listItems: { some: { status: MediaStatus.UPCOMING } } },
+      buildDateArrivedWhere(now),
+    ]);
+  });
+
+  it('matches library status against any list membership', () => {
+    const where = buildLibraryMembershipWhere({
+      status: MediaStatus.WATCHING,
     });
+
+    expect(where).toEqual([
+      { listItems: { some: { status: MediaStatus.WATCHING } } },
+    ]);
+  });
+
+  it('matches downloaded=true against any list membership', () => {
+    expect(buildLibraryMembershipWhere({ downloaded: true })).toEqual([
+      { listItems: { some: { downloaded: true } } },
+    ]);
+  });
+
+  it('matches downloaded=false when no membership is downloaded', () => {
+    expect(buildLibraryMembershipWhere({ downloaded: false })).toEqual([
+      { NOT: { listItems: { some: { downloaded: true } } } },
+    ]);
   });
 });

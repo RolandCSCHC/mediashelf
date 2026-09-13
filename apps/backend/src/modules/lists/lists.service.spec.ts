@@ -57,6 +57,7 @@ describe('ListsService.moveItemForUser', () => {
   };
   let mediaService: {
     getForUser: jest.Mock;
+    stampDateWatchedIfNeeded: jest.Mock;
   };
   let service: ListsService;
 
@@ -81,13 +82,12 @@ describe('ListsService.moveItemForUser', () => {
         lastAirDate: null,
         genres: [],
         runtime: null,
-        status: MediaStatus.WATCHING,
-        downloaded: false,
         notes: null,
         dateWatched: null,
         createdAt: '2024-02-01T00:00:00.000Z',
         updatedAt: '2024-02-02T00:00:00.000Z',
       }),
+      stampDateWatchedIfNeeded: jest.fn(),
     };
 
     service = new ListsService(
@@ -299,8 +299,6 @@ describe('ListsService.getForUser', () => {
             lastAirDate: null,
             genres: ['Drama'],
             runtime: null,
-            status: MediaStatus.WATCHING,
-            downloaded: false,
             notes: null,
             dateWatched: null,
             createdAt: new Date('2024-02-01T00:00:00.000Z'),
@@ -356,8 +354,6 @@ describe('ListsService.addItemForUser', () => {
     lastAirDate: null,
     genres: [],
     runtime: null,
-    status: MediaStatus.WATCHLIST,
-    downloaded: true,
     notes: null,
     dateWatched: null,
     createdAt: '2024-02-01T00:00:00.000Z',
@@ -372,6 +368,7 @@ describe('ListsService.addItemForUser', () => {
   };
   let mediaService: {
     getForUser: jest.Mock;
+    stampDateWatchedIfNeeded: jest.Mock;
   };
   let service: ListsService;
 
@@ -393,6 +390,7 @@ describe('ListsService.addItemForUser', () => {
     };
     mediaService = {
       getForUser: jest.fn().mockResolvedValue(mediaItem),
+      stampDateWatchedIfNeeded: jest.fn(),
     };
     service = new ListsService(
       listsRepository as unknown as ListsRepository,
@@ -417,7 +415,7 @@ describe('ListsService.addItemForUser', () => {
     });
   });
 
-  it('copies the title downloaded flag when the list leaves it unchanged', async () => {
+  it('defaults grouping lists to Watchlist and not downloaded', async () => {
     listsRepository.findByIdForUser.mockResolvedValue(
       buildList(listId, 'Favorites'),
     );
@@ -426,7 +424,7 @@ describe('ListsService.addItemForUser', () => {
 
     expect(listsRepository.addItem).toHaveBeenCalledWith(listId, mediaItemId, {
       status: MediaStatus.WATCHLIST,
-      downloaded: true,
+      downloaded: false,
       currentSeason: undefined,
       currentEpisode: undefined,
     });

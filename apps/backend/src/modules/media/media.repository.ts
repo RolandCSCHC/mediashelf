@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type {
   MediaItem as PrismaMediaItem,
-  MediaStatus,
   MediaType,
   Prisma,
 } from '@prisma/client';
@@ -9,7 +8,11 @@ import type { ListMediaQuery } from '@mediashelf/shared-types';
 import { resolvePagination, uniqueSortedGenres } from '../../common/pagination';
 import { PrismaService } from '../prisma/prisma.service';
 import type { TmdbMediaDetails } from '../tmdb/tmdb.service';
-import { buildMediaItemOrderBy, buildMediaItemWhere } from './media-query';
+import {
+  buildLibraryMembershipWhere,
+  buildMediaItemOrderBy,
+  buildMediaItemWhere,
+} from './media-query';
 
 export type MediaListFilters = ListMediaQuery;
 
@@ -145,8 +148,6 @@ export class MediaRepository {
     userId: string,
     details: TmdbMediaDetails,
     options?: {
-      status?: MediaStatus;
-      downloaded?: boolean;
       notes?: string | null;
     },
   ): Promise<PrismaMediaItem> {
@@ -163,10 +164,6 @@ export class MediaRepository {
         lastAirDate: details.lastAirDate,
         genres: details.genres,
         runtime: details.runtime,
-        ...(options?.status !== undefined ? { status: options.status } : {}),
-        ...(options?.downloaded !== undefined
-          ? { downloaded: options.downloaded }
-          : {}),
         ...(options?.notes !== undefined ? { notes: options.notes } : {}),
       },
     });
@@ -180,7 +177,6 @@ export class MediaRepository {
       description: string | null;
       releaseDate: Date | null;
       notes: string | null;
-      status?: MediaStatus;
     },
   ): Promise<PrismaMediaItem> {
     return this.prisma.mediaItem.create({
@@ -196,7 +192,6 @@ export class MediaRepository {
         genres: [],
         runtime: null,
         notes: data.notes,
-        ...(data.status !== undefined ? { status: data.status } : {}),
       },
     });
   }
@@ -215,8 +210,6 @@ export class MediaRepository {
       lastAirDate: Date | null;
       genres: string[];
       runtime: number | null;
-      status: MediaStatus;
-      downloaded: boolean;
       notes: string | null;
       dateWatched: Date | null;
     },
@@ -234,8 +227,6 @@ export class MediaRepository {
         lastAirDate: data.lastAirDate,
         genres: data.genres,
         runtime: data.runtime,
-        status: data.status,
-        downloaded: data.downloaded,
         notes: data.notes,
         dateWatched: data.dateWatched,
       },
@@ -246,8 +237,6 @@ export class MediaRepository {
     id: string,
     userId: string,
     data: {
-      status?: MediaStatus;
-      downloaded?: boolean;
       notes?: string | null;
       dateWatched?: Date | null;
       lastAirDate?: Date | null;
@@ -281,12 +270,23 @@ export class MediaRepository {
       ...buildMediaItemWhere(filters),
     };
 
+    const membershipClauses = buildLibraryMembershipWhere(filters);
+    const andClauses: Prisma.MediaItemWhereInput[] = [];
+
     if (filters.listId) {
-      where.listItems = {
-        some: {
-          listId: filters.listId,
-          list: { userId },
+      andClauses.push({
+        listItems: {
+          some: {
+            listId: filters.listId,
+            list: { userId },
+          },
         },
+      });
+    }
+
+    if (membershipClauses.length > 0 || andClauses.length > 0) {
+      return {
+        AND: [where, ...andClauses, ...membershipClauses],
       };
     }
 

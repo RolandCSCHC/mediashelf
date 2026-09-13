@@ -13,13 +13,13 @@ type MediaItemControlsProps = {
   layout?: 'full' | 'compact' | 'inline';
   disabled?: boolean;
   allowedStatuses?: MediaStatus[] | null;
-  /** Status shown in the dropdown. Defaults to the library title status. */
+  /** Status in this list. Required to show the status dropdown. */
   status?: MediaStatus;
-  /** When set, status changes go here instead of PATCH /media/:id. */
+  /** Status changes go here (list membership PATCH). */
   onStatusChange?: (status: MediaStatus) => Promise<void>;
-  /** Downloaded flag shown in the checkbox. Defaults to the library title. */
+  /** Downloaded in this list. Required to show the checkbox. */
   downloaded?: boolean;
-  /** When set, downloaded changes go here instead of PATCH /media/:id. */
+  /** Downloaded changes go here (list membership PATCH). */
   onDownloadedChange?: (downloaded: boolean) => Promise<void>;
   onUpdated: (item: MediaItem) => void;
   onDeleted: (id: string) => void;
@@ -46,10 +46,14 @@ export function MediaItemControls({
   const busy = disabled || isSaving || isDeleting;
   const compact = layout === 'compact' || layout === 'inline';
   const inline = layout === 'inline';
-  const displayedStatus = status ?? item.status;
-  const displayedDownloaded = downloaded ?? item.downloaded;
+  const showStatusControls =
+    status !== undefined && onStatusChange !== undefined;
+  const showDownloadedControls =
+    downloaded !== undefined && onDownloadedChange !== undefined;
+  const displayedStatus = status;
+  const displayedDownloaded = downloaded ?? false;
   const statusOptions = MEDIA_STATUS_OPTIONS.filter((option) => {
-    if (!allowedStatuses) {
+    if (!displayedStatus || !allowedStatuses) {
       return true;
     }
     return (
@@ -62,17 +66,12 @@ export function MediaItemControls({
   }, [item.id, item.notes]);
 
   async function handleStatusChange(nextStatus: MediaStatus) {
-    if (nextStatus === displayedStatus) {
+    if (!onStatusChange || nextStatus === displayedStatus) {
       return;
     }
     setIsSaving(true);
     try {
-      if (onStatusChange) {
-        await onStatusChange(nextStatus);
-      } else {
-        const updated = await updateMedia(item.id, { status: nextStatus });
-        onUpdated(updated);
-      }
+      await onStatusChange(nextStatus);
     } catch (err) {
       onError?.(
         err instanceof Error ? err.message : t('media.updateStatusFailed'),
@@ -83,17 +82,13 @@ export function MediaItemControls({
   }
 
   async function handleDownloadedToggle() {
+    if (!onDownloadedChange) {
+      return;
+    }
     const nextDownloaded = !displayedDownloaded;
     setIsSaving(true);
     try {
-      if (onDownloadedChange) {
-        await onDownloadedChange(nextDownloaded);
-      } else {
-        const updated = await updateMedia(item.id, {
-          downloaded: nextDownloaded,
-        });
-        onUpdated(updated);
-      }
+      await onDownloadedChange(nextDownloaded);
     } catch (err) {
       onError?.(
         err instanceof Error ? err.message : t('media.updateDownloadedFailed'),
@@ -148,63 +143,71 @@ export function MediaItemControls({
 
   return (
     <div className={compact ? (inline ? '' : 'space-y-2') : 'space-y-6'}>
-      <div
-        className={
-          inline
-            ? 'flex flex-wrap items-center gap-3'
-            : compact
-              ? 'space-y-2'
-              : 'grid gap-6 sm:grid-cols-2'
-        }
-      >
-        <label className={inline ? 'block' : 'block space-y-1.5'}>
-          {!compact ? (
-            <span className="text-sm font-medium text-foreground">
-              {t('filters.status')}
-            </span>
-          ) : (
-            <span className="sr-only">{t('filters.status')}</span>
-          )}
-          <select
-            value={displayedStatus}
-            disabled={busy}
-            aria-label={t('filters.status')}
-            onChange={(event) =>
-              void handleStatusChange(event.target.value as MediaStatus)
-            }
-            className={selectClass}
-          >
-            {statusOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {t(option.labelKey)}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label
+      {showStatusControls || showDownloadedControls ? (
+        <div
           className={
-            compact ? 'flex items-center gap-2' : 'flex items-end gap-3 pb-2'
+            inline
+              ? 'flex flex-wrap items-center gap-3'
+              : compact
+                ? 'space-y-2'
+                : 'grid gap-6 sm:grid-cols-2'
           }
         >
-          <input
-            type="checkbox"
-            checked={displayedDownloaded}
-            disabled={busy}
-            onChange={() => void handleDownloadedToggle()}
-            className="h-4 w-4 rounded border-border accent-[var(--accent)]"
-          />
-          <span
-            className={
-              compact
-                ? 'text-xs font-medium text-foreground'
-                : 'text-sm font-medium text-foreground'
-            }
-          >
-            {t('common.downloaded')}
-          </span>
-        </label>
-      </div>
+          {showStatusControls && displayedStatus ? (
+            <label className={inline ? 'block' : 'block space-y-1.5'}>
+              {!compact ? (
+                <span className="text-sm font-medium text-foreground">
+                  {t('filters.status')}
+                </span>
+              ) : (
+                <span className="sr-only">{t('filters.status')}</span>
+              )}
+              <select
+                value={displayedStatus}
+                disabled={busy}
+                aria-label={t('filters.status')}
+                onChange={(event) =>
+                  void handleStatusChange(event.target.value as MediaStatus)
+                }
+                className={selectClass}
+              >
+                {statusOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {t(option.labelKey)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+
+          {showDownloadedControls ? (
+            <label
+              className={
+                compact
+                  ? 'flex items-center gap-2'
+                  : 'flex items-end gap-3 pb-2'
+              }
+            >
+              <input
+                type="checkbox"
+                checked={displayedDownloaded}
+                disabled={busy}
+                onChange={() => void handleDownloadedToggle()}
+                className="h-4 w-4 rounded border-border accent-[var(--accent)]"
+              />
+              <span
+                className={
+                  compact
+                    ? 'text-xs font-medium text-foreground'
+                    : 'text-sm font-medium text-foreground'
+                }
+              >
+                {t('common.downloaded')}
+              </span>
+            </label>
+          ) : null}
+        </div>
+      ) : null}
 
       {!compact ? (
         <div className="space-y-2">
@@ -235,7 +238,7 @@ export function MediaItemControls({
         </div>
       ) : null}
 
-      {!compact && displayedStatus === 'WATCHED' && item.dateWatched ? (
+      {!compact && item.dateWatched ? (
         <p className="text-sm text-muted">
           {t('media.watchedOn', {
             date: new Date(item.dateWatched).toLocaleDateString(

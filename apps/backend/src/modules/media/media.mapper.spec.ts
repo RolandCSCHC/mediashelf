@@ -1,5 +1,5 @@
 import type { MediaItem as PrismaMediaItem } from '@prisma/client';
-import { MediaStatus, MediaType } from '@mediashelf/shared-types';
+import { MediaType } from '@mediashelf/shared-types';
 import { toMediaItem } from './media.mapper';
 
 function buildPrismaMediaItem(
@@ -18,8 +18,6 @@ function buildPrismaMediaItem(
     lastAirDate: null,
     genres: ['Drama'],
     runtime: 120,
-    status: 'WATCHLIST',
-    downloaded: false,
     notes: 'note',
     dateWatched: null,
     createdAt: new Date('2024-01-01T12:00:00.000Z'),
@@ -45,8 +43,6 @@ describe('toMediaItem', () => {
       lastAirDate: null,
       genres: ['Drama'],
       runtime: 120,
-      status: MediaStatus.WATCHLIST,
-      downloaded: false,
       notes: 'note',
       dateWatched: null,
       createdAt: '2024-01-01T12:00:00.000Z',
@@ -67,7 +63,6 @@ describe('toMediaItem', () => {
         notes: null,
         dateWatched: null,
         type: 'SERIES',
-        status: 'WATCHED',
       }),
     );
 
@@ -81,7 +76,6 @@ describe('toMediaItem', () => {
     expect(result.notes).toBeNull();
     expect(result.dateWatched).toBeNull();
     expect(result.type).toBe(MediaType.SERIES);
-    expect(result.status).toBe(MediaStatus.WATCHED);
   });
 
   it('converts lastAirDate to ISO when present', () => {
@@ -99,7 +93,6 @@ describe('toMediaItem', () => {
     const result = toMediaItem(
       buildPrismaMediaItem({
         dateWatched: new Date('2023-06-01T18:30:00.000Z'),
-        status: 'WATCHED',
       }),
     );
 

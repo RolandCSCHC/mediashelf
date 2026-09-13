@@ -27,8 +27,6 @@ function buildPrismaMediaItem(
     lastAirDate: null,
     genres: [],
     runtime: null,
-    status: 'WATCHING',
-    downloaded: false,
     notes: null,
     dateWatched: null,
     createdAt: new Date('2024-02-01T00:00:00.000Z'),
@@ -129,28 +127,25 @@ describe('lists.mapper', () => {
       expect(result.currentEpisode).toBe(5);
       expect(result.addedAt).toBe('2024-03-05T12:00:00.000Z');
       expect(result.mediaItem.type).toBe(MediaType.SERIES);
-      expect(result.mediaItem.status).toBe(MediaStatus.WATCHING);
       expect(result.mediaItem.title).toBe('Show');
     });
 
     it('maps membership status independently of the library title', () => {
       const result = toCustomListEntry({
         ...buildPrismaListItem({ status: 'WATCHED' }),
-        mediaItem: buildPrismaMediaItem({ status: 'WATCHLIST' }),
+        mediaItem: buildPrismaMediaItem(),
       });
 
       expect(result.status).toBe(MediaStatus.WATCHED);
-      expect(result.mediaItem.status).toBe(MediaStatus.WATCHLIST);
     });
 
     it('maps membership downloaded independently of the library title', () => {
       const result = toCustomListEntry({
         ...buildPrismaListItem({ downloaded: true }),
-        mediaItem: buildPrismaMediaItem({ downloaded: false }),
+        mediaItem: buildPrismaMediaItem(),
       });
 
       expect(result.downloaded).toBe(true);
-      expect(result.mediaItem.downloaded).toBe(false);
     });
 
     it('preserves null progress fields', () => {
@@ -159,7 +154,7 @@ describe('lists.mapper', () => {
           currentSeason: null,
           currentEpisode: null,
         }),
-        mediaItem: buildPrismaMediaItem({ type: 'MOVIE', status: 'WATCHLIST' }),
+        mediaItem: buildPrismaMediaItem({ type: 'MOVIE' }),
       });
 
       expect(result.currentSeason).toBeNull();

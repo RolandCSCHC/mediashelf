@@ -170,13 +170,13 @@ Live URLs:
 | `/search/movie/[tmdbId]`  | TMDB movie preview (cast, crew) before adding                           |
 | `/search/series/[tmdbId]` | TMDB series preview (cast, creators) before adding                      |
 | `/library`                | Full library with filters, sort, search, pagination, panels/list toggle |
-| `/library/[id]`           | Title detail, status, lists, notes, TMDB credits                        |
+| `/library/[id]`           | Title detail, lists, notes, TMDB credits                                |
 | `/lists`                  | Custom lists CRUD                                                       |
 | `/lists/[id]`             | List detail, pagination, bulk add, per-list series progress             |
 | `/backup`                 | Export library JSON / merge-import a backup                             |
 | `/feedback`               | Report a bug or suggest an improvement                                  |
 
-`GET /tmdb/search` finds titles. `GET /tmdb/:type/:tmdbId` returns details and credits for the preview page. `GET /media` accepts filter, sort, and pagination query params (`page`, `pageSize`, including `search`). `PATCH /media/:id` updates library status and downloaded. `PATCH /lists/:id/items/:mediaItemId` updates per-list status, downloaded, and series progress. `GET /backup` / `POST /backup/import` handle JSON backup. `POST /feedback` stores a bug report or improvement; `GET /feedback` lists them for `FEEDBACK_ADMIN_EMAIL`.
+`GET /tmdb/search` finds titles. `GET /tmdb/:type/:tmdbId` returns details and credits for the preview page. `GET /media` accepts filter, sort, and pagination query params (`page`, `pageSize`, including `search`). Status, downloaded, and released filters on `GET /media` match any list membership. `PATCH /media/:id` updates notes and date watched. `PATCH /lists/:id/items/:mediaItemId` updates per-list status, downloaded, and series progress. `GET /backup` / `POST /backup/import` handle JSON backup. `POST /feedback` stores a bug report or improvement; `GET /feedback` lists them for `FEEDBACK_ADMIN_EMAIL`.
 
 Interactive API docs: [Swagger](http://localhost:3001/docs) (local) or [production Swagger](https://mediashelf-api.vercel.app/docs).
 

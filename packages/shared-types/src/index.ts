@@ -77,8 +77,6 @@ export interface MediaItem {
   lastAirDate: string | null;
   genres: string[];
   runtime: number | null;
-  status: MediaStatus;
-  downloaded: boolean;
   notes: string | null;
   dateWatched: string | null;
   createdAt: string;
@@ -92,7 +90,6 @@ export interface CreateManualMediaRequest {
   releaseYear?: number;
   description?: string | null;
   notes?: string | null;
-  status?: MediaStatus;
 }
 
 export interface HealthResponse {
@@ -148,8 +145,6 @@ export interface ImportMediaRequest {
 }
 
 export interface UpdateMediaItemRequest {
-  status?: MediaStatus;
-  downloaded?: boolean;
   notes?: string | null;
   dateWatched?: string | null;
 }
@@ -184,9 +179,11 @@ export interface PaginatedMediaResponse extends PaginationMeta {
 }
 
 export interface ListMediaQuery {
+  /** Library: titles with this status on any list. Lists: memberships with this status. */
   status?: MediaStatus;
   type?: MediaType;
   genre?: string;
+  /** Library: downloaded on any list (`true`) or on none (`false`). Lists: this membership. */
   downloaded?: boolean;
   /** Upcoming titles whose release / last-air date has arrived (`true`) or not yet (`false`). */
   released?: boolean;
@@ -306,8 +303,10 @@ export interface LibraryBackupMediaItem {
   lastAirDate?: string | null;
   genres: string[];
   runtime: number | null;
-  status: MediaStatus;
-  downloaded: boolean;
+  /** Ignored on import except as a fallback for list memberships that omit status. */
+  status?: MediaStatus;
+  /** Ignored on import except as a fallback for list memberships that omit downloaded. */
+  downloaded?: boolean;
   notes: string | null;
   dateWatched: string | null;
 }

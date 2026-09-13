@@ -166,14 +166,23 @@ export class ListsService {
     );
     const existingSet = new Set(existingIds);
     const newItems = mediaItems.filter((item) => !existingSet.has(item.id));
+    const status = this.membershipStatusFor(list, MediaStatus.WATCHLIST);
+    const downloaded = this.membershipDownloadedFor(list, false);
     await this.listsRepository.addItems(
       listId,
       newItems.map((item) => ({
         mediaItemId: item.id,
-        status: this.membershipStatusFor(list, item.status),
-        downloaded: this.membershipDownloadedFor(list, item.downloaded),
+        status,
+        downloaded,
       })),
     );
+    if (status === MediaStatus.WATCHED) {
+      await Promise.all(
+        newItems.map((item) =>
+          this.mediaService.stampDateWatchedIfNeeded(userId, item.id),
+        ),
+      );
+    }
   }
 
   async updateForUser(
@@ -269,12 +278,14 @@ export class ListsService {
     }
 
     try {
+      const status = this.membershipStatusFor(list, MediaStatus.WATCHLIST);
       await this.listsRepository.addItem(listId, dto.mediaItemId, {
-        status: this.membershipStatusFor(list, media.status),
-        downloaded: this.membershipDownloadedFor(list, media.downloaded),
+        status,
+        downloaded: this.membershipDownloadedFor(list, false),
         currentSeason: dto.currentSeason,
         currentEpisode: dto.currentEpisode,
       });
+      await this.maybeStampWatched(userId, dto.mediaItemId, status);
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -317,15 +328,17 @@ export class ListsService {
     }
 
     try {
+      const status =
+        membership?.status ??
+        this.membershipStatusFor(list, MediaStatus.WATCHLIST);
       await this.listsRepository.addItem(listId, mediaItemId, {
-        status:
-          membership?.status ?? this.membershipStatusFor(list, media.status),
+        status,
         downloaded:
-          membership?.downloaded ??
-          this.membershipDownloadedFor(list, media.downloaded),
+          membership?.downloaded ?? this.membershipDownloadedFor(list, false),
         currentSeason: membership?.currentSeason,
         currentEpisode: membership?.currentEpisode,
       });
+      await this.maybeStampWatched(userId, mediaItemId, status);
       return 'added';
     } catch (error) {
       if (
@@ -363,14 +376,23 @@ export class ListsService {
     );
     const existingSet = new Set(existingIds);
     const newItems = mediaItems.filter((item) => !existingSet.has(item.id));
+    const status = this.membershipStatusFor(list, MediaStatus.WATCHLIST);
+    const downloaded = this.membershipDownloadedFor(list, false);
     await this.listsRepository.addItems(
       listId,
       newItems.map((item) => ({
         mediaItemId: item.id,
-        status: this.membershipStatusFor(list, item.status),
-        downloaded: this.membershipDownloadedFor(list, item.downloaded),
+        status,
+        downloaded,
       })),
     );
+    if (status === MediaStatus.WATCHED) {
+      await Promise.all(
+        newItems.map((item) =>
+          this.mediaService.stampDateWatchedIfNeeded(userId, item.id),
+        ),
+      );
+    }
 
     return this.getForUser(userId, listId);
   }
@@ -421,6 +443,10 @@ export class ListsService {
       throw new NotFoundException('List item not found');
     }
 
+    if (updated.status === MediaStatus.WATCHED) {
+      await this.mediaService.stampDateWatchedIfNeeded(userId, mediaItemId);
+    }
+
     return toCustomListEntry(updated);
   }
 
@@ -469,15 +495,16 @@ export class ListsService {
     }
 
     try {
+      const status = this.membershipStatusFor(
+        targetList,
+        sourceItem.status as MediaStatus,
+      );
       await this.listsRepository.moveItem(
         sourceListId,
         dto.targetListId,
         mediaItemId,
         {
-          status: this.membershipStatusFor(
-            targetList,
-            sourceItem.status as MediaStatus,
-          ),
+          status,
           downloaded: this.membershipDownloadedFor(
             targetList,
             sourceItem.downloaded,
@@ -486,6 +513,7 @@ export class ListsService {
           currentEpisode: sourceItem.currentEpisode,
         },
       );
+      await this.maybeStampWatched(userId, mediaItemId, status);
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -530,6 +558,18 @@ export class ListsService {
     fallback: boolean,
   ): boolean {
     return resolveMembershipDownloaded(list.defaultDownloaded, fallback);
+  }
+
+  private async maybeStampWatched(
+    userId: string,
+    mediaItemId: string,
+    status: MediaStatus,
+  ): Promise<void> {
+    if (status !== MediaStatus.WATCHED) {
+      return;
+    }
+
+    await this.mediaService.stampDateWatchedIfNeeded(userId, mediaItemId);
   }
 
   private assertProgressAllowed(

@@ -216,13 +216,15 @@ Each media item should contain information such as:
 - Runtime
 - Media type (Movie / Series)
 
-Series progress fields (`currentSeason`, `currentEpisode`), **list status**, and **downloaded** live on **list membership** (`CustomListItem`), not only on the media item. The same series can have different progress, status, and downloaded state in different lists (for example S1–2 Watched in “Series watched” and S3 Watchlist in “Series to watch”). Progress is only used when the media `type` is `SERIES`.
+Series progress fields (`currentSeason`, `currentEpisode`), **status**, and **downloaded** live on **list membership** (`CustomListItem`), not on the library title. The library is a catalog of titles you own. The same series can have different progress, status, and downloaded state in different lists (for example S1–2 Watched in “Series watched” and S3 Watchlist in “Series to watch”). Progress is only used when the media `type` is `SERIES`.
 
 ---
 
 ## Status
 
-Each **library** title has a status and downloaded flag, and each **list membership** has its own status and downloaded flag. The same series can be Watchlist and not downloaded in one list, and Watched and downloaded in another.
+Status and downloaded belong to **list membership**, not to the library title. The same movie can be Watchlist in one list, Watching in another, and downloaded in only some of them.
+
+The library is the catalog. Filtering the library by Watching (or downloaded) shows titles that have that status (or downloaded flag) on **any** list.
 
 Possible statuses:
 
@@ -233,16 +235,16 @@ Possible statuses:
 
 Downloaded is a separate boolean flag (not a status).
 
-Example library title:
+Example list membership:
 
 ```json
 {
-  "status": "WATCHLIST",
+  "status": "WATCHING",
   "downloaded": true
 }
 ```
 
-This allows a movie or series to be both downloaded and still waiting to be watched in the library, while custom lists keep their own membership status and downloaded flags.
+A title that is not on any list has no status or downloaded flag. Add it to a list to track those.
 
 ---
 
@@ -284,7 +286,7 @@ A details page shows extra TMDB info (cast, directors / creators, genres, runtim
 
 MediaShelf automatically imports all relevant information.
 
-When a title cannot be found on TMDB, the user can add it manually (title and type required; year, description, notes, and status optional). Manual items have no TMDB ID or poster.
+When a title cannot be found on TMDB, the user can add it manually (title and type required; year, description, and notes optional). Manual items have no TMDB ID or poster.
 
 ---
 
@@ -292,7 +294,7 @@ When a title cannot be found on TMDB, the user can add it manually (title and ty
 
 Allow filtering by:
 
-- Status
+- Status (library: any list membership; a list page: that list only)
 - Genre
 - Movie / Series
 - Downloaded
@@ -331,9 +333,9 @@ Examples:
 
 Users should be able to create unlimited custom lists.
 
-Each list can optionally configure a default **status** and **downloaded** flag. Adding or moving a title into that list immediately applies both to **that list membership**. For example, a “Downloaded movies” list can set every added title to Watchlist and Downloaded in that list, without changing the library title or other lists.
+Each list can optionally configure a default **status** and **downloaded** flag. Adding or moving a title into that list immediately applies both to **that list membership**. For example, a “Downloaded movies” list can set every added title to Watchlist and Downloaded in that list, without changing other lists.
 
-On a configured list, titles can be the configured status or **Watching**, so a Watchlist list can still have items you are currently watching. Grouping lists (Favorites, Marvel) can leave status and downloaded unchanged; new memberships copy the library status and downloaded flag.
+On a configured list, titles can be the configured status or **Watching**, so a Watchlist list can still have items you are currently watching. Grouping lists (Favorites, Marvel) can leave defaults unset; new memberships start as Watchlist and not downloaded.
 
 Series progress, status, and downloaded are stored on each list membership, so one series can track different seasons/episodes, statuses, and download states across lists. Moving a title from one list to another copies that membership onto the destination and applies the destination list’s default state.
 
@@ -349,7 +351,7 @@ Import the same JSON with **merge** semantics:
 - Manual titles match on `(title, type)` and are skipped if already present
 - Missing lists are created by name (including default status / downloaded); existing lists are reused
 - Missing list memberships are added (including per-list status and downloaded); existing memberships (and series progress) are left unchanged
-- Import does not rewrite library status/downloaded from list defaults (media records and list memberships are stored separately)
+- Older backups may still include library-level status/downloaded on media records; those fields are ignored except as a fallback when a membership omits them
 
 The backup stores resolved TMDB IDs, so ambiguous titles do not need to be re-matched on import.
 
@@ -432,7 +434,7 @@ The frontend communicates with the backend through a REST API.
 Primary library resource:
 
 - `GET /media`
-- `GET /media?status=WATCHING&type=SERIES&sortBy=TITLE&page=1&pageSize=25`
+- `GET /media?status=WATCHING&type=SERIES&sortBy=TITLE&page=1&pageSize=25` (status matches any list membership)
 - `GET /media?released=true`
 - `POST /media`
 - `POST /media/refresh-last-air-dates`
@@ -675,6 +677,7 @@ Production hosting: Next.js and NestJS on Vercel; database on Neon.
 
 ## Phase 15
 - Setup in docs and docu in readme ✓
+- Status and downloaded live on lists only (library is a catalog) ✓
 
 # Portfolio Goals
 

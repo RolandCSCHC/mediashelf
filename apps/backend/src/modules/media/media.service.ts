@@ -10,7 +10,7 @@ import type {
   MediaItem,
   PaginatedMediaResponse,
 } from '@mediashelf/shared-types';
-import { MediaStatus, MediaType } from '@mediashelf/shared-types';
+import { MediaType } from '@mediashelf/shared-types';
 import { TmdbService } from '../tmdb/tmdb.service';
 import { MediaRepository } from './media.repository';
 import { toMediaItem } from './media.mapper';
@@ -109,8 +109,6 @@ export class MediaService {
     tmdbId: number,
     type: MediaType,
     options?: {
-      status?: MediaStatus;
-      downloaded?: boolean;
       notes?: string | null;
     },
   ): Promise<MediaItem> {
@@ -207,9 +205,6 @@ export class MediaService {
       description,
       releaseDate,
       notes,
-      ...(dto.status !== undefined
-        ? { status: dto.status as MediaStatus }
-        : {}),
     });
 
     return toMediaItem(created);
@@ -228,8 +223,6 @@ export class MediaService {
       lastAirDate: string | null;
       genres: string[];
       runtime: number | null;
-      status: MediaStatus;
-      downloaded: boolean;
       notes: string | null;
       dateWatched: string | null;
     },
@@ -250,8 +243,6 @@ export class MediaService {
       lastAirDate: data.lastAirDate ? new Date(data.lastAirDate) : null,
       genres: data.genres,
       runtime: data.runtime,
-      status: data.status,
-      downloaded: data.downloaded,
       notes: data.notes?.trim() || null,
       dateWatched: data.dateWatched ? new Date(data.dateWatched) : null,
     });
@@ -264,12 +255,7 @@ export class MediaService {
     id: string,
     dto: UpdateMediaItemDto,
   ): Promise<MediaItem> {
-    if (
-      dto.status === undefined &&
-      dto.downloaded === undefined &&
-      dto.notes === undefined &&
-      dto.dateWatched === undefined
-    ) {
+    if (dto.notes === undefined && dto.dateWatched === undefined) {
       throw new BadRequestException('No fields to update');
     }
 
@@ -278,17 +264,12 @@ export class MediaService {
       throw new NotFoundException('Media item not found');
     }
 
-    let dateWatched: Date | null | undefined = undefined;
-
-    if (dto.dateWatched !== undefined) {
-      dateWatched = dto.dateWatched ? new Date(dto.dateWatched) : null;
-    } else if (dto.status !== undefined) {
-      if (dto.status === MediaStatus.WATCHED && !existing.dateWatched) {
-        dateWatched = new Date();
-      } else if (dto.status !== MediaStatus.WATCHED) {
-        dateWatched = null;
-      }
-    }
+    const dateWatched =
+      dto.dateWatched === undefined
+        ? undefined
+        : dto.dateWatched
+          ? new Date(dto.dateWatched)
+          : null;
 
     const notes =
       dto.notes === undefined
@@ -298,10 +279,6 @@ export class MediaService {
           : dto.notes.trim() || null;
 
     const updated = await this.mediaRepository.updateOwned(id, userId, {
-      ...(dto.status !== undefined
-        ? { status: dto.status as typeof existing.status }
-        : {}),
-      ...(dto.downloaded !== undefined ? { downloaded: dto.downloaded } : {}),
       ...(notes !== undefined ? { notes } : {}),
       ...(dateWatched !== undefined ? { dateWatched } : {}),
     });
@@ -311,6 +288,17 @@ export class MediaService {
     }
 
     return toMediaItem(updated);
+  }
+
+  async stampDateWatchedIfNeeded(userId: string, id: string): Promise<void> {
+    const existing = await this.mediaRepository.findByIdForUser(id, userId);
+    if (!existing || existing.dateWatched) {
+      return;
+    }
+
+    await this.mediaRepository.updateOwned(id, userId, {
+      dateWatched: new Date(),
+    });
   }
 
   async deleteForUser(userId: string, id: string): Promise<void> {

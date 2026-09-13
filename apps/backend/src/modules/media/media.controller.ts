@@ -49,7 +49,8 @@ export class MediaController {
 
   @Get()
   @ApiOperation({
-    summary: 'List library items (filter, search, sort, paginate)',
+    summary:
+      'List library items (filter, search, sort, paginate). Status, downloaded, and released match any list membership.',
   })
   @ApiOkResponse({ type: PaginatedMediaResponseSchema })
   list(
@@ -109,7 +110,7 @@ export class MediaController {
 
   @Patch(':id')
   @ApiOperation({
-    summary: 'Update status, downloaded flag, notes, or date watched',
+    summary: 'Update notes or date watched',
   })
   @ApiParam({ name: 'id', description: 'Media item id' })
   @ApiOkResponse({ type: MediaItemSchema })

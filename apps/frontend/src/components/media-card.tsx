@@ -73,15 +73,16 @@ export function MediaCard({
     item.type === 'SERIES'
       ? formatSeriesProgress(progressSeason, progressEpisode)
       : null;
-  const displayedStatus = status ?? item.status;
-  const displayedDownloaded = downloaded ?? item.downloaded;
+  const showMembershipControls =
+    (status !== undefined && onStatusChange !== undefined) ||
+    (downloaded !== undefined && onDownloadedChange !== undefined);
   const meta = (
     <>
       <TypeLabel type={item.type} />
       {releaseLabel ? ` · ${releaseLabel}` : ''}
-      {` · ${t(mediaStatusLabelKey(displayedStatus))}`}
+      {status ? ` · ${t(mediaStatusLabelKey(status))}` : ''}
       {progress ? ` · ${progress}` : ''}
-      {displayedDownloaded ? ` · ${t('common.downloaded')}` : ''}
+      {downloaded ? ` · ${t('common.downloaded')}` : ''}
     </>
   );
 
@@ -119,23 +120,29 @@ export function MediaCard({
             </div>
           </Link>
 
-          <div className="flex flex-col gap-2 sm:items-end">
-            <MediaItemControls
-              item={item}
-              layout="inline"
-              allowedStatuses={allowedStatuses}
-              status={status}
-              onStatusChange={onStatusChange}
-              downloaded={downloaded}
-              onDownloadedChange={onDownloadedChange}
-              onUpdated={onUpdated}
-              onDeleted={onDeleted}
-              onError={onError}
-            />
-            {actions ? (
-              <div className="flex flex-wrap items-center gap-2">{actions}</div>
-            ) : null}
-          </div>
+          {showMembershipControls || actions ? (
+            <div className="flex flex-col gap-2 sm:items-end">
+              {showMembershipControls ? (
+                <MediaItemControls
+                  item={item}
+                  layout="inline"
+                  allowedStatuses={allowedStatuses}
+                  status={status}
+                  onStatusChange={onStatusChange}
+                  downloaded={downloaded}
+                  onDownloadedChange={onDownloadedChange}
+                  onUpdated={onUpdated}
+                  onDeleted={onDeleted}
+                  onError={onError}
+                />
+              ) : null}
+              {actions ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  {actions}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       </article>
     );
@@ -171,21 +178,33 @@ export function MediaCard({
         </div>
       </Link>
 
-      <div className="border-t border-border px-3 py-2.5">
-        <MediaItemControls
-          item={item}
-          layout="compact"
-          allowedStatuses={allowedStatuses}
-          status={status}
-          onStatusChange={onStatusChange}
-          downloaded={downloaded}
-          onDownloadedChange={onDownloadedChange}
-          onUpdated={onUpdated}
-          onDeleted={onDeleted}
-          onError={onError}
-        />
-        {actions ? <div className="mt-2 space-y-2">{actions}</div> : null}
-      </div>
+      {showMembershipControls || actions ? (
+        <div className="border-t border-border px-3 py-2.5">
+          {showMembershipControls ? (
+            <MediaItemControls
+              item={item}
+              layout="compact"
+              allowedStatuses={allowedStatuses}
+              status={status}
+              onStatusChange={onStatusChange}
+              downloaded={downloaded}
+              onDownloadedChange={onDownloadedChange}
+              onUpdated={onUpdated}
+              onDeleted={onDeleted}
+              onError={onError}
+            />
+          ) : null}
+          {actions ? (
+            <div
+              className={
+                showMembershipControls ? 'mt-2 space-y-2' : 'space-y-2'
+              }
+            >
+              {actions}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </article>
   );
 }

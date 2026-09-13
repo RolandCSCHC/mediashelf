@@ -289,7 +289,6 @@ export const es: Messages = {
     title: 'Título',
     type: 'Tipo',
     yearOptional: 'Año (opcional)',
-    status: 'Estado',
     descriptionOptional: 'Descripción (opcional)',
     notesOptional: 'Notas (opcional)',
     titleRequired: 'El título es obligatorio',
@@ -304,7 +303,7 @@ export const es: Messages = {
     heading: 'Exportar e importar',
     export: 'Exportar',
     exportBody:
-      'Incluye cada título (estado, notas, pósters), listas personalizadas y el progreso de series por lista.',
+      'Incluye cada título (notas, pósters), listas personalizadas y, por lista, el estado, la marca de descarga y el progreso de series.',
     preparing: 'Preparando…',
     downloadJson: 'Descargar JSON',
     exportFailed: 'La exportación falló',
@@ -373,15 +372,15 @@ export const es: Messages = {
     descriptionPlaceholder: 'Opcional',
     setStatus: 'Estado al añadir',
     setDownloaded: 'Descarga al añadir',
-    leaveUnchanged: 'Dejar igual',
-    help: 'Los títulos nuevos reciben el estado y la marca de descarga de esta lista, solo en esta lista. Puedes pasar un título a Viendo aquí sin cambiar su estado en otras listas.',
+    leaveUnchanged: 'Sin valor por defecto',
+    help: 'Si configuras un valor, los títulos nuevos reciben ese estado y marca de descarga solo en esta lista. Si no, empiezan como Por ver y sin descargar. Puedes pasar un título a Viendo aquí sin cambiar otras listas.',
   },
   tips: {
     label: 'Cómo usar esta página',
     gotIt: 'Entendido',
     restore: 'Volver a mostrar las ayudas',
     library:
-      'Cada título tiene un estado (Por ver, Viendo, Visto, Próximamente) y una marca de descargado aparte. Filtra y ordena la estantería, y usa Ya disponible / Aún no sale para ver qué se ha estrenado.',
+      'La biblioteca es tu catálogo. El estado y la descarga viven en cada lista donde está un título, así que la misma película puede estar Viendo en una lista y Visto en otra. Filtra por Viendo para ver los títulos con ese estado en cualquier lista.',
     search:
       'Busca en TMDB, abre un título para ver el reparto y los detalles, y añádelo a tu biblioteca. Si TMDB no lo tiene, añádelo a mano.',
     lists:

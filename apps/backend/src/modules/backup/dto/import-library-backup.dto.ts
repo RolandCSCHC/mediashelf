@@ -77,12 +77,18 @@ export class LibraryBackupMediaItemDto {
   @Min(0)
   runtime!: number | null;
 
-  @Transform(({ value }) => coerceLegacyMediaStatus(value))
+  @IsOptional()
+  @Transform(({ value }) =>
+    value === undefined || value === null || value === ''
+      ? undefined
+      : coerceLegacyMediaStatus(value),
+  )
   @IsEnum(MediaStatus)
-  status!: MediaStatus;
+  status?: MediaStatus;
 
+  @IsOptional()
   @IsBoolean()
-  downloaded!: boolean;
+  downloaded?: boolean;
 
   @ValidateIf((_, value) => value !== null)
   @IsString()

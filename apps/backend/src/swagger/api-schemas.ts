@@ -76,12 +76,6 @@ export class MediaItemSchema {
   @ApiPropertyOptional({ nullable: true, type: Number })
   runtime!: number | null;
 
-  @ApiProperty({ enum: MediaStatus })
-  status!: MediaStatus;
-
-  @ApiProperty()
-  downloaded!: boolean;
-
   @ApiPropertyOptional({ nullable: true, type: String })
   notes!: string | null;
 
@@ -344,11 +338,13 @@ export class LibraryBackupMediaItemSchema {
   @ApiPropertyOptional({ nullable: true, type: Number })
   runtime!: number | null;
 
-  @ApiProperty({ enum: MediaStatus })
-  status!: MediaStatus;
+  /** Present on older backups; ignored except as a membership fallback. */
+  @ApiPropertyOptional({ enum: MediaStatus })
+  status?: MediaStatus;
 
-  @ApiProperty()
-  downloaded!: boolean;
+  /** Present on older backups; ignored except as a membership fallback. */
+  @ApiPropertyOptional()
+  downloaded?: boolean;
 
   @ApiPropertyOptional({ nullable: true, type: String })
   notes!: string | null;

@@ -68,8 +68,12 @@ export type MediaFilterSortInput = {
 export function matchesMediaFilters(
   item: MediaItem,
   filters: MediaFilterSortInput,
+  memberships: { status: MediaStatus; downloaded: boolean }[] = [],
 ): boolean {
-  if (filters.status && item.status !== filters.status) {
+  if (
+    filters.status &&
+    !memberships.some((membership) => membership.status === filters.status)
+  ) {
     return false;
   }
   if (filters.type && item.type !== filters.type) {
@@ -78,21 +82,38 @@ export function matchesMediaFilters(
   if (filters.genre && !item.genres.includes(filters.genre)) {
     return false;
   }
-  if (filters.downloaded === 'true' && !item.downloaded) {
-    return false;
-  }
-  if (filters.downloaded === 'false' && item.downloaded) {
-    return false;
-  }
-  if (filters.released === 'true' && !isReleasedUpcoming(item, item.status)) {
+  if (
+    filters.downloaded === 'true' &&
+    !memberships.some((membership) => membership.downloaded)
+  ) {
     return false;
   }
   if (
-    filters.released === 'false' &&
-    (item.status !== MediaStatus.UPCOMING ||
-      isReleasedUpcoming(item, item.status))
+    filters.downloaded === 'false' &&
+    memberships.some((membership) => membership.downloaded)
   ) {
     return false;
+  }
+  if (
+    filters.released === 'true' &&
+    !memberships.some((membership) =>
+      isReleasedUpcoming(item, membership.status),
+    )
+  ) {
+    return false;
+  }
+  if (filters.released === 'false') {
+    const hasUpcoming = memberships.some(
+      (membership) => membership.status === MediaStatus.UPCOMING,
+    );
+    if (
+      !hasUpcoming ||
+      memberships.some((membership) =>
+        isReleasedUpcoming(item, membership.status),
+      )
+    ) {
+      return false;
+    }
   }
   const query = filters.search?.trim().toLowerCase();
   if (query && !item.title.toLowerCase().includes(query)) {

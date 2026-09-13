@@ -26,20 +26,11 @@ export function buildDateArrivedWhere(
 
 export function buildMediaItemWhere(
   filters: ListMediaQuery,
-  now = new Date(),
 ): Prisma.MediaItemWhereInput {
   const where: Prisma.MediaItemWhereInput = {};
 
-  if (filters.status) {
-    where.status = filters.status;
-  }
-
   if (filters.type) {
     where.type = filters.type;
-  }
-
-  if (filters.downloaded !== undefined) {
-    where.downloaded = filters.downloaded;
   }
 
   if (filters.genre) {
@@ -50,18 +41,44 @@ export function buildMediaItemWhere(
     where.title = { contains: filters.search, mode: 'insensitive' };
   }
 
-  if (filters.released === undefined) {
-    return where;
+  return where;
+}
+
+/** Library filters for status, downloaded, and released look at list memberships. */
+export function buildLibraryMembershipWhere(
+  filters: ListMediaQuery,
+  now = new Date(),
+): Prisma.MediaItemWhereInput[] {
+  const clauses: Prisma.MediaItemWhereInput[] = [];
+
+  if (filters.status) {
+    clauses.push({
+      listItems: { some: { status: filters.status } },
+    });
   }
 
-  const releasedClause: Prisma.MediaItemWhereInput[] = [
-    { status: MediaStatus.UPCOMING },
-    filters.released
-      ? buildDateArrivedWhere(now)
-      : { NOT: buildDateArrivedWhere(now) },
-  ];
+  if (filters.downloaded === true) {
+    clauses.push({
+      listItems: { some: { downloaded: true } },
+    });
+  } else if (filters.downloaded === false) {
+    clauses.push({
+      NOT: { listItems: { some: { downloaded: true } } },
+    });
+  }
 
-  return { AND: [where, ...releasedClause] };
+  if (filters.released !== undefined) {
+    clauses.push({
+      listItems: { some: { status: MediaStatus.UPCOMING } },
+    });
+    clauses.push(
+      filters.released
+        ? buildDateArrivedWhere(now)
+        : { NOT: buildDateArrivedWhere(now) },
+    );
+  }
+
+  return clauses;
 }
 
 export function buildMediaItemOrderBy(

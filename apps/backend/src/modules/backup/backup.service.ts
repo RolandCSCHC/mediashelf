@@ -50,8 +50,6 @@ export class BackupService {
         lastAirDate: item.lastAirDate,
         genres: item.genres,
         runtime: item.runtime,
-        status: item.status,
-        downloaded: item.downloaded,
         notes: item.notes,
         dateWatched: item.dateWatched,
       })),
@@ -112,8 +110,8 @@ export class BackupService {
           refToMedia.set(item.ref, {
             id: existing.id,
             type: existing.type,
-            status: item.status,
-            downloaded: item.downloaded,
+            status: item.status ?? MediaStatus.WATCHLIST,
+            downloaded: item.downloaded ?? false,
           });
           result.mediaSkipped += 1;
           continue;
@@ -130,8 +128,6 @@ export class BackupService {
           lastAirDate: item.lastAirDate ?? null,
           genres: item.genres,
           runtime: item.runtime,
-          status: item.status,
-          downloaded: item.downloaded,
           notes: item.notes,
           dateWatched: item.dateWatched,
         });
@@ -139,8 +135,8 @@ export class BackupService {
         refToMedia.set(item.ref, {
           id: created.id,
           type: created.type,
-          status: item.status,
-          downloaded: item.downloaded,
+          status: item.status ?? MediaStatus.WATCHLIST,
+          downloaded: item.downloaded ?? false,
         });
         result.mediaImported += 1;
       } catch (error) {

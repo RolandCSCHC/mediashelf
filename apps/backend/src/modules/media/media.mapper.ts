@@ -1,6 +1,6 @@
 import type { MediaItem as PrismaMediaItem } from '@prisma/client';
 import type { MediaItem } from '@mediashelf/shared-types';
-import { MediaStatus, MediaType } from '@mediashelf/shared-types';
+import { MediaType } from '@mediashelf/shared-types';
 
 export function toMediaItem(item: PrismaMediaItem): MediaItem {
   return {
@@ -16,8 +16,6 @@ export function toMediaItem(item: PrismaMediaItem): MediaItem {
     lastAirDate: item.lastAirDate?.toISOString() ?? null,
     genres: item.genres,
     runtime: item.runtime,
-    status: item.status as MediaStatus,
-    downloaded: item.downloaded,
     notes: item.notes,
     dateWatched: item.dateWatched?.toISOString() ?? null,
     createdAt: item.createdAt.toISOString(),

@@ -20,10 +20,10 @@ Local setup, OAuth, Vercel/Neon, and backups: **[docs/SETUP.md](docs/SETUP.md)**
 - **Google and Microsoft OAuth** — JWT in an httpOnly cookie; same email is the same private library
 - **TMDB search and import** — posters, genres, metadata; preview cast / directors / creators before adding
 - **Manual entries** when a title is missing from TMDB
-- **Library CRUD** with status (Watchlist / Watching / Watched / Upcoming) and a separate downloaded flag
-- **Filters and sort** — status, type, genre, downloaded, list; sort by title (default), date added, release date, or date watched; title search
+- **Library CRUD** — catalog of titles; status (Watchlist / Watching / Watched / Upcoming) and downloaded live on each list membership
+- **Filters and sort** — status (any list in the library), type, genre, downloaded, list; sort by title (default), date added, release date, or date watched; title search
 - **Custom lists** with optional default status / downloaded, bulk add from the library, and move between lists
-- **Series progress per list** — season / episode, status, and downloaded live on membership, not only on the title
+- **Series progress per list** — season / episode, status, and downloaded live on membership
 - **Release awareness** — complete dates and “out now” / “not out yet” badges; refresh last-episode air dates from TMDB
 - **Panels / list view toggle** on library and list pages (persisted in `localStorage`)
 - **Server-side pagination** (default 2 panel rows or 10 list rows; 25 / 50 / 100 / all)
@@ -71,9 +71,9 @@ Production: Next.js and NestJS as separate Vercel projects; Prisma uses Neon’s
 
 Media is a **unified `MediaItem`** (`MOVIE` | `SERIES`), not separate movie/series tables. The REST resource is `/media`.
 
-Library status and downloaded live on the title. Custom-list **membership** (`CustomListItem`) has its own status, downloaded flag, and series progress. The same series can be Watchlist in one list and Watching S3 in another.
+The library is a catalog of titles. Status, downloaded, and series progress live on custom-list **membership** (`CustomListItem`). The same series can be Watchlist in one list and Watching S3 in another. Filtering the library by Watching shows titles with that status on any list.
 
-Lists can set default membership state. Adding or moving a title into a configured list applies that list’s defaults to **that membership** without rewriting the library title or other lists.
+Lists can set default membership state. Adding or moving a title into a configured list applies that list’s defaults to **that membership** without rewriting other lists. Grouping lists with no defaults start new memberships as Watchlist and not downloaded.
 
 JSON backup stores resolved TMDB IDs and imports with **merge** semantics: existing titles and memberships are left unchanged; missing lists and memberships are created.
 
@@ -136,9 +136,10 @@ Primary resources: `/media`, `/lists`, `/tmdb`, `/backup`, `/feedback`, `/auth`.
 
 Examples:
 
-- `GET /media?status=WATCHING&type=SERIES&sortBy=TITLE&page=1&pageSize=25`
+- `GET /media?status=WATCHING&type=SERIES&sortBy=TITLE&page=1&pageSize=25` (status matches any list membership)
 - `GET /media?released=true`
 - `POST /media` (TMDB import) / `POST /media/manual`
+- `PATCH /media/:id` (notes, date watched)
 - `PATCH /lists/:id/items/:mediaItemId` (per-list status, downloaded, series progress)
 - `GET /backup` / `POST /backup/import`
 

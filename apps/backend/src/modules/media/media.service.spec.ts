@@ -1,4 +1,4 @@
-import { MediaSortBy, MediaStatus, MediaType } from '@mediashelf/shared-types';
+import { MediaSortBy, MediaType } from '@mediashelf/shared-types';
 import { MediaRepository } from './media.repository';
 import { MediaService } from './media.service';
 import { TmdbService } from '../tmdb/tmdb.service';
@@ -36,8 +36,6 @@ describe('MediaService.listPageForUser', () => {
           lastAirDate: null,
           genres: ['Drama'],
           runtime: null,
-          status: MediaStatus.WATCHLIST,
-          downloaded: false,
           notes: null,
           dateWatched: null,
           createdAt: new Date('2024-01-01T00:00:00.000Z'),
@@ -88,8 +86,6 @@ describe('MediaService.refreshLastAirDates', () => {
     lastAirDate: null,
     genres: ['Comedy'],
     runtime: null,
-    status: MediaStatus.WATCHED,
-    downloaded: false,
     notes: null,
     dateWatched: null,
     createdAt: new Date('2024-01-01T00:00:00.000Z'),
