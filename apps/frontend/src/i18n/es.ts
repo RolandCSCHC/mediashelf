@@ -197,6 +197,7 @@ export const es: Messages = {
     notYetReleased: 'Aún no disponible',
     sortTitle: 'Título',
     sortDateAdded: 'Fecha de alta',
+    sortDateAddedToList: 'Fecha de alta en la lista',
     sortReleaseDate: 'Fecha de estreno',
     sortDateWatched: 'Fecha de visionado',
   },

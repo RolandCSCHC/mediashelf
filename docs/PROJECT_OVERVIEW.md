@@ -315,7 +315,7 @@ Library and custom lists sort by title A–Z by default.
 
 Users can also sort by:
 
-- Date added
+- Date added — in the library, when the title was added to the catalog; on a list, when it was added to that list
 - Release date
 - Date watched
 
@@ -678,6 +678,10 @@ Production hosting: Next.js and NestJS on Vercel; database on Neon.
 ## Phase 15
 - Setup in docs and docu in readme ✓
 - Status and downloaded live on lists only (library is a catalog) ✓
+
+## Phase 16
+- Sort lists by date added to list ✓
+- Download feature for individual lists so you can share them
 
 # Portfolio Goals
 

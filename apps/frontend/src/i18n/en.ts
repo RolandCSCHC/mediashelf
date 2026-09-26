@@ -193,6 +193,7 @@ export const en = {
     notYetReleased: 'Not yet released',
     sortTitle: 'Title',
     sortDateAdded: 'Date added',
+    sortDateAddedToList: 'Date added to list',
     sortReleaseDate: 'Release date',
     sortDateWatched: 'Date watched',
   },

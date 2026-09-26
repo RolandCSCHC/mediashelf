@@ -22,7 +22,7 @@ Local setup, OAuth, Vercel/Neon, and backups: **[docs/SETUP.md](docs/SETUP.md)**
 - **Manual entries** when a title is missing from TMDB
 - **Library CRUD** — catalog of titles; status (Watchlist / Watching / Watched / Upcoming) and downloaded live on each list membership
 - **Filters and sort** — status (any list in the library), type, genre, downloaded, list; sort by title (default), date added, release date, or date watched; title search
-- **Custom lists** with optional default status / downloaded, bulk add from the library, and move between lists
+- **Custom lists** with optional default status / downloaded, bulk add from the library, move between lists, and sort by the date a title was added to that list
 - **Series progress per list** — season / episode, status, and downloaded live on membership
 - **Release awareness** — complete dates and “out now” / “not out yet” badges; refresh last-episode air dates from TMDB
 - **Panels / list view toggle** on library and list pages (persisted in `localStorage`)

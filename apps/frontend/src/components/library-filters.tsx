@@ -10,6 +10,7 @@ import { MediaSortBy } from '@mediashelf/shared-types';
 import { useI18n } from '@/components/locale-provider';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
+import type { MessageKey } from '@/i18n';
 import {
   DOWNLOADED_FILTER_OPTIONS,
   MEDIA_SORT_OPTIONS,
@@ -34,6 +35,8 @@ type LibraryFilterSortControlsProps = {
   genres: string[];
   lists?: CustomList[];
   showListFilter?: boolean;
+  /** List pages sort “date added” by membership time, not library catalog time. */
+  dateAddedLabelKey?: MessageKey;
   onChange: (next: LibraryFiltersState) => void;
   onResetFilters: () => void;
 };
@@ -46,6 +49,7 @@ export function LibraryFilterSortControls({
   genres,
   lists = [],
   showListFilter = true,
+  dateAddedLabelKey,
   onChange,
   onResetFilters,
 }: LibraryFilterSortControlsProps) {
@@ -66,9 +70,18 @@ export function LibraryFilterSortControls({
     ...(showListFilter ? [value.listId] : []),
   ].filter(Boolean).length;
 
+  function sortOptionLabelKey(option: (typeof MEDIA_SORT_OPTIONS)[number]) {
+    if (option.value === MediaSortBy.DATE_ADDED && dateAddedLabelKey) {
+      return dateAddedLabelKey;
+    }
+    return option.labelKey;
+  }
+
+  const activeSort = MEDIA_SORT_OPTIONS.find(
+    (option) => option.value === value.sortBy,
+  );
   const sortLabel = t(
-    MEDIA_SORT_OPTIONS.find((option) => option.value === value.sortBy)
-      ?.labelKey ?? 'filters.sort',
+    activeSort ? sortOptionLabelKey(activeSort) : 'filters.sort',
   );
 
   return (
@@ -272,7 +285,7 @@ export function LibraryFilterSortControls({
             >
               {MEDIA_SORT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
-                  {t(option.labelKey)}
+                  {t(sortOptionLabelKey(option))}
                 </option>
               ))}
             </select>

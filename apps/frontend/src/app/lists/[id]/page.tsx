@@ -383,6 +383,7 @@ function ListDetailContent() {
                 value={filters}
                 genres={genres}
                 showListFilter={false}
+                dateAddedLabelKey="filters.sortDateAddedToList"
                 onChange={setFilters}
                 onResetFilters={resetFiltersOnly}
               />

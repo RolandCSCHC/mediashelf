@@ -9,10 +9,10 @@ import type { ListMediaQuery } from '@mediashelf/shared-types';
 import { resolvePagination, uniqueSortedGenres } from '../../common/pagination';
 import {
   buildDateArrivedWhere,
-  buildMediaItemOrderBy,
   buildMediaItemWhere,
 } from '../media/media-query';
 import { PrismaService } from '../prisma/prisma.service';
+import { buildListItemOrderBy } from './list-query';
 
 type ListWithCount = PrismaCustomList & { _count: { items: number } };
 
@@ -101,9 +101,7 @@ export class ListsRepository {
     const items = await this.prisma.customListItem.findMany({
       where: itemWhere,
       include: { mediaItem: true },
-      orderBy: buildMediaItemOrderBy(filters.sortBy).map((order) => ({
-        mediaItem: order,
-      })),
+      orderBy: buildListItemOrderBy(filters.sortBy),
       ...(pagination.skip !== undefined ? { skip: pagination.skip } : {}),
       ...(pagination.take !== undefined ? { take: pagination.take } : {}),
     });
