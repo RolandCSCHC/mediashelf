@@ -48,11 +48,13 @@ import { ViewTip } from '@/components/view-tip';
 import { useI18n } from '@/components/locale-provider';
 import {
   deleteCustomList,
+  exportListBackup,
   getCustomList,
   removeMediaFromList,
   updateCustomList,
   updateListItem,
 } from '@/lib/api';
+import { downloadJson, listShareFileName } from '@/lib/download-json';
 import { resolvePageSize } from '@/lib/media-pagination';
 import { mediaCollectionClassName } from '@/lib/media-view-mode';
 import { formatListStateSummary } from '@/lib/list-state';
@@ -90,6 +92,7 @@ function ListDetailContent() {
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -224,6 +227,26 @@ function ListDetailContent() {
       );
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function handleDownloadList() {
+    if (!list || isDownloading) {
+      return;
+    }
+
+    setIsDownloading(true);
+    setActionError(null);
+    try {
+      const payload = await exportListBackup(list.id);
+      const stamp = new Date().toISOString().slice(0, 10);
+      downloadJson(listShareFileName(list.name, stamp), payload);
+    } catch (err) {
+      setActionError(
+        err instanceof Error ? err.message : t('listDetail.downloadFailed'),
+      );
+    } finally {
+      setIsDownloading(false);
     }
   }
 
@@ -405,6 +428,17 @@ function ListDetailContent() {
                 onClick={openEditModal}
               >
                 {t('listDetail.editList')}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={isDownloading}
+                onClick={() => void handleDownloadList()}
+              >
+                {isDownloading
+                  ? t('listDetail.downloading')
+                  : t('listDetail.downloadJson')}
               </Button>
               <Button
                 type="button"

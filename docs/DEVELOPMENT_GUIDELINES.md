@@ -191,6 +191,8 @@ GET /lists/for-media/:mediaItemId
 
 GET /backup
 
+GET /backup/lists/:id
+
 POST /backup/import
 
 POST /feedback

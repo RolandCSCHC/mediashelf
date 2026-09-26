@@ -22,12 +22,12 @@ Local setup, OAuth, Vercel/Neon, and backups: **[docs/SETUP.md](docs/SETUP.md)**
 - **Manual entries** when a title is missing from TMDB
 - **Library CRUD** — catalog of titles; status (Watchlist / Watching / Watched / Upcoming) and downloaded live on each list membership
 - **Filters and sort** — status (any list in the library), type, genre, downloaded, list; sort by title (default), date added, release date, or date watched; title search
-- **Custom lists** with optional default status / downloaded, bulk add from the library, move between lists, and sort by the date a title was added to that list
+- **Custom lists** with optional default status / downloaded, bulk add from the library, move between lists, sort by the date a title was added to that list, and download one list as JSON to share
 - **Series progress per list** — season / episode, status, and downloaded live on membership
 - **Release awareness** — complete dates and “out now” / “not out yet” badges; refresh last-episode air dates from TMDB
 - **Panels / list view toggle** on library and list pages (persisted in `localStorage`)
 - **Server-side pagination** (default 2 panel rows or 10 list rows; 25 / 50 / 100 / all)
-- **JSON export / merge import** for library + lists
+- **JSON export / merge import** for the library, every list, or a single shareable list
 - **Daily JSON backup** to a GitHub Actions artifact (90 days) and Dropbox
 - **Dark / light mode**, **English / Spanish UI**, **responsive shell** with mobile nav
 - **PWA** (manifest, icons, service worker) — installable on a phone over HTTPS
@@ -75,7 +75,7 @@ The library is a catalog of titles. Status, downloaded, and series progress live
 
 Lists can set default membership state. Adding or moving a title into a configured list applies that list’s defaults to **that membership** without rewriting other lists. Grouping lists with no defaults start new memberships as Watchlist and not downloaded.
 
-JSON backup stores resolved TMDB IDs and imports with **merge** semantics: existing titles and memberships are left unchanged; missing lists and memberships are created.
+JSON backup stores resolved TMDB IDs and imports with **merge** semantics: existing titles and memberships are left unchanged; missing lists and memberships are created. A single-list download uses that same file shape (without notes or date watched) so it can be imported to recreate the list.
 
 ---
 
@@ -141,7 +141,7 @@ Examples:
 - `POST /media` (TMDB import) / `POST /media/manual`
 - `PATCH /media/:id` (notes, date watched)
 - `PATCH /lists/:id/items/:mediaItemId` (per-list status, downloaded, series progress)
-- `GET /backup` / `POST /backup/import`
+- `GET /backup` / `GET /backup/lists/:id` / `POST /backup/import`
 
 `GET /media` and `GET /lists/:id` return a page (`items`, `page`, `pageSize`, `total`, `totalPages`). Use `pageSize=all` for every matching item.
 

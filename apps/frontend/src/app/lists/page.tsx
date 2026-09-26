@@ -19,9 +19,11 @@ import { useI18n } from '@/components/locale-provider';
 import {
   createCustomList,
   deleteCustomList,
+  exportListBackup,
   listCustomLists,
   updateCustomList,
 } from '@/lib/api';
+import { downloadJson, listShareFileName } from '@/lib/download-json';
 import { formatListStateSummary } from '@/lib/list-state';
 
 function ListsContent() {
@@ -31,6 +33,7 @@ function ListsContent() {
   const [editingList, setEditingList] = useState<CustomList | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -51,6 +54,26 @@ function ListsContent() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  async function handleDownload(list: CustomList) {
+    if (downloadingId) {
+      return;
+    }
+
+    setDownloadingId(list.id);
+    setError(null);
+    try {
+      const payload = await exportListBackup(list.id);
+      const stamp = new Date().toISOString().slice(0, 10);
+      downloadJson(listShareFileName(list.name, stamp), payload);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : t('listDetail.downloadFailed'),
+      );
+    } finally {
+      setDownloadingId(null);
+    }
+  }
 
   function openCreateModal() {
     setEditingList(null);
@@ -208,6 +231,21 @@ function ListsContent() {
                   </p>
                 </div>
                 <div className="relative z-[2] flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    disabled={downloadingId === list.id}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      void handleDownload(list);
+                    }}
+                  >
+                    {downloadingId === list.id
+                      ? t('listDetail.downloading')
+                      : t('listDetail.downloadJson')}
+                  </Button>
                   <Button
                     type="button"
                     variant="secondary"

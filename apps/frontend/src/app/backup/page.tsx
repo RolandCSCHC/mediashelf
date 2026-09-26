@@ -13,18 +13,7 @@ import { Button } from '@/components/ui/button';
 import { ViewTip } from '@/components/view-tip';
 import { useI18n } from '@/components/locale-provider';
 import { exportLibraryBackup, importLibraryBackup } from '@/lib/api';
-
-function downloadJson(filename: string, payload: LibraryBackupPayload) {
-  const blob = new Blob([JSON.stringify(payload, null, 2)], {
-    type: 'application/json',
-  });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
-  URL.revokeObjectURL(url);
-}
+import { downloadJson } from '@/lib/download-json';
 
 function isBackupPayload(value: unknown): value is LibraryBackupPayload {
   if (!value || typeof value !== 'object') {

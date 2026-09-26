@@ -341,6 +341,12 @@ export async function exportLibraryBackup(): Promise<LibraryBackupPayload> {
   return apiFetch<LibraryBackupPayload>('/backup');
 }
 
+export async function exportListBackup(
+  listId: string,
+): Promise<LibraryBackupPayload> {
+  return apiFetch<LibraryBackupPayload>(`/backup/lists/${listId}`);
+}
+
 export async function importLibraryBackup(
   payload: LibraryBackupImportRequest,
 ): Promise<LibraryBackupImportResponse> {

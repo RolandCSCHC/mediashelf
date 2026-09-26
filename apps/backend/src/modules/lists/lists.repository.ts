@@ -118,6 +118,22 @@ export class ListsRepository {
     };
   }
 
+  findWithItemsForUser(
+    id: string,
+    userId: string,
+  ): Promise<ListWithItems | null> {
+    return this.prisma.customList.findFirst({
+      where: { id, userId },
+      include: {
+        _count: { select: { items: true } },
+        items: {
+          include: { mediaItem: true },
+          orderBy: { addedAt: 'asc' },
+        },
+      },
+    });
+  }
+
   findAllDetailsForUser(userId: string): Promise<ListWithItems[]> {
     return this.prisma.customList.findMany({
       where: { userId },

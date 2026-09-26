@@ -74,6 +74,19 @@ export class ListsService {
     );
   }
 
+  /** Full list, including every membership. Used by list JSON export. */
+  async getWithAllItemsForUser(
+    userId: string,
+    id: string,
+  ): Promise<CustomListDetail> {
+    const list = await this.listsRepository.findWithItemsForUser(id, userId);
+    if (!list) {
+      throw new NotFoundException('List not found');
+    }
+
+    return toCustomListDetail(list);
+  }
+
   async listDetailsForUser(userId: string): Promise<CustomListDetail[]> {
     const lists = await this.listsRepository.findAllDetailsForUser(userId);
     return lists.map((list) => toCustomListDetail(list));

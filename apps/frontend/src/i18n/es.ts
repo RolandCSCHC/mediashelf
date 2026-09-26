@@ -170,6 +170,9 @@ export const es: Messages = {
     noMatchBody: 'Prueba a quitar filtros para ver todo lo de esta lista.',
     removeFromList: 'Quitar de la lista',
     removeFailed: 'No se pudo quitar de la lista',
+    downloadJson: 'Descargar JSON',
+    downloading: 'Preparando…',
+    downloadFailed: 'No se pudo descargar esta lista',
     matchCountOne: '{count} coincidencia',
     matchCountMany: '{count} coincidencias',
   },
@@ -310,7 +313,7 @@ export const es: Messages = {
     exportFailed: 'La exportación falló',
     import: 'Importar (fusionar)',
     importBody:
-      'Los títulos existentes se omiten (TMDB por ID, manuales por título). Se añaden listas y pertenencias que falten. El progreso de series existente no se toca.',
+      'Los títulos existentes se omiten (TMDB por ID, manuales por título). Se añaden listas y pertenencias que falten. El progreso de series existente no se toca. Un JSON descargado de una sola lista funciona igual.',
     importing: 'Importando…',
     chooseFile: 'Elegir archivo JSON',
     importFailed: 'La importación falló',
@@ -385,10 +388,10 @@ export const es: Messages = {
     search:
       'Busca en TMDB, abre un título para ver el reparto y los detalles, y añádelo a tu biblioteca. Si TMDB no lo tiene, añádelo a mano.',
     lists:
-      'Agrupa títulos como quieras. Cada pertenencia a una lista tiene su propio estado, marca de descarga y progreso de serie. Los valores predeterminados de una lista solo se aplican al añadir o mover un título a esa lista.',
+      'Agrupa títulos como quieras. Cada pertenencia a una lista tiene su propio estado, marca de descarga y progreso de serie. Los valores predeterminados de una lista solo se aplican al añadir o mover un título a esa lista. Descargar JSON comparte esa lista para importarla en otro lado.',
     listDetail:
-      'Añade títulos desde tu biblioteca o muévelos entre listas. El progreso de serie, el estado y la descarga de esta página pertenecen solo a esta lista.',
+      'Añade títulos desde tu biblioteca o muévelos entre listas. Descargar JSON guarda esta lista en el mismo formato que una copia de la biblioteca, para importarla y recrearla. Las notas y la fecha de visto no se incluyen.',
     backup:
-      'Exportar descarga tu biblioteca y listas en JSON. Importar fusiona: se omiten los títulos que ya existen y se añaden las listas y pertenencias que falten.',
+      'Exportar descarga tu biblioteca y listas en JSON. Desde una lista puedes descargar solo esa lista en el mismo formato. Importar fusiona: se omiten los títulos que ya existen y se añaden las listas y pertenencias que falten.',
   },
 };

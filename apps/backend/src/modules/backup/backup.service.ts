@@ -12,6 +12,11 @@ import {
 } from '@mediashelf/shared-types';
 import { ListsService } from '../lists/lists.service';
 import { MediaService } from '../media/media.service';
+import {
+  toBackupList,
+  toBackupMediaItem,
+  toListSharePayload,
+} from './list-share-payload';
 
 type ResolvedMedia = {
   id: string;
@@ -38,35 +43,17 @@ export class BackupService {
     return {
       version: LIBRARY_BACKUP_VERSION,
       exportedAt: new Date().toISOString(),
-      media: media.map((item) => ({
-        ref: item.id,
-        tmdbId: item.tmdbId,
-        type: item.type,
-        title: item.title,
-        description: item.description,
-        posterPath: item.posterPath,
-        backdropPath: item.backdropPath,
-        releaseDate: item.releaseDate,
-        lastAirDate: item.lastAirDate,
-        genres: item.genres,
-        runtime: item.runtime,
-        notes: item.notes,
-        dateWatched: item.dateWatched,
-      })),
-      lists: lists.map((list) => ({
-        name: list.name,
-        description: list.description,
-        defaultStatus: list.defaultStatus,
-        defaultDownloaded: list.defaultDownloaded,
-        items: list.items.map((entry) => ({
-          mediaRef: entry.mediaItemId,
-          status: entry.status,
-          downloaded: entry.downloaded,
-          currentSeason: entry.currentSeason,
-          currentEpisode: entry.currentEpisode,
-        })),
-      })),
+      media: media.map((item) => toBackupMediaItem(item)),
+      lists: lists.map((list) => toBackupList(list)),
     };
+  }
+
+  async exportListForUser(
+    userId: string,
+    listId: string,
+  ): Promise<LibraryBackupPayload> {
+    const list = await this.listsService.getWithAllItemsForUser(userId, listId);
+    return toListSharePayload(list, new Date().toISOString());
   }
 
   async importForUser(

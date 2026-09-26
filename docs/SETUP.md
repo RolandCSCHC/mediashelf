@@ -176,7 +176,7 @@ Live URLs:
 | `/backup`                 | Export library JSON / merge-import a backup                             |
 | `/feedback`               | Report a bug or suggest an improvement                                  |
 
-`GET /tmdb/search` finds titles. `GET /tmdb/:type/:tmdbId` returns details and credits for the preview page. `GET /media` accepts filter, sort, and pagination query params (`page`, `pageSize`, including `search`). Status, downloaded, and released filters on `GET /media` match any list membership. `PATCH /media/:id` updates notes and date watched. `PATCH /lists/:id/items/:mediaItemId` updates per-list status, downloaded, and series progress. `GET /backup` / `POST /backup/import` handle JSON backup. `POST /feedback` stores a bug report or improvement; `GET /feedback` lists them for `FEEDBACK_ADMIN_EMAIL`.
+`GET /tmdb/search` finds titles. `GET /tmdb/:type/:tmdbId` returns details and credits for the preview page. `GET /media` accepts filter, sort, and pagination query params (`page`, `pageSize`, including `search`). Status, downloaded, and released filters on `GET /media` match any list membership. `PATCH /media/:id` updates notes and date watched. `PATCH /lists/:id/items/:mediaItemId` updates per-list status, downloaded, and series progress. `GET /backup`, `GET /backup/lists/:id`, and `POST /backup/import` handle JSON backup. A list download is the same format as a library backup, limited to that list. `POST /feedback` stores a bug report or improvement; `GET /feedback` lists them for `FEEDBACK_ADMIN_EMAIL`.
 
 Interactive API docs: [Swagger](http://localhost:3001/docs) (local) or [production Swagger](https://mediashelf-api.vercel.app/docs).
 

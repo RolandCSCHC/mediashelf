@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import {
   ApiCookieAuth,
   ApiOkResponse,
   ApiOperation,
+  ApiParam,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -33,6 +34,21 @@ export class BackupController {
   @ApiOkResponse({ type: LibraryBackupPayloadSchema })
   exportLibrary(@CurrentUser() user: AuthUser): Promise<LibraryBackupPayload> {
     return this.backupService.exportForUser(user.id);
+  }
+
+  @Get('lists/:id')
+  @ApiOperation({
+    summary: 'Export one list as shareable JSON',
+    description:
+      'Same format as a library backup, containing only this list and its titles, so it can be merge-imported. Notes and date watched are omitted.',
+  })
+  @ApiParam({ name: 'id', description: 'List id' })
+  @ApiOkResponse({ type: LibraryBackupPayloadSchema })
+  exportList(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+  ): Promise<LibraryBackupPayload> {
+    return this.backupService.exportListForUser(user.id, id);
   }
 
   @Post('import')
