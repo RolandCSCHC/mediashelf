@@ -4,12 +4,39 @@ A production-style personal media library for movies and TV series. Sign in with
 
 This is a portfolio project: a real app I use, built to show modern full-stack engineering rather than a thin CRUD demo.
 
-|             |                                                                              |
-| ----------- | ---------------------------------------------------------------------------- |
-| **App**     | [mediashelf-frontend.vercel.app](https://mediashelf-frontend.vercel.app)     |
-| **API**     | [mediashelf-api.vercel.app](https://mediashelf-api.vercel.app)               |
-| **Health**  | [mediashelf-api.vercel.app/health](https://mediashelf-api.vercel.app/health) |
-| **Swagger** | [mediashelf-api.vercel.app/docs](https://mediashelf-api.vercel.app/docs)     |
+## Stack
+
+| Layer      | Choice                                                                                     |
+| ---------- | ------------------------------------------------------------------------------------------ |
+| Frontend   | Next.js (App Router), TypeScript, Tailwind CSS                                             |
+| Backend    | NestJS, TypeScript, Prisma                                                                 |
+| Database   | PostgreSQL (Neon in production; Docker Postgres locally)                                   |
+| Auth       | Google / Microsoft OAuth + JWT httpOnly cookie (`SameSite=Lax`)                            |
+| Monorepo   | pnpm workspaces (`apps/*`, `packages/*`)                                                   |
+| Containers | Docker + Docker Compose (local)                                                            |
+| Production | Vercel (frontend + API) + Neon                                                             |
+| CI/CD      | GitHub Actions — lint, typecheck, Prettier, Jest, build, `prisma migrate deploy` on `main` |
+
+---
+
+<table>
+  <tr>
+    <td><strong>App</strong></td>
+    <td><a href="https://mediashelf-frontend.vercel.app">mediashelf-frontend.vercel.app</a></td>
+  </tr>
+  <tr>
+    <td><strong>API</strong></td>
+    <td><a href="https://mediashelf-api.vercel.app">mediashelf-api.vercel.app</a></td>
+  </tr>
+  <tr>
+    <td><strong>Health</strong></td>
+    <td><a href="https://mediashelf-api.vercel.app/health">mediashelf-api.vercel.app/health</a></td>
+  </tr>
+  <tr>
+    <td><strong>Swagger</strong></td>
+    <td><a href="https://mediashelf-api.vercel.app/docs">mediashelf-api.vercel.app/docs</a></td>
+  </tr>
+</table>
 
 Local setup, OAuth, Vercel/Neon, and backups: **[docs/SETUP.md](docs/SETUP.md)**.
 
@@ -99,21 +126,6 @@ JSON backup stores resolved TMDB IDs and imports with **merge** semantics: exist
 | **Auth linking by email**      | Google and Microsoft upsert one `User`; provider IDs are optional and unique                                                             |
 
 Frontend code is organized by domain (routes, hooks, UI components, API client) rather than a single dump of screens. Auth and guest guards wrap protected and login-only pages.
-
----
-
-## Stack
-
-| Layer      | Choice                                                                                     |
-| ---------- | ------------------------------------------------------------------------------------------ |
-| Frontend   | Next.js (App Router), TypeScript, Tailwind CSS                                             |
-| Backend    | NestJS, TypeScript, Prisma                                                                 |
-| Database   | PostgreSQL (Neon in production; Docker Postgres locally)                                   |
-| Auth       | Google / Microsoft OAuth + JWT httpOnly cookie (`SameSite=Lax`)                            |
-| Monorepo   | pnpm workspaces (`apps/*`, `packages/*`)                                                   |
-| Containers | Docker + Docker Compose (local)                                                            |
-| Production | Vercel (frontend + API) + Neon                                                             |
-| CI/CD      | GitHub Actions — lint, typecheck, Prettier, Jest, build, `prisma migrate deploy` on `main` |
 
 ---
 
