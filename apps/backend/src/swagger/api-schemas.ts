@@ -427,6 +427,11 @@ export class LibraryBackupImportResponseSchema {
   errors!: string[];
 }
 
+export class ShareListResponseSchema {
+  @ApiProperty({ example: 'ada@example.com' })
+  sentTo!: string;
+}
+
 export class FeedbackSubmissionSchema {
   @ApiProperty()
   id!: string;

@@ -352,6 +352,14 @@ export interface LibraryBackupImportResponse {
   errors: string[];
 }
 
+export interface ShareListRequest {
+  email: string;
+}
+
+export interface ShareListResponse {
+  sentTo: string;
+}
+
 export {
   hasDateArrived,
   isReleasedUpcoming,

@@ -2,6 +2,7 @@ import {
   backupUserFolderName,
   libraryBackupFileName,
   libraryBackupRelativePath,
+  listShareFileName,
   utcDateStamp,
 } from './backup-file-name';
 
@@ -43,6 +44,20 @@ describe('libraryBackupRelativePath', () => {
   it('puts the JSON inside a folder named after the email', () => {
     expect(libraryBackupRelativePath('roland@example.com', '2026-08-23')).toBe(
       'roland@example.com/mediashelf-backup-2026-08-23.json',
+    );
+  });
+});
+
+describe('listShareFileName', () => {
+  it('slugs the list name into the attachment filename', () => {
+    expect(listShareFileName('Sci-fi Favorites', '2026-08-23')).toBe(
+      'mediashelf-list-sci-fi-favorites-2026-08-23.json',
+    );
+  });
+
+  it('falls back when the name has no letters or digits', () => {
+    expect(listShareFileName('!!!', '2026-08-23')).toBe(
+      'mediashelf-list-list-2026-08-23.json',
     );
   });
 });

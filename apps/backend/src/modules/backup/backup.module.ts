@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { ListsModule } from '../lists/lists.module';
+import { MailModule } from '../mail/mail.module';
 import { MediaModule } from '../media/media.module';
 import { BackupController } from './backup.controller';
 import { BackupService } from './backup.service';
 
 @Module({
-  imports: [AuthModule, MediaModule, ListsModule],
+  imports: [AuthModule, MediaModule, ListsModule, MailModule],
   controllers: [BackupController],
   providers: [BackupService],
   exports: [BackupService],

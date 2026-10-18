@@ -4,6 +4,7 @@ import type {
   LibraryBackupImportResponse,
   LibraryBackupPayload,
   MediaType,
+  ShareListResponse,
 } from '@mediashelf/shared-types';
 import {
   LIBRARY_BACKUP_VERSION,
@@ -11,7 +12,10 @@ import {
   MediaType as MediaTypeEnum,
 } from '@mediashelf/shared-types';
 import { ListsService } from '../lists/lists.service';
+import { MailerService } from '../mail/mailer.service';
 import { MediaService } from '../media/media.service';
+import { listShareFileName, utcDateStamp } from './backup-file-name';
+import { buildListShareEmail } from './list-share-email';
 import {
   toBackupList,
   toBackupMediaItem,
@@ -32,6 +36,7 @@ export class BackupService {
   constructor(
     private readonly mediaService: MediaService,
     private readonly listsService: ListsService,
+    private readonly mailer: MailerService,
   ) {}
 
   async exportForUser(userId: string): Promise<LibraryBackupPayload> {
@@ -54,6 +59,28 @@ export class BackupService {
   ): Promise<LibraryBackupPayload> {
     const list = await this.listsService.getWithAllItemsForUser(userId, listId);
     return toListSharePayload(list, new Date().toISOString());
+  }
+
+  async shareListForUser(
+    userId: string,
+    listId: string,
+    recipientEmail: string,
+    sender: { email: string; name: string | null },
+  ): Promise<ShareListResponse> {
+    const list = await this.listsService.getWithAllItemsForUser(userId, listId);
+    const exportedAt = new Date();
+    const payload = toListSharePayload(list, exportedAt.toISOString());
+    const message = buildListShareEmail({
+      listName: list.name,
+      senderName: sender.name,
+      senderEmail: sender.email,
+      recipientEmail,
+      filename: listShareFileName(list.name, utcDateStamp(exportedAt)),
+      json: JSON.stringify(payload, null, 2),
+    });
+
+    await this.mailer.send(message);
+    return { sentTo: message.to };
   }
 
   async importForUser(

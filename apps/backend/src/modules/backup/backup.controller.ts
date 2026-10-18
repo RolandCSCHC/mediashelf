@@ -11,14 +11,17 @@ import type {
   AuthUser,
   LibraryBackupImportResponse,
   LibraryBackupPayload,
+  ShareListResponse,
 } from '@mediashelf/shared-types';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { BackupService } from './backup.service';
 import { ImportLibraryBackupDto } from './dto/import-library-backup.dto';
+import { ShareListDto } from './dto/share-list.dto';
 import {
   LibraryBackupImportResponseSchema,
   LibraryBackupPayloadSchema,
+  ShareListResponseSchema,
 } from '../../swagger/api-schemas';
 
 @ApiTags('Backup')
@@ -49,6 +52,25 @@ export class BackupController {
     @Param('id') id: string,
   ): Promise<LibraryBackupPayload> {
     return this.backupService.exportListForUser(user.id, id);
+  }
+
+  @Post('lists/:id/share')
+  @ApiOperation({
+    summary: 'Email one list as shareable JSON',
+    description:
+      'Builds the same JSON as GET /backup/lists/:id and emails it. The recipient can merge-import the attachment. Notes and date watched are omitted.',
+  })
+  @ApiParam({ name: 'id', description: 'List id' })
+  @ApiOkResponse({ type: ShareListResponseSchema })
+  shareList(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() body: ShareListDto,
+  ): Promise<ShareListResponse> {
+    return this.backupService.shareListForUser(user.id, id, body.email, {
+      email: user.email,
+      name: user.name,
+    });
   }
 
   @Post('import')
