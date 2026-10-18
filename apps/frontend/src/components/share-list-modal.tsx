@@ -86,7 +86,9 @@ export function ShareListModal({ list, onClose }: ShareListModalProps) {
       <Modal
         open={list !== null}
         title={
-          list ? t('shareList.title', { name: list.name }) : t('shareList.button')
+          list
+            ? t('shareList.title', { name: list.name })
+            : t('shareList.button')
         }
         onClose={close}
       >

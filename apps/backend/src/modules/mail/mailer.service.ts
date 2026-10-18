@@ -21,7 +21,9 @@ export class MailerService {
     const user = process.env.GMAIL_USER?.trim();
     const pass = process.env.GMAIL_APP_PASSWORD?.replace(/\s+/g, '');
     if (!user || !pass) {
-      throw new ServiceUnavailableException('Sharing by email is not configured');
+      throw new ServiceUnavailableException(
+        'Sharing by email is not configured',
+      );
     }
 
     const transport = nodemailer.createTransport({

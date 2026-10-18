@@ -254,10 +254,7 @@ function ListsContent() {
         </ul>
       ) : null}
 
-      <ShareListModal
-        list={sharingList}
-        onClose={() => setSharingList(null)}
-      />
+      <ShareListModal list={sharingList} onClose={() => setSharingList(null)} />
 
       <Modal
         open={isEditorOpen}
