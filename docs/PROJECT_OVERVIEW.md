@@ -687,6 +687,7 @@ Production hosting: Next.js and NestJS on Vercel; database on Neon.
 
 ## Phase 17
 - Share list jsons via email ✓
+- Link domain mediashelf.mov ✓
 
 # Portfolio Goals
 
