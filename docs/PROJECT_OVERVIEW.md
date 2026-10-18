@@ -355,7 +355,7 @@ Import the same JSON with **merge** semantics:
 
 The backup stores resolved TMDB IDs, so ambiguous titles do not need to be re-matched on import.
 
-A list page can download that list alone in the same JSON format. The file includes the list, its titles, and each membership’s status, downloaded flag, and series progress. Notes and date watched are omitted so the file can be shared. Import it with the same merge importer.
+A list can be shared by email in the same JSON format. The message attaches the list, its titles, and each membership’s status, downloaded flag, and series progress. Notes and date watched are omitted. The recipient imports the file with the same merge importer.
 
 A GitHub Actions workflow exports this same JSON daily (and on demand). It
 keeps a 90-day Actions artifact and uploads each user’s JSON to Dropbox at
@@ -684,6 +684,9 @@ Production hosting: Next.js and NestJS on Vercel; database on Neon.
 ## Phase 16
 - Sort lists by date added to list ✓
 - Download feature for individual lists so you can share them ✓
+
+## Phase 17
+- Share list jsons via email ✓
 
 # Portfolio Goals
 

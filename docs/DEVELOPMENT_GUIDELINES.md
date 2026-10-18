@@ -193,6 +193,8 @@ GET /backup
 
 GET /backup/lists/:id
 
+POST /backup/lists/:id/share
+
 POST /backup/import
 
 POST /feedback

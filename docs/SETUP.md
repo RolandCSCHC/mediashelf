@@ -115,10 +115,31 @@ On Vercel, add this to the API project (not the frontend). After the first deplo
 
 ---
 
+## Sharing a list by email
+
+**Share** on a list (the lists page or a list’s own page) asks for an email address and sends that list as a JSON attachment. The file is the same merge-import format as a library backup, limited to that list, without notes or date watched. The recipient imports it on **Backup**.
+
+Sending uses the Gmail account in `GMAIL_USER`. Gmail can deliver to any recipient, and the list is attached as JSON. No domain is required. On the **backend**:
+
+1. On that Google account, turn on **2-Step Verification**.
+2. Create an app password at [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords). Choose Mail, then copy the 16-character password.
+3. Set both variables on the API project (Vercel) and in local `.env` if you use Docker Compose:
+
+```bash
+GMAIL_USER=you@gmail.com
+GMAIL_APP_PASSWORD=abcdefghijklmnop
+```
+
+The message is sent as `MediaShelf <you@gmail.com>`. Replies go to the MediaShelf account that clicked Share.
+
+Share returns an error until both variables are set. Library export on `/backup` still downloads JSON in the browser.
+
+---
+
 ## Production (Vercel + Neon) checklist
 
 1. **Frontend** project env: `NEXT_PUBLIC_API_URL=/api`, `API_URL=https://mediashelf-api.vercel.app` (redeploy so `NEXT_PUBLIC_*` is baked in).
-2. **Backend** project env: `DATABASE_URL` (Neon **pooled** host — hostname contains `-pooler`, add `?sslmode=require&pgbouncer=true&connect_timeout=15`), `DIRECT_URL` (Neon **direct** host — same endpoint without `-pooler`, add `?sslmode=require&connect_timeout=15`), plus `GOOGLE_*`, `MICROSOFT_*`, `JWT_SECRET`, `FRONTEND_URL`, `CORS_ORIGIN`, `FEEDBACK_ADMIN_EMAIL` (your login email, to see the `/feedback` inbox).
+2. **Backend** project env: `DATABASE_URL` (Neon **pooled** host — hostname contains `-pooler`, add `?sslmode=require&pgbouncer=true&connect_timeout=15`), `DIRECT_URL` (Neon **direct** host — same endpoint without `-pooler`, add `?sslmode=require&connect_timeout=15`), plus `GOOGLE_*`, `MICROSOFT_*`, `JWT_SECRET`, `FRONTEND_URL`, `CORS_ORIGIN`, `FEEDBACK_ADMIN_EMAIL` (your login email, to see the `/feedback` inbox), `GMAIL_USER`, and `GMAIL_APP_PASSWORD` (list sharing).
 3. Backend: `GOOGLE_CALLBACK_URL=https://mediashelf-frontend.vercel.app/api/auth/google/callback` and `MICROSOFT_CALLBACK_URL=https://mediashelf-frontend.vercel.app/api/auth/microsoft/callback` (and matching `FRONTEND_URL` / `CORS_ORIGIN`).
 4. Google Cloud Console → authorized JavaScript origin: `https://mediashelf-frontend.vercel.app`; redirect URI: `https://mediashelf-frontend.vercel.app/api/auth/google/callback`.
 5. Entra app registration → **Authentication** → add a **Web** redirect URI: `https://mediashelf-frontend.vercel.app/api/auth/microsoft/callback`.
@@ -176,7 +197,7 @@ Live URLs:
 | `/backup`                 | Export library JSON / merge-import a backup                             |
 | `/feedback`               | Report a bug or suggest an improvement                                  |
 
-`GET /tmdb/search` finds titles. `GET /tmdb/:type/:tmdbId` returns details and credits for the preview page. `GET /media` accepts filter, sort, and pagination query params (`page`, `pageSize`, including `search`). Status, downloaded, and released filters on `GET /media` match any list membership. `PATCH /media/:id` updates notes and date watched. `PATCH /lists/:id/items/:mediaItemId` updates per-list status, downloaded, and series progress. `GET /backup`, `GET /backup/lists/:id`, and `POST /backup/import` handle JSON backup. A list download is the same format as a library backup, limited to that list. `POST /feedback` stores a bug report or improvement; `GET /feedback` lists them for `FEEDBACK_ADMIN_EMAIL`.
+`GET /tmdb/search` finds titles. `GET /tmdb/:type/:tmdbId` returns details and credits for the preview page. `GET /media` accepts filter, sort, and pagination query params (`page`, `pageSize`, including `search`). Status, downloaded, and released filters on `GET /media` match any list membership. `PATCH /media/:id` updates notes and date watched. `PATCH /lists/:id/items/:mediaItemId` updates per-list status, downloaded, and series progress. `GET /backup` and `POST /backup/import` handle a full library JSON backup. `POST /backup/lists/:id/share` emails one list in that same format. `POST /feedback` stores a bug report or improvement; `GET /feedback` lists them for `FEEDBACK_ADMIN_EMAIL`.
 
 Interactive API docs: [Swagger](http://localhost:3001/docs) (local) or [production Swagger](https://mediashelf-api.vercel.app/docs).
 
