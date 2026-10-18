@@ -14,6 +14,8 @@ import type {
   LibraryBackupImportRequest,
   LibraryBackupImportResponse,
   LibraryBackupPayload,
+  ShareListRequest,
+  ShareListResponse,
   ListMediaQuery,
   LogoutResponse,
   MediaItem,
@@ -341,10 +343,14 @@ export async function exportLibraryBackup(): Promise<LibraryBackupPayload> {
   return apiFetch<LibraryBackupPayload>('/backup');
 }
 
-export async function exportListBackup(
+export async function shareListBackup(
   listId: string,
-): Promise<LibraryBackupPayload> {
-  return apiFetch<LibraryBackupPayload>(`/backup/lists/${listId}`);
+  payload: ShareListRequest,
+): Promise<ShareListResponse> {
+  return apiFetch<ShareListResponse>(`/backup/lists/${listId}/share`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function importLibraryBackup(

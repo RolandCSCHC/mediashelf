@@ -166,11 +166,20 @@ export const en = {
     noMatchBody: 'Try clearing filters to see everything in this list.',
     removeFromList: 'Remove from list',
     removeFailed: 'Failed to remove from list',
-    downloadJson: 'Download JSON',
-    downloading: 'Preparing…',
-    downloadFailed: 'Could not download this list',
     matchCountOne: '{count} match',
     matchCountMany: '{count} matches',
+  },
+  shareList: {
+    button: 'Share',
+    title: 'Share “{name}”',
+    body: 'We’ll email this list as JSON. The recipient can import it on the Backup page. Notes and date watched are left out.',
+    email: 'Email',
+    emailPlaceholder: 'name@example.com',
+    emailInvalid: 'Enter a valid email',
+    send: 'Send',
+    sending: 'Sending…',
+    sent: 'Sent to {email}',
+    failed: 'Could not send this list',
   },
   filters: {
     searchPlaceholder: 'Search titles…',
@@ -309,7 +318,7 @@ export const en = {
     exportFailed: 'Export failed',
     import: 'Import (merge)',
     importBody:
-      'Existing titles are skipped (TMDB by ID, manuals by title). Missing lists and memberships are added. Existing series progress is left alone. A JSON file downloaded from a single list works the same way.',
+      'Existing titles are skipped (TMDB by ID, manuals by title). Missing lists and memberships are added. Existing series progress is left alone. A JSON file shared from a single list works the same way.',
     importing: 'Importing…',
     chooseFile: 'Choose JSON file',
     importFailed: 'Import failed',
@@ -383,10 +392,10 @@ export const en = {
     search:
       'Search TMDB, open a title to preview cast and details, then add it to your library. If TMDB does not have it, add it manually.',
     lists:
-      'Group titles however you like. Each list membership has its own status, downloaded flag, and series progress. Optional list defaults apply only when you add or move a title into that list. Download JSON shares that list so it can be imported elsewhere.',
+      'Group titles however you like. Each list membership has its own status, downloaded flag, and series progress. Optional list defaults apply only when you add or move a title into that list. Share emails that list as JSON so it can be imported elsewhere.',
     listDetail:
-      'Add titles from your library or move them between lists. Download JSON saves this list in the same format as a library backup so someone can import it and recreate the list. Notes and date watched are left out.',
+      'Add titles from your library or move them between lists. Share emails this list in the same format as a library backup so someone can import it and recreate the list. Notes and date watched are left out.',
     backup:
-      'Export downloads your library and lists as JSON. A list page can download just that list in the same format. Import merges: existing titles are skipped, and missing lists and memberships are added.',
+      'Export downloads your library and lists as JSON. Share on a list emails just that list in the same format. Import merges: existing titles are skipped, and missing lists and memberships are added.',
   },
 } as const;
