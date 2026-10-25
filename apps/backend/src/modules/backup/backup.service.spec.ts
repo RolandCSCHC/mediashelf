@@ -83,6 +83,7 @@ describe('BackupService.shareListForUser', () => {
       'list_1',
       'Friend@Example.com',
       { email: 'ada@example.com', name: 'Ada' },
+      'en',
     );
 
     expect(listsService.getWithAllItemsForUser).toHaveBeenCalledWith(
@@ -93,10 +94,13 @@ describe('BackupService.shareListForUser', () => {
     const sent = mailer.send.mock.calls[0]?.[0] as {
       to: string;
       subject: string;
+      text: string;
       attachment: { filename: string; content: string };
     };
     expect(sent.to).toBe('friend@example.com');
     expect(sent.subject).toBe('MediaShelf: Sci-fi');
+    expect(sent.text).toContain('shared the MediaShelf list');
+    expect(sent.text).not.toContain('compartió');
     expect(sent.attachment.filename).toMatch(
       /^mediashelf-list-sci-fi-\d{4}-\d{2}-\d{2}\.json$/,
     );

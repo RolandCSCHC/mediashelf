@@ -25,7 +25,7 @@ function isEmail(value: string): boolean {
 }
 
 export function ShareListModal({ list, onClose }: ShareListModalProps) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const [email, setEmail] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +71,10 @@ export function ShareListModal({ list, onClose }: ShareListModalProps) {
     setIsSending(true);
     setError(null);
     try {
-      const result = await shareListBackup(list.id, { email: recipient });
+      const result = await shareListBackup(list.id, {
+        email: recipient,
+        locale,
+      });
       setNotice(result.sentTo);
       onClose();
     } catch (err) {

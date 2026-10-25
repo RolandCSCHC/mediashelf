@@ -130,7 +130,7 @@ RESEND_API_KEY=re_xxxxxxxx
 RESEND_FROM=share@mediashelf.mov
 ```
 
-The message is sent as `MediaShelf <share@mediashelf.mov>`. Replies go to the MediaShelf account that clicked Share.
+The message is sent as `MediaShelf <share@mediashelf.mov>`. The body is English or Spanish, matching the language selected in the app. Replies go to the MediaShelf account that clicked Share.
 
 Share returns an error until both variables are set. Library export on `/backup` still downloads JSON in the browser.
 

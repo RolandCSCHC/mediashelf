@@ -352,8 +352,13 @@ export interface LibraryBackupImportResponse {
   errors: string[];
 }
 
+export const SHARE_LIST_LOCALES = ['en', 'es'] as const;
+export type ShareListLocale = (typeof SHARE_LIST_LOCALES)[number];
+
 export interface ShareListRequest {
   email: string;
+  /** Language selected in the app when the list was shared. */
+  locale: ShareListLocale;
 }
 
 export interface ShareListResponse {

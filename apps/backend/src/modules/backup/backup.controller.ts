@@ -58,7 +58,7 @@ export class BackupController {
   @ApiOperation({
     summary: 'Email one list as shareable JSON',
     description:
-      'Builds the same JSON as GET /backup/lists/:id and emails it. The recipient can merge-import the attachment. Notes and date watched are omitted.',
+      'Builds the same JSON as GET /backup/lists/:id and emails it in the requested locale (en or es). The recipient can merge-import the attachment. Notes and date watched are omitted.',
   })
   @ApiParam({ name: 'id', description: 'List id' })
   @ApiOkResponse({ type: ShareListResponseSchema })
@@ -67,10 +67,16 @@ export class BackupController {
     @Param('id') id: string,
     @Body() body: ShareListDto,
   ): Promise<ShareListResponse> {
-    return this.backupService.shareListForUser(user.id, id, body.email, {
-      email: user.email,
-      name: user.name,
-    });
+    return this.backupService.shareListForUser(
+      user.id,
+      id,
+      body.email,
+      {
+        email: user.email,
+        name: user.name,
+      },
+      body.locale,
+    );
   }
 
   @Post('import')

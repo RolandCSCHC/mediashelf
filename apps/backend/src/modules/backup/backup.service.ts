@@ -4,6 +4,7 @@ import type {
   LibraryBackupImportResponse,
   LibraryBackupPayload,
   MediaType,
+  ShareListLocale,
   ShareListResponse,
 } from '@mediashelf/shared-types';
 import {
@@ -66,6 +67,7 @@ export class BackupService {
     listId: string,
     recipientEmail: string,
     sender: { email: string; name: string | null },
+    locale: ShareListLocale,
   ): Promise<ShareListResponse> {
     const list = await this.listsService.getWithAllItemsForUser(userId, listId);
     const exportedAt = new Date();
@@ -75,6 +77,7 @@ export class BackupService {
       senderName: sender.name,
       senderEmail: sender.email,
       recipientEmail,
+      locale,
       filename: listShareFileName(list.name, utcDateStamp(exportedAt)),
       json: JSON.stringify(payload, null, 2),
     });
