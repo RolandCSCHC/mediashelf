@@ -689,6 +689,7 @@ Production hosting: Next.js and NestJS on Vercel; database on Neon.
 - Share list jsons via email ✓
 - Link domain mediashelf.mov ✓
 - Link sub-domain mediashelf.rolandschlosser.dev ✓
+- Change smtp.gmail.com for resend ✓
 
 # Portfolio Goals
 

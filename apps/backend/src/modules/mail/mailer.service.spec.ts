@@ -1,16 +1,18 @@
 import {
   BadGatewayException,
+  Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { MailerService } from './mailer.service';
 import type { OutboundEmail } from './outbound-email';
 
-jest.mock('nodemailer', () => ({
-  __esModule: true,
-  default: {
-    createTransport: jest.fn(),
-  },
+const mockSend = jest.fn();
+
+jest.mock('resend', () => ({
+  Resend: jest.fn().mockImplementation(() => ({
+    emails: { send: (...args: unknown[]) => mockSend(...args) },
+  })),
 }));
 
 const message: OutboundEmail = {
@@ -25,51 +27,38 @@ const message: OutboundEmail = {
 };
 
 describe('MailerService', () => {
-  const originalUser = process.env.GMAIL_USER;
-  const originalPass = process.env.GMAIL_APP_PASSWORD;
-  const sendMail = jest.fn();
-  const close = jest.fn();
-  const createTransport = nodemailer.createTransport as jest.Mock;
+  const originalKey = process.env.RESEND_API_KEY;
+  const originalFrom = process.env.RESEND_FROM;
   let service: MailerService;
 
   beforeEach(() => {
-    process.env.GMAIL_USER = 'relovia.app@gmail.com';
-    process.env.GMAIL_APP_PASSWORD = 'abcd efgh ijkl mnop';
-    sendMail.mockReset();
-    close.mockReset();
-    createTransport.mockReset();
-    createTransport.mockReturnValue({ sendMail, close });
-    sendMail.mockResolvedValue({ messageId: '1' });
+    process.env.RESEND_API_KEY = 're_test_key';
+    process.env.RESEND_FROM = 'share@mediashelf.mov';
+    mockSend.mockReset();
+    jest.mocked(Resend).mockClear();
+    mockSend.mockResolvedValue({ data: { id: '1' }, error: null });
     service = new MailerService();
   });
 
   afterEach(() => {
-    if (originalUser === undefined) {
-      delete process.env.GMAIL_USER;
+    if (originalKey === undefined) {
+      delete process.env.RESEND_API_KEY;
     } else {
-      process.env.GMAIL_USER = originalUser;
+      process.env.RESEND_API_KEY = originalKey;
     }
-    if (originalPass === undefined) {
-      delete process.env.GMAIL_APP_PASSWORD;
+    if (originalFrom === undefined) {
+      delete process.env.RESEND_FROM;
     } else {
-      process.env.GMAIL_APP_PASSWORD = originalPass;
+      process.env.RESEND_FROM = originalFrom;
     }
   });
 
-  it('sends the JSON attachment from the Gmail account', async () => {
+  it('sends the JSON attachment from the verified domain', async () => {
     await service.send(message);
 
-    expect(createTransport).toHaveBeenCalledWith({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: {
-        user: 'relovia.app@gmail.com',
-        pass: 'abcdefghijklmnop',
-      },
-    });
-    expect(sendMail).toHaveBeenCalledWith({
-      from: 'MediaShelf <relovia.app@gmail.com>',
+    expect(Resend).toHaveBeenCalledWith('re_test_key');
+    expect(mockSend).toHaveBeenCalledWith({
+      from: 'MediaShelf <share@mediashelf.mov>',
       to: 'ada@example.com',
       replyTo: 'owner@example.com',
       subject: 'MediaShelf: Sci-fi',
@@ -77,29 +66,35 @@ describe('MailerService', () => {
       attachments: [
         {
           filename: 'mediashelf-list-sci-fi-2026-08-23.json',
-          content: '{"ok":true}',
+          content: Buffer.from('{"ok":true}', 'utf8').toString('base64'),
           contentType: 'application/json',
         },
       ],
     });
-    expect(close).toHaveBeenCalled();
   });
 
-  it('refuses to send when Gmail is not configured', async () => {
-    delete process.env.GMAIL_APP_PASSWORD;
+  it('refuses to send when Resend is not configured', async () => {
+    delete process.env.RESEND_API_KEY;
 
     await expect(service.send(message)).rejects.toBeInstanceOf(
       ServiceUnavailableException,
     );
-    expect(createTransport).not.toHaveBeenCalled();
+    expect(Resend).not.toHaveBeenCalled();
   });
 
-  it('hides Gmail failures from the caller', async () => {
-    sendMail.mockRejectedValue(new Error('Invalid login'));
+  it('hides Resend failures from the caller', async () => {
+    const errorLog = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => undefined);
+    mockSend.mockResolvedValue({
+      data: null,
+      error: { message: 'Invalid from address', name: 'validation_error' },
+    });
 
     await expect(service.send(message)).rejects.toBeInstanceOf(
       BadGatewayException,
     );
-    expect(close).toHaveBeenCalled();
+    expect(errorLog).toHaveBeenCalled();
+    errorLog.mockRestore();
   });
 });

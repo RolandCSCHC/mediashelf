@@ -4,38 +4,32 @@ import {
   Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import type { OutboundEmail } from './outbound-email';
 
 /**
- * Sends mail through the Gmail account in GMAIL_USER. An app password is
- * enough, so sharing does not depend on a domain or a third-party signup.
- * A new connection is opened per message so a serverless instance does not
- * keep an SMTP socket around.
+ * Sends mail through Resend. RESEND_FROM must be an address on a domain
+ * verified in Resend; after that, any recipient works. Replies go to the
+ * person who shared the list, not the From address.
  */
 @Injectable()
 export class MailerService {
   private readonly logger = new Logger(MailerService.name);
 
   async send(message: OutboundEmail): Promise<void> {
-    const user = process.env.GMAIL_USER?.trim();
-    const pass = process.env.GMAIL_APP_PASSWORD?.replace(/\s+/g, '');
-    if (!user || !pass) {
+    const apiKey = process.env.RESEND_API_KEY?.trim();
+    const fromEmail = process.env.RESEND_FROM?.trim();
+    if (!apiKey || !fromEmail) {
       throw new ServiceUnavailableException(
         'Sharing by email is not configured',
       );
     }
 
-    const transport = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: { user, pass },
-    });
+    const resend = new Resend(apiKey);
 
     try {
-      await transport.sendMail({
-        from: `MediaShelf <${user}>`,
+      const { error } = await resend.emails.send({
+        from: `MediaShelf <${fromEmail}>`,
         to: message.to,
         replyTo: message.replyTo,
         subject: message.subject,
@@ -43,19 +37,22 @@ export class MailerService {
         attachments: [
           {
             filename: message.attachment.filename,
-            content: message.attachment.content,
+            content: Buffer.from(message.attachment.content, 'utf8').toString(
+              'base64',
+            ),
             contentType: 'application/json',
           },
         ],
       });
+      if (error) {
+        throw new Error(error.message);
+      }
     } catch (error) {
       this.logger.error(
-        'Gmail rejected the email',
+        'Resend rejected the email',
         error instanceof Error ? error.message : error,
       );
       throw new BadGatewayException('Could not send the email');
-    } finally {
-      transport.close();
     }
   }
 }

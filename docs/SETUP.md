@@ -119,18 +119,18 @@ On Vercel, add this to the API project (not the frontend). After the first deplo
 
 **Share** on a list (the lists page or a list’s own page) asks for an email address and sends that list as a JSON attachment. The file is the same merge-import format as a library backup, limited to that list, without notes or date watched. The recipient imports it on **Backup**.
 
-Sending uses the Gmail account in `GMAIL_USER`. Gmail can deliver to any recipient, and the list is attached as JSON. No domain is required. On the **backend**:
+Sending uses [Resend](https://resend.com). The list is attached as JSON. `RESEND_FROM` must be an address on a domain you have verified in Resend (`mediashelf.mov` or `mediashelf.rolandschlosser.dev`). After that domain’s DNS records show as verified, Resend delivers to any recipient. Until then, it only delivers to the email on your Resend account. On the **backend**:
 
-1. On that Google account, turn on **2-Step Verification**.
-2. Create an app password at [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords). Choose Mail, then copy the 16-character password.
+1. In Resend, add the domain and publish the DNS records it shows.
+2. Create an API key with sending access.
 3. Set both variables on the API project (Vercel) and in local `.env` if you use Docker Compose:
 
 ```bash
-GMAIL_USER=you@gmail.com
-GMAIL_APP_PASSWORD=abcdefghijklmnop
+RESEND_API_KEY=re_xxxxxxxx
+RESEND_FROM=share@mediashelf.mov
 ```
 
-The message is sent as `MediaShelf <you@gmail.com>`. Replies go to the MediaShelf account that clicked Share.
+The message is sent as `MediaShelf <share@mediashelf.mov>`. Replies go to the MediaShelf account that clicked Share.
 
 Share returns an error until both variables are set. Library export on `/backup` still downloads JSON in the browser.
 
@@ -139,7 +139,7 @@ Share returns an error until both variables are set. Library export on `/backup`
 ## Production (Vercel + Neon) checklist
 
 1. **Frontend** project env: `NEXT_PUBLIC_API_URL=/api`, `API_URL=https://mediashelf-api.vercel.app` (redeploy so `NEXT_PUBLIC_*` is baked in).
-2. **Backend** project env: `DATABASE_URL` (Neon **pooled** host — hostname contains `-pooler`, add `?sslmode=require&pgbouncer=true&connect_timeout=15`), `DIRECT_URL` (Neon **direct** host — same endpoint without `-pooler`, add `?sslmode=require&connect_timeout=15`), plus `GOOGLE_*`, `MICROSOFT_*`, `JWT_SECRET`, `FRONTEND_URL`, `CORS_ORIGIN`, `FEEDBACK_ADMIN_EMAIL` (your login email, to see the `/feedback` inbox), `GMAIL_USER`, and `GMAIL_APP_PASSWORD` (list sharing).
+2. **Backend** project env: `DATABASE_URL` (Neon **pooled** host — hostname contains `-pooler`, add `?sslmode=require&pgbouncer=true&connect_timeout=15`), `DIRECT_URL` (Neon **direct** host — same endpoint without `-pooler`, add `?sslmode=require&connect_timeout=15`), plus `GOOGLE_*`, `MICROSOFT_*`, `JWT_SECRET`, `FRONTEND_URL`, `CORS_ORIGIN`, `FEEDBACK_ADMIN_EMAIL` (your login email, to see the `/feedback` inbox), `RESEND_API_KEY`, and `RESEND_FROM` (list sharing; an address on your verified Resend domain).
 3. Backend: `GOOGLE_CALLBACK_URL=https://mediashelf-frontend.vercel.app/api/auth/google/callback` and `MICROSOFT_CALLBACK_URL=https://mediashelf-frontend.vercel.app/api/auth/microsoft/callback` (and matching `FRONTEND_URL` / `CORS_ORIGIN`).
 4. Google Cloud Console → authorized JavaScript origin: `https://mediashelf-frontend.vercel.app`; redirect URI: `https://mediashelf-frontend.vercel.app/api/auth/google/callback`.
 5. Entra app registration → **Authentication** → add a **Web** redirect URI: `https://mediashelf-frontend.vercel.app/api/auth/microsoft/callback`.
