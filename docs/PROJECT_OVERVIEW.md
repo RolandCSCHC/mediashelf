@@ -692,6 +692,9 @@ Production hosting: Next.js and NestJS on Vercel; database on Neon.
 - Change smtp.gmail.com for resend ✓
 - Email message depends on the language the app is ✓
 
+## Phase 18
+- Update README.md ✓
+
 # Portfolio Goals
 
 This project should demonstrate proficiency in:

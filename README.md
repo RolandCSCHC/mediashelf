@@ -1,17 +1,18 @@
 # MediaShelf
 
-A production-style personal media library for movies and TV series. Sign in with Google or Microsoft, search TMDB, keep custom lists with per-list watch progress, and export JSON backups. Frontend and API run on Vercel; the database is Neon PostgreSQL.
+A production-style personal media library for movies and TV series. Sign in with Google or Microsoft, search TMDB, keep custom lists with per-list watch progress, and export JSON backups. I run it at [mediashelf.rolandschlosser.dev](https://mediashelf.rolandschlosser.dev): Next.js and the API on Vercel, PostgreSQL on Neon.
 
-This is a portfolio project: a real app I use, built to show modern full-stack engineering rather than a thin CRUD demo.
+This is a portfolio project: a real app I use, built to show how I structure a full-stack product.
 
 ## Stack
 
 | Layer      | Choice                                                                                     |
 | ---------- | ------------------------------------------------------------------------------------------ |
 | Frontend   | Next.js (App Router), TypeScript, Tailwind CSS                                             |
-| Backend    | NestJS, TypeScript, Prisma                                                                 |
+| Backend    | NestJS, TypeScript, Prisma, Passport                                                       |
 | Database   | PostgreSQL (Neon in production; Docker Postgres locally)                                   |
-| Auth       | Google / Microsoft OAuth + JWT httpOnly cookie (`SameSite=Lax`)                            |
+| Auth       | Google / Microsoft OAuth (authorization code) + JWT httpOnly cookie (`SameSite=Lax`)       |
+| Email      | Resend — share one list as a JSON attachment                                               |
 | Monorepo   | pnpm workspaces (`apps/*`, `packages/*`)                                                   |
 | Containers | Docker + Docker Compose (local)                                                            |
 | Production | Vercel (frontend + API) + Neon                                                             |
@@ -22,7 +23,7 @@ This is a portfolio project: a real app I use, built to show modern full-stack e
 <table>
   <tr>
     <td><strong>App</strong></td>
-    <td><a href="https://mediashelf-frontend.vercel.app">mediashelf-frontend.vercel.app</a></td>
+    <td><a href="https://mediashelf.rolandschlosser.dev">mediashelf.rolandschlosser.dev</a></td>
   </tr>
   <tr>
     <td><strong>API</strong></td>
@@ -67,30 +68,48 @@ Local setup, OAuth, Vercel/Neon, and backups: **[docs/SETUP.md](docs/SETUP.md)**
 ## Architecture
 
 ```text
-                  +----------------------+
-                  |      Next.js         |
-                  |   App Router + PWA   |
-                  |  same-origin /api    |
-                  +----------+-----------+
-                             |  BFF proxy
-                             v
-                  +----------------------+
-                  |       NestJS         |
-                  |  modules + Prisma    |
-                  +----------+-----------+
-                             |
-                  +----------v-----------+
-                  | PostgreSQL (Neon)    |
-                  +----------+-----------+
-                             |
-                  +----------v-----------+
-                  |      TMDB API        |
-                  +----------------------+
+                    +------------------------+
+                    |        Next.js         |
+                    |   App Router + PWA     |
+                    |    client UI + /api    |
+                    +-----------+------------+
+                                | BFF proxy
+                                v
+                    +------------------------+
+                    |         NestJS         |
+                    |    modules + Prisma    |
+                    +-----------+------------+
+                                |
+            +-------------------+-------------------+
+            |                   |                   |
+            v                   v                   v
+   +----------------+  +----------------+  +----------------+
+   | PostgreSQL     |  |    TMDB API    |  |     Resend     |
+   | (Neon)         |  +----------------+  | (list email)   |
+   +----------------+                      +----------------+
 ```
 
-The browser talks only to the Next.js origin. A catch-all App Router route (`/api/[...path]`) forwards to Nest at request time. That **BFF proxy** keeps the auth cookie first-party, which is required because Safari blocks third-party cookies across `*.vercel.app` hosts.
+The browser talks only to `mediashelf.rolandschlosser.dev`. A catch-all App Router route (`/api/[...path]`) forwards to Nest at request time. That **BFF proxy** keeps the auth cookie first-party. Safari blocks third-party cookies across separate `*.vercel.app` hosts, so the UI calls the API through the frontend origin. The Vercel frontend hostname redirects to the custom domain. The API project stays on its own Vercel host.
 
-Production: Next.js and NestJS as separate Vercel projects; Prisma uses Neon’s pooled `DATABASE_URL` at runtime and a direct `DIRECT_URL` for migrations.
+Prisma uses Neon’s pooled `DATABASE_URL` at runtime and a direct `DIRECT_URL` for migrations. The pooler is what a serverless function needs; migrations need a direct connection.
+
+---
+
+## Why I built it this way
+
+I wanted a library I would keep using, and a codebase that shows how I make structural choices.
+
+I already knew React, so the frontend is Next.js App Router: file-based routes, metadata, a PWA manifest, and a server route that proxies the API. I already knew Django and Flask. NestJS is how I work in Node with that same shape — modules, dependency injection, controllers that validate and delegate, services that own the rules. The data is relational, so the database is PostgreSQL. Prisma gives me typed queries and migrations. Neon hosts it. The API on Vercel can go idle, so queries go through Neon’s pooled connection and migrations use a separate direct URL.
+
+Sign-in is Google or Microsoft OAuth, authorization-code flow, with a client secret on the API. The account is the email address: both providers open the same library. The session is a JWT in an httpOnly cookie (`mediashelf_token`) for seven days, `SameSite=Lax`, and `Secure` when the site is HTTPS. `Secure` follows `FRONTEND_URL`, so a production Docker image on local HTTP still sets a cookie the browser will store. The OAuth callback is on the frontend origin (`/api/auth/.../callback`) and the BFF forwards it, which is what makes the cookie first-party. The login buttons stay disabled until `GET /health` succeeds, because a cold API would fail the redirect.
+
+The product UI is a client application inside Next.js. Library screens are interactive, and every request needs the session cookie, so pages load data with a typed `fetch` client (`apps/frontend/src/lib/api.ts`) that always calls same-origin `/api` with `credentials: 'include'`. Auth, theme, and locale are React context. The root layout is a server component: it reads the locale cookie and sets `<html lang>` before paint, and a small inline script applies the theme so the first frame matches the saved mode. Client state stays in those providers and in the page that uses it. Shared UI is a button and a modal. The frontend and the API share `packages/shared-types`, so a response shape has to change in one place.
+
+Movies and series are one `MediaItem`. Watch state sits on list membership, so one series can be Watched in one list and Watchlist in another. I copy the TMDB fields the UI shows (poster, genres, dates, runtime) onto the row at import. The library still opens when TMDB is down. Last-episode air dates refresh only when I ask. Genres are a text array on the item, which is enough to filter by them. Each repository method takes the signed-in `userId` and filters with it. Deleting a user cascades to their titles and lists.
+
+JSON import merges. An existing title or membership stays as it is, so a restore keeps the progress already on the account. A shared list email reuses that file for one list and leaves out notes and date watched. Resend sends it in the language the UI is using, and replies go to the account that clicked Share. Those files can be large, so the API accepts a 10 MB JSON body.
+
+I set the repo up as a pnpm monorepo and ran it in Docker Compose from the start, so the frontend, the API, and Postgres come up together. Features landed in phases: auth, TMDB import, the library, lists, then Vercel and Neon. The phase list is in [docs/PROJECT_OVERVIEW.md](docs/PROJECT_OVERVIEW.md). GitHub Actions lints, typechecks, tests, and builds both apps on every pull request. A push to `main` applies Prisma migrations. A daily workflow writes the same backup JSON to an Actions artifact (90 days) and to Dropbox.
 
 ---
 
@@ -108,24 +127,28 @@ JSON backup stores resolved TMDB IDs and imports with **merge** semantics: exist
 
 ## Design patterns and engineering practices
 
-| Practice                       | How MediaShelf uses it                                                                                                                   |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| **Modular monolith**           | Nest feature modules (`auth`, `media`, `lists`, `tmdb`, `backup`, `feedback`) each own controllers, services, DTOs, and tests            |
-| **Layered architecture**       | Controllers validate and delegate; services hold business logic; repositories talk to Prisma                                             |
-| **Dependency injection**       | Nest providers for services, Prisma, Passport strategies, and guards                                                                     |
-| **DTO + validation**           | Global `ValidationPipe` (`whitelist`, `forbidNonWhitelisted`, `transform`) on request bodies and query DTOs                              |
-| **Mapper**                     | Prisma records mapped to shared API types (`media.mapper`, `tmdb.mapper`, `lists.mapper`) so the HTTP contract is not the database shape |
-| **Repository**                 | Data access isolated from services (`media.repository`, `lists.repository`)                                                              |
-| **Guard / strategy**           | Passport Google, Microsoft, and JWT strategies; `JwtAuthGuard` on protected routes; optional JWT for public feedback                     |
-| **Custom decorators**          | `@CurrentUser()` / optional current user for controllers                                                                                 |
-| **BFF / same-origin proxy**    | Next.js forwards `/api/*` so cookies stay first-party on Safari                                                                          |
-| **Shared kernel**              | `packages/shared-types` enums and interfaces used by frontend and backend                                                                |
-| **Discriminated domain types** | `MediaType` / `MediaStatus` shared across Prisma, API, and UI                                                                            |
-| **Idempotent merge import**    | Backup import matches TMDB titles on `(tmdbId, type)` and manuals on `(title, type)`                                                     |
-| **Typed i18n**                 | English catalog is the source of truth; Spanish must match the key tree or TypeScript fails                                              |
-| **Auth linking by email**      | Google and Microsoft upsert one `User`; provider IDs are optional and unique                                                             |
+| Practice                       | How MediaShelf uses it                                                                                                                                                |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Modular monolith**           | Nest feature modules (`auth`, `media`, `lists`, `tmdb`, `backup`, `feedback`, `health`) own their HTTP surface. `mail` is the Resend provider the backup module calls |
+| **Layered architecture**       | Controllers validate and delegate; services hold business logic; repositories talk to Prisma                                                                          |
+| **Dependency injection**       | Nest providers for services, Prisma, Passport strategies, and guards                                                                                                  |
+| **DTO + validation**           | Global `ValidationPipe` (`whitelist`, `forbidNonWhitelisted`, `transform`) on request bodies and query DTOs                                                           |
+| **Mapper**                     | Prisma records mapped to shared API types (`media.mapper`, `tmdb.mapper`, `lists.mapper`) so the HTTP contract is not the database shape                              |
+| **Repository**                 | Data access isolated from services (`media.repository`, `lists.repository`)                                                                                           |
+| **Guard / strategy**           | Passport Google, Microsoft, and JWT strategies; `JwtAuthGuard` on protected routes; optional JWT for public feedback                                                  |
+| **Custom decorators**          | `@CurrentUser()` / optional current user for controllers                                                                                                              |
+| **BFF / same-origin proxy**    | Next.js forwards `/api/*` so cookies stay first-party on Safari                                                                                                       |
+| **Shared kernel**              | `packages/shared-types` enums and interfaces used by frontend and backend                                                                                             |
+| **Discriminated domain types** | `MediaType` / `MediaStatus` shared across Prisma, API, and UI                                                                                                         |
+| **Idempotent merge import**    | Backup import matches TMDB titles on `(tmdbId, type)` and manuals on `(title, type)`                                                                                  |
+| **Typed i18n**                 | English catalog is the source of truth; Spanish must match the key tree or TypeScript fails                                                                           |
+| **Auth linking by email**      | Google and Microsoft upsert one `User`; provider IDs are optional and unique                                                                                          |
+| **Context providers**          | `AuthProvider`, `ThemeProvider`, and `LocaleProvider` hold session, theme, and UI language                                                                            |
+| **Route guards**               | `AuthGuard` wraps private pages; `GuestGuard` wraps login. Both read the session from context                                                                         |
+| **Typed API client**           | `lib/api.ts` calls same-origin `/api` with the shared request and response types                                                                                      |
+| **Ownership scoping**          | Repository queries filter by `userId`. A signed-in user only reads and writes their own rows                                                                          |
 
-Frontend code is organized by domain (routes, hooks, UI components, API client) rather than a single dump of screens. Auth and guest guards wrap protected and login-only pages.
+Frontend code is organized by domain: `app/` routes, `components/` (UI, guards, providers), `hooks/`, `lib/` (API client and domain helpers), and `i18n/` catalogs. The interactive pages are client components. The server layout owns fonts, metadata, the locale cookie, and the theme script.
 
 ---
 
@@ -163,10 +186,12 @@ Full request/response schemas and try-it-out: [Swagger](https://mediashelf-api.v
 
 ## Quality bar
 
-- **TypeScript strict** across the monorepo; no `any` in public APIs
-- **Jest unit tests** for services, mappers, auth cookies, pagination, list-state, and backup helpers
+- **TypeScript strict** across the monorepo; public APIs use explicit types
+- **Jest unit tests** for services, mappers, auth cookies, pagination, list-state, mail, and backup helpers
+- **Input validation** — global `ValidationPipe` (`whitelist`, `forbidNonWhitelisted`, `transform`) strips unknown fields
+- **Session cookie** — httpOnly `mediashelf_token`, `SameSite=Lax`, `Secure` on HTTPS, seven days
 - **ESLint + Prettier** on CI; `pnpm check` runs lint, typecheck, tests, and format
-- **Prisma migrations** applied from GitHub Actions after a successful `main` build, not ad hoc on the server
+- **Prisma migrations** applied from GitHub Actions after a successful `main` build
 - **Docker Compose** for a one-command local stack (frontend, backend, Postgres)
 
 ---
